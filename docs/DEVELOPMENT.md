@@ -31,7 +31,7 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 | Milestone | Status | Description |
 |-----------|--------|-------------|
 | 0 | **COMPLETE** | Project Scaffolding |
-| 1 | Pending | Database Schema & Core Infrastructure |
+| 1 | **COMPLETE** | Database Schema & Core Infrastructure |
 | 2 | Pending | Fastify App & Core Middleware |
 | 3 | Pending | Authentication (JWT + OTP) |
 | 4 | Pending | CRUD (Professionals, Clients, Services) |
@@ -85,15 +85,15 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 
 ## Milestone 1: Database Schema & Core Infrastructure
 
-**Status:** Pending
+**Status:** COMPLETE
 
 ### Checklist
 
-- [ ] Apply database migration via Supabase MCP
-- [ ] Verify all 6 tables created
-- [ ] Generate Prisma client
-- [ ] Unit tests for Prisma singleton
-- [ ] Unit tests for Redis client
+- [x] Apply database migration via Supabase MCP
+- [x] Verify all 6 tables created
+- [x] Generate Prisma client
+- [x] Unit tests for Prisma singleton
+- [x] Unit tests for Redis client
 
 ---
 

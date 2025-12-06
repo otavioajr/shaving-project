@@ -125,3 +125,6 @@ When the project is set up, typical commands will be:
 3. **All queries must filter by barbershopId** - Multi-tenant isolation is security-critical
 4. **Snapshot financial data** - Store price/commission at transaction time
 5. **Require pagination parameters** - Prevent Vercel timeouts on large datasets
+
+
+**Alwayas create a todo test for user**

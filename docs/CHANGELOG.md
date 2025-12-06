@@ -9,6 +9,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Next Steps
+- Milestone 2: Fastify App & Core Middleware
+- Milestone 3: Authentication (JWT + OTP)
+
+---
+
+## [0.2.0] - 2025-12-06
+
+### Milestone 1: Database Schema & Core Infrastructure - COMPLETE ✅
+
+#### Added
+
+**Database Migrations:**
+- `prisma/migrations/20251206133233_init/migration.sql` - Initial migration creating all database tables, enums, indexes, and foreign keys
+  - 6 tables: `barbershops`, `professionals`, `clients`, `services`, `appointments`, `transactions`
+  - 4 enums: `Role`, `AppointmentStatus`, `PaymentMethod`, `TransactionType`
+  - Cascading foreign keys for tenant isolation
+  - Composite indexes for multi-tenant query optimization
+
+**Unit Tests:**
+- `src/__tests__/prisma.test.ts` - 5 tests verifying schema structure and migration integrity
+  - Validates schema contains all enums and models
+  - Verifies PostgreSQL datasource configuration
+  - Confirms Prisma client generator setup
+  - Validates cascading deletes
+- `src/__tests__/redis.test.ts` - 18 tests for Redis client and all helpers
+  - Tests OTP storage/verification (5-minute TTL)
+  - Tests refresh token management (7-day TTL)
+  - Tests tenant cache helpers (5-minute TTL)
+  - Tests IP and tenant rate limiters
+  - Full coverage of all Redis helper functions
+
+#### Verified
+
+- ✅ `npx prisma validate` - Schema is valid
+- ✅ Migration created and applied to Supabase
+- ✅ All 6 tables created with correct structure
+- ✅ All indexes created for query optimization
+- ✅ Foreign keys with CASCADE deletes working
+- ✅ `npx prisma generate` - Prisma Client generated successfully
+- ✅ `npm test` - 23 tests passing (5 Prisma + 18 Redis)
+- ✅ Unit tests cover core library functionality
+
+#### Technical Details
+
+- **Migration File:** Prisma auto-generated migration from schema changes
+- **Enums:** All 4 business enums created as PostgreSQL custom types
+- **Indexes:** 12 composite and single-column indexes created for performance
+- **Foreign Keys:** 8 foreign key constraints with proper cascade rules
+- **Constraints:** Unique constraints for `slug` and composite `(barbershopId, email/phone)`
+- **Data Types:** Decimals for prices/commissions, JSONB for push subscriptions, TIMESTAMP for audit fields
+
+---
+
+## [0.1.1] - 2025-12-06
+
 ### Added
 - **Plans Structure:** Criada estrutura de planos individuais por milestone em `docs/plans/`
   - `principal-plan.md` - Plano principal com visão geral completa do projeto
@@ -22,10 +78,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `08-barbershop-management.md` - Plano detalhado do Milestone 8
   - `09-testing-deployment.md` - Plano detalhado do Milestone 9
 - Cada plano inclui seção obrigatória de pré-requisitos com links para `principal-plan.md`, `DEVELOPMENT.md` e `CHANGELOG.md`
-
-### Next Steps
-- Milestone 1: Database Schema & Core Infrastructure
-- Milestone 2: Fastify App & Core Middleware
 
 ---
 
@@ -147,8 +199,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Project Metadata
 
 **Started:** 2025-12-06
-**Current Version:** 0.1.0
-**Status:** Milestone 0 Complete, Milestone 1 Pending
+**Current Version:** 0.2.0
+**Status:** Milestone 0 Complete, Milestone 1 Complete, Milestone 2 In Progress
 
 ### Key Architecture Principles
 
