@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=vsbvxitmupvoljopzbek"
+    },
+    "upstash": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/mcp-server",
+        "run",
+        "otavioajr@gmail.com",
+        "27d5ed7f-b018-4de8-9ef2-fe7631a8d5d0"
+      ]
+    }
+  }
+}
