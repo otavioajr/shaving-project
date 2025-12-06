@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'fs'
-import { join } from 'path'
+import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = join(__filename, '..')
+const __dirname = dirname(__filename)
 
 describe('Prisma Singleton', () => {
   it('should exist and be properly configured', () => {
