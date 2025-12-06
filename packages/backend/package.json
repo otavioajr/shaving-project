@@ -1,0 +1,52 @@
+{
+  "name": "@shaving/backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.1",
+    "@fastify/cors": "^10.0.1",
+    "@fastify/jwt": "^9.0.1",
+    "@fastify/swagger": "^9.2.0",
+    "@fastify/swagger-ui": "^5.1.0",
+    "@prisma/client": "^6.1.0",
+    "@upstash/ratelimit": "^2.0.4",
+    "@upstash/redis": "^1.34.3",
+    "bcryptjs": "^2.4.3",
+    "date-fns": "^4.1.0",
+    "fastify": "^5.1.0",
+    "web-push": "^3.6.7",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.10.1",
+    "@types/supertest": "^6.0.2",
+    "@types/web-push": "^3.6.4",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "@vercel/node": "^3.2.25",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.16.0",
+    "prisma": "^6.1.0",
+    "supertest": "^7.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
