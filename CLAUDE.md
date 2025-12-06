@@ -14,6 +14,7 @@ Multi-Tenant Barbershop SaaS Platform backend built for zero-cost deployment on 
 - **Cache/Rate Limiting:** Upstash Redis (HTTP/REST)
 - **Testing:** Vitest + Supertest
 - **Key Libraries:** `zod`, `@fastify/jwt`, `@upstash/ratelimit`, `date-fns`, `web-push`
+- **Always create a to-do test for user**
 
 ## Architecture
 
@@ -125,6 +126,3 @@ When the project is set up, typical commands will be:
 3. **All queries must filter by barbershopId** - Multi-tenant isolation is security-critical
 4. **Snapshot financial data** - Store price/commission at transaction time
 5. **Require pagination parameters** - Prevent Vercel timeouts on large datasets
-
-
-**Alwayas create a todo test for user**
