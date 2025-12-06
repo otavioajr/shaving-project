@@ -142,6 +142,12 @@ CREATE INDEX "appointments_barbershopId_date_idx" ON "appointments"("barbershopI
 CREATE INDEX "appointments_barbershopId_clientId_idx" ON "appointments"("barbershopId", "clientId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "professionals_barbershopId_id_key" ON "professionals"("barbershopId", "id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "clients_barbershopId_id_key" ON "clients"("barbershopId", "id");
+
+-- CreateIndex
 CREATE INDEX "transactions_barbershopId_date_idx" ON "transactions"("barbershopId", "date");
 
 -- CreateIndex
@@ -163,16 +169,16 @@ ALTER TABLE "services" ADD CONSTRAINT "services_barbershopId_fkey" FOREIGN KEY (
 ALTER TABLE "appointments" ADD CONSTRAINT "appointments_barbershopId_fkey" FOREIGN KEY ("barbershopId") REFERENCES "barbershops"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "appointments" ADD CONSTRAINT "appointments_professionalId_fkey" FOREIGN KEY ("professionalId") REFERENCES "professionals"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "appointments" ADD CONSTRAINT "appointments_barbershopId_professionalId_fkey" FOREIGN KEY ("barbershopId", "professionalId") REFERENCES "professionals"("barbershopId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "appointments" ADD CONSTRAINT "appointments_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "clients"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "appointments" ADD CONSTRAINT "appointments_barbershopId_clientId_fkey" FOREIGN KEY ("barbershopId", "clientId") REFERENCES "clients"("barbershopId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "appointments" ADD CONSTRAINT "appointments_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "services"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "appointments" ADD CONSTRAINT "appointments_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "professionals"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "appointments" ADD CONSTRAINT "appointments_barbershopId_createdById_fkey" FOREIGN KEY ("barbershopId", "createdById") REFERENCES "professionals"("barbershopId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_barbershopId_fkey" FOREIGN KEY ("barbershopId") REFERENCES "barbershops"("id") ON DELETE CASCADE ON UPDATE CASCADE;
