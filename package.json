@@ -1,0 +1,35 @@
+{
+  "name": "shaving-project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Multi-Tenant Barbershop SaaS Platform",
+  "scripts": {
+    "dev": "pnpm --filter @shaving/backend dev",
+    "build": "pnpm --filter @shaving/backend build",
+    "start": "pnpm --filter @shaving/backend start",
+    "test": "pnpm --filter @shaving/backend test",
+    "test:coverage": "pnpm --filter @shaving/backend test:coverage",
+    "lint": "pnpm --filter @shaving/backend lint",
+    "lint:fix": "pnpm --filter @shaving/backend lint:fix",
+    "db:migrate": "pnpm --filter @shaving/backend db:migrate",
+    "db:generate": "pnpm --filter @shaving/backend db:generate",
+    "db:push": "pnpm --filter @shaving/backend db:push",
+    "db:seed": "pnpm --filter @shaving/backend db:seed",
+    "db:studio": "pnpm --filter @shaving/backend db:studio"
+  },
+  "keywords": [
+    "barbershop",
+    "saas",
+    "multi-tenant",
+    "fastify",
+    "prisma",
+    "supabase"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

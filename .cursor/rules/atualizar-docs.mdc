@@ -1,0 +1,4 @@
+---
+alwaysApply: true
+---
+Sempre que fizermos mudanças no projeto, vamos atualizar o CHANGELOG para Log detalhado de mudanças por versão/milestone (contexto histórico completo) com os comentários das mudanças feitas para manter contexto, o DEVELOPMENT.md para Rastreamento de milestones e checklists (atualizado conforme progredimos) e README.md - Visão geral do projeto, setup inicial, comandos.
