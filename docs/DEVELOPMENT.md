@@ -127,6 +127,27 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 
 ---
 
+## Development Tools: Database Seeding
+
+**Status:** COMPLETE ✅
+
+### Seeding for Local Development
+
+- [x] `prisma/seed.ts` - Idempotent development database seeder
+  - Creates test barbershop (`barbearia-teste`)
+  - Creates admin and barber test users with known credentials
+  - Creates test client and services
+  - Safe to run multiple times
+  
+**Quick Start:**
+```bash
+pnpm db:seed
+```
+
+This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate` → `pnpm db:seed` → `pnpm dev`
+
+---
+
 ## Milestone 3: Authentication (JWT + OTP)
 
 **Status:** Pending

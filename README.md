@@ -61,6 +61,9 @@ pnpm db:generate
 # Run database migrations
 pnpm db:migrate
 
+# Seed database with test data (optional but recommended)
+pnpm db:seed
+
 # Start development server
 pnpm dev
 ```
@@ -75,6 +78,23 @@ See `packages/backend/.env.example` for all required variables:
 - `UPSTASH_REDIS_REST_TOKEN` - Redis REST token
 - `JWT_SECRET` - JWT signing secret (min 32 chars)
 - `CRON_SECRET` - Secret for cron endpoint protection
+
+## Database Seeding
+
+For local development, you can populate the database with test data:
+
+```bash
+pnpm db:seed
+```
+
+This creates:
+- **Barbershop:** `barbearia-teste` (slug for tenant header)
+- **Admin User:** `admin@barbearia-teste.com` / `senha123`
+- **Barber User:** `barber@barbearia-teste.com` / `senha123`
+- **Test Client:** João Silva
+- **Services:** Corte de Cabelo, Barba, Corte + Barba
+
+The script is idempotent and safe to run multiple times.
 
 ## Development
 

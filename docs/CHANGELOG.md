@@ -14,6 +14,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.1] - 2025-12-07
+
+### Database Seed Script - COMPLETE ✅
+
+#### Added
+
+**Seed Script:**
+- `prisma/seed.ts` - Development database seeder
+  - Idempotent script (safe to run multiple times)
+  - Creates 1 barbershop with slug `barbearia-teste`
+  - Creates 2 professionals (admin + barber with credentials)
+  - Creates 1 test client
+  - Creates 3 services (Corte, Barba, Corte+Barba)
+  - Uses `DIRECT_URL` to bypass connection pooler (avoids prepared statement cache issues)
+  - Outputs test credentials for manual API testing
+
+**Documentation:**
+- Updated `docs/QUICK-TEST.md` with seed instructions and credential info
+- Added "Testar com Dados de Seed" section with example curl requests
+- Clear steps in preamble: install → db:generate → **db:seed** → dev
+
+#### Technical Details
+
+- **Idempotency:** Script checks if data exists before creating (uses `findUnique`/`findFirst`)
+- **Connection:** Uses `DIRECT_URL` environment variable to avoid Supabase pooler prepared statement cache
+- **Error Handling:** Tries/catch with proper `prisma.$disconnect()` cleanup
+- **Output:** Clear console logs (✅ created, ✓ already exists) + test credentials summary
+
+#### Verified
+
+- ✅ `pnpm db:seed` runs successfully (first execution)
+- ✅ `pnpm db:seed` is idempotent (second execution shows ✓ already exists)
+- ✅ Barbershop slug `barbearia-teste` is created and ready for API tests
+- ✅ Test credentials are printed and ready for use
+
+---
+
 ## [0.3.0] - 2025-12-07
 
 ### Milestone 2: Fastify App & Core Middleware - COMPLETE ✅

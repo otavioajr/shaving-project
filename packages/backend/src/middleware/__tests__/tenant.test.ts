@@ -1,182 +1,268 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { tenantMiddleware } from '../tenant.js'
-import { prisma } from '../../lib/prisma.js'
-import * as redis from '../../lib/redis.js'
+import { tenantMiddleware } from '../tenant'
 
 // Mock dependencies
-vi.mock('../../lib/prisma.js')
-vi.mock('../../lib/redis.js')
+vi.mock('../../lib/prisma', () => ({
+  prisma: {
+    barbershop: {
+      findUnique: vi.fn(),
+    },
+  },
+}))
 
-describe('Tenant Middleware', () => {
+vi.mock('../../lib/redis', () => ({
+  getCachedTenant: vi.fn(),
+  cacheTenant: vi.fn(),
+}))
+
+import { prisma } from '../../lib/prisma'
+import { getCachedTenant, cacheTenant } from '../../lib/redis'
+
+describe('tenantMiddleware', () => {
   let mockRequest: Partial<FastifyRequest>
   let mockReply: Partial<FastifyReply>
+  let statusMock: ReturnType<typeof vi.fn>
+  let sendMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
+    // Reset mocks
     vi.clearAllMocks()
 
-    mockRequest = {
-      url: '/api/test',
-      headers: {},
-      log: {
-        warn: vi.fn(),
-      } as any,
-    }
+    // Setup mock reply
+    statusMock = vi.fn().mockReturnThis()
+    sendMock = vi.fn()
 
     mockReply = {
-      status: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
+      status: statusMock,
+      send: sendMock,
     }
   })
 
-  it('should skip middleware for /health route', async () => {
-    mockRequest.url = '/health'
-    
-    await tenantMiddleware(
-      mockRequest as FastifyRequest,
-      mockReply as FastifyReply
-    )
+  describe('Public routes (should skip middleware)', () => {
+    it('should allow /health without tenant header', async () => {
+      mockRequest = {
+        url: '/health',
+        headers: {},
+      }
 
-    expect(mockReply.status).not.toHaveBeenCalled()
-    expect(mockReply.send).not.toHaveBeenCalled()
-  })
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
 
-  it('should skip middleware for /docs route', async () => {
-    mockRequest.url = '/docs'
-    
-    await tenantMiddleware(
-      mockRequest as FastifyRequest,
-      mockReply as FastifyReply
-    )
+      expect(statusMock).not.toHaveBeenCalled()
+      expect(sendMock).not.toHaveBeenCalled()
+    })
 
-    expect(mockReply.status).not.toHaveBeenCalled()
-    expect(mockReply.send).not.toHaveBeenCalled()
-  })
+    it('should allow / without tenant header', async () => {
+      mockRequest = {
+        url: '/',
+        headers: {},
+      }
 
-  it('should skip middleware for / route', async () => {
-    mockRequest.url = '/'
-    
-    await tenantMiddleware(
-      mockRequest as FastifyRequest,
-      mockReply as FastifyReply
-    )
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
 
-    expect(mockReply.status).not.toHaveBeenCalled()
-    expect(mockReply.send).not.toHaveBeenCalled()
-  })
+      expect(statusMock).not.toHaveBeenCalled()
+      expect(sendMock).not.toHaveBeenCalled()
+    })
 
-  it('should return 404 when x-tenant-slug header is missing', async () => {
-    mockRequest.url = '/api/test'
-    mockRequest.headers = {}
+    it('should allow /docs without tenant header', async () => {
+      mockRequest = {
+        url: '/docs',
+        headers: {},
+      }
 
-    await tenantMiddleware(
-      mockRequest as FastifyRequest,
-      mockReply as FastifyReply
-    )
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
 
-    expect(mockReply.status).toHaveBeenCalledWith(404)
-    expect(mockReply.send).toHaveBeenCalledWith({
-      error: 'Tenant not found',
-      message: 'Missing x-tenant-slug header',
+      expect(statusMock).not.toHaveBeenCalled()
+      expect(sendMock).not.toHaveBeenCalled()
+    })
+
+    it('should allow /docs/static/swagger.css without tenant header', async () => {
+      mockRequest = {
+        url: '/docs/static/swagger.css',
+        headers: {},
+      }
+
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
+
+      expect(statusMock).not.toHaveBeenCalled()
+      expect(sendMock).not.toHaveBeenCalled()
+    })
+
+    it('should allow /docs/json without tenant header', async () => {
+      mockRequest = {
+        url: '/docs/json',
+        headers: {},
+      }
+
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
+
+      expect(statusMock).not.toHaveBeenCalled()
+      expect(sendMock).not.toHaveBeenCalled()
+    })
+
+    it('should allow /docs/ without tenant header', async () => {
+      mockRequest = {
+        url: '/docs/',
+        headers: {},
+      }
+
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
+
+      expect(statusMock).not.toHaveBeenCalled()
+      expect(sendMock).not.toHaveBeenCalled()
+    })
+
+    it('should strip query string when checking public routes', async () => {
+      mockRequest = {
+        url: '/health?timestamp=123',
+        headers: {},
+      }
+
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
+
+      expect(statusMock).not.toHaveBeenCalled()
+      expect(sendMock).not.toHaveBeenCalled()
     })
   })
 
-  it('should return 404 when tenant is not found in database', async () => {
-    mockRequest.url = '/api/test'
-    mockRequest.headers = { 'x-tenant-slug': 'invalid-tenant' }
+  describe('Protected routes (require tenant)', () => {
+    it('should return 404 when x-tenant-slug header is missing', async () => {
+      mockRequest = {
+        url: '/api/professionals',
+        headers: {},
+      }
 
-    vi.mocked(redis.getCachedTenant).mockResolvedValue(null)
-    vi.mocked(prisma.barbershop.findUnique).mockResolvedValue(null)
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
 
-    await tenantMiddleware(
-      mockRequest as FastifyRequest,
-      mockReply as FastifyReply
-    )
-
-    expect(mockReply.status).toHaveBeenCalledWith(404)
-    expect(mockReply.send).toHaveBeenCalledWith({
-      error: 'Tenant not found',
-      message: 'Barbershop with slug "invalid-tenant" does not exist',
+      expect(statusMock).toHaveBeenCalledWith(404)
+      expect(sendMock).toHaveBeenCalledWith({
+        error: 'Tenant not found',
+        message: 'Missing x-tenant-slug header',
+      })
     })
-  })
 
-  it('should return 404 when tenant is inactive', async () => {
-    mockRequest.url = '/api/test'
-    mockRequest.headers = { 'x-tenant-slug': 'inactive-tenant' }
+    it('should return 404 when tenant does not exist', async () => {
+      vi.mocked(getCachedTenant).mockResolvedValue(null)
+      vi.mocked(prisma.barbershop.findUnique).mockResolvedValue(null)
 
-    vi.mocked(redis.getCachedTenant).mockResolvedValue(null)
-    vi.mocked(prisma.barbershop.findUnique).mockResolvedValue({
-      id: 'tenant-id',
-      isActive: false,
-    } as any)
+      mockRequest = {
+        url: '/api/professionals',
+        headers: {
+          'x-tenant-slug': 'non-existent',
+        },
+      }
 
-    await tenantMiddleware(
-      mockRequest as FastifyRequest,
-      mockReply as FastifyReply
-    )
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
 
-    expect(mockReply.status).toHaveBeenCalledWith(404)
-    expect(mockReply.send).toHaveBeenCalledWith({
-      error: 'Tenant not found',
-      message: 'Barbershop with slug "inactive-tenant" is inactive',
+      expect(statusMock).toHaveBeenCalledWith(404)
+      expect(sendMock).toHaveBeenCalledWith({
+        error: 'Tenant not found',
+        message: 'Barbershop with slug "non-existent" does not exist',
+      })
     })
-  })
 
-  it('should use cached tenant when available', async () => {
-    mockRequest.url = '/api/test'
-    mockRequest.headers = { 'x-tenant-slug': 'valid-tenant' }
+    it('should return 404 when tenant is inactive', async () => {
+      vi.mocked(getCachedTenant).mockResolvedValue(null)
+      vi.mocked(prisma.barbershop.findUnique).mockResolvedValue({
+        id: 'barbershop-1',
+        isActive: false,
+      } as any)
 
-    vi.mocked(redis.getCachedTenant).mockResolvedValue('cached-tenant-id')
+      mockRequest = {
+        url: '/api/professionals',
+        headers: {
+          'x-tenant-slug': 'inactive-shop',
+        },
+      }
 
-    await tenantMiddleware(
-      mockRequest as FastifyRequest,
-      mockReply as FastifyReply
-    )
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
 
-    expect(prisma.barbershop.findUnique).not.toHaveBeenCalled()
-    expect(mockRequest.tenantId).toBe('cached-tenant-id')
-    expect(mockRequest.tenantSlug).toBe('valid-tenant')
-    expect(mockReply.status).not.toHaveBeenCalled()
-  })
-
-  it('should fetch tenant from database and cache it', async () => {
-    mockRequest.url = '/api/test'
-    mockRequest.headers = { 'x-tenant-slug': 'valid-tenant' }
-
-    vi.mocked(redis.getCachedTenant).mockResolvedValue(null)
-    vi.mocked(prisma.barbershop.findUnique).mockResolvedValue({
-      id: 'tenant-id',
-      isActive: true,
-    } as any)
-    vi.mocked(redis.cacheTenant).mockResolvedValue()
-
-    await tenantMiddleware(
-      mockRequest as FastifyRequest,
-      mockReply as FastifyReply
-    )
-
-    expect(prisma.barbershop.findUnique).toHaveBeenCalledWith({
-      where: { slug: 'valid-tenant' },
-      select: { id: true, isActive: true },
+      expect(statusMock).toHaveBeenCalledWith(404)
+      expect(sendMock).toHaveBeenCalledWith({
+        error: 'Tenant not found',
+        message: 'Barbershop with slug "inactive-shop" is inactive',
+      })
     })
-    expect(redis.cacheTenant).toHaveBeenCalledWith('valid-tenant', 'tenant-id')
-    expect(mockRequest.tenantId).toBe('tenant-id')
-    expect(mockRequest.tenantSlug).toBe('valid-tenant')
-    expect(mockReply.status).not.toHaveBeenCalled()
-  })
 
-  it('should handle query string in URL', async () => {
-    mockRequest.url = '/api/test?foo=bar'
-    mockRequest.headers = { 'x-tenant-slug': 'valid-tenant' }
+    it('should inject tenantId and tenantSlug from cache when tenant exists', async () => {
+      vi.mocked(getCachedTenant).mockResolvedValue('barbershop-1')
 
-    vi.mocked(redis.getCachedTenant).mockResolvedValue('tenant-id')
+      mockRequest = {
+        url: '/api/professionals',
+        headers: {
+          'x-tenant-slug': 'test-shop',
+        },
+      }
 
-    await tenantMiddleware(
-      mockRequest as FastifyRequest,
-      mockReply as FastifyReply
-    )
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
 
-    expect(mockRequest.tenantId).toBe('tenant-id')
-    expect(mockRequest.tenantSlug).toBe('valid-tenant')
+      expect(mockRequest.tenantId).toBe('barbershop-1')
+      expect(mockRequest.tenantSlug).toBe('test-shop')
+      expect(statusMock).not.toHaveBeenCalled()
+      expect(sendMock).not.toHaveBeenCalled()
+    })
+
+    it('should query database, cache result, and inject tenant info when cache misses', async () => {
+      vi.mocked(getCachedTenant).mockResolvedValue(null)
+      vi.mocked(prisma.barbershop.findUnique).mockResolvedValue({
+        id: 'barbershop-2',
+        isActive: true,
+      } as any)
+
+      mockRequest = {
+        url: '/api/professionals',
+        headers: {
+          'x-tenant-slug': 'new-shop',
+        },
+      }
+
+      await tenantMiddleware(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      )
+
+      expect(prisma.barbershop.findUnique).toHaveBeenCalledWith({
+        where: { slug: 'new-shop' },
+        select: { id: true, isActive: true },
+      })
+      expect(cacheTenant).toHaveBeenCalledWith('new-shop', 'barbershop-2')
+      expect(mockRequest.tenantId).toBe('barbershop-2')
+      expect(mockRequest.tenantSlug).toBe('new-shop')
+      expect(statusMock).not.toHaveBeenCalled()
+      expect(sendMock).not.toHaveBeenCalled()
+    })
   })
 })

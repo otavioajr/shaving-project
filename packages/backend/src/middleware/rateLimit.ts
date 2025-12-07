@@ -15,7 +15,9 @@ export async function rateLimitMiddleware(
 
   // Skip rate limiting for public routes
   const path = request.url.split('?')[0] // Remove query string
-  if (PUBLIC_ROUTES.includes(path)) {
+
+  // Check if path is exactly in PUBLIC_ROUTES or starts with /docs
+  if (PUBLIC_ROUTES.includes(path) || path.startsWith('/docs')) {
     return
   }
 
