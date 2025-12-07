@@ -14,6 +14,7 @@ Multi-Tenant Barbershop SaaS Platform backend built for zero-cost deployment on 
 - **Cache/Rate Limiting:** Upstash Redis (HTTP/REST)
 - **Testing:** Vitest + Supertest
 - **Key Libraries:** `zod`, `@fastify/jwt`, `@upstash/ratelimit`, `date-fns`, `web-push`
+- **Always create a to-do test for user**
 
 ## Architecture
 

@@ -78,6 +78,70 @@ Configurar Fastify com plugins essenciais, implementar middleware de validação
   2. Por Tenant: 1000 requisições por 60 segundos
 - Retornar 429 com headers apropriados quando exceder
 
+### Database Security & Performance Improvements
+
+**⚠️ IMPORTANTE:** Pendências identificadas no review do Milestone 1
+
+#### 1. Row Level Security (RLS) - CRITICAL
+
+**Contexto:** Atualmente todas as tabelas estão sem RLS. Como usamos Fastify API (não PostgREST), o isolamento é feito no middleware. Porém, RLS adiciona camada extra de segurança "defense-in-depth" caso haja acesso direto ao banco ou bugs no código.
+
+**Tabelas que precisam de RLS:**
+- `barbershops`
+- `professionals`
+- `clients`
+- `services`
+- `appointments`
+- `transactions`
+
+**Implementação:**
+```sql
+-- Exemplo para tabela professionals
+ALTER TABLE professionals ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Isolamento por tenant"
+  ON professionals
+  FOR ALL
+  USING (barbershopId = current_setting('app.current_tenant')::text);
+```
+
+**Estratégia:**
+- Criar migration `add_rls_policies.sql`
+- Habilitar RLS em todas as tabelas (exceto `_prisma_migrations`)
+- Criar políticas que validem `barbershopId`
+- Configurar `current_setting('app.current_tenant')` no middleware de tenant
+
+**Referência:** [Supabase RLS Documentation](https://supabase.com/docs/guides/database/database-linter?lint=0013_rls_disabled_in_public)
+
+#### 2. Performance Indexes - INFO
+
+**Contexto:** As composite foreign keys adicionadas no Milestone 1 precisam de índices para otimizar queries.
+
+**Índices Faltando:**
+1. `appointments(barbershopId, createdById)` - Para queries de appointments criados por professional
+2. `appointments(barbershopId, serviceId)` - Para queries de appointments por serviço
+3. `transactions(barbershopId, createdById)` - Para queries de transações por professional
+
+**Implementação:**
+```sql
+-- Migration: add_composite_fk_indexes.sql
+CREATE INDEX "appointments_barbershopId_createdById_idx"
+  ON "appointments"("barbershopId", "createdById");
+
+CREATE INDEX "appointments_barbershopId_serviceId_idx"
+  ON "appointments"("barbershopId", "serviceId");
+
+CREATE INDEX "transactions_barbershopId_createdById_idx"
+  ON "transactions"("barbershopId", "createdById");
+```
+
+**Impacto:**
+- Melhora performance de queries que filtram por creator/service
+- Reduz full table scans
+- Especialmente importante com growth de dados
+
+**Referência:** [Supabase Unindexed FK Documentation](https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys)
+
 ### Endpoints
 
 **GET /health** (público, sem tenant)
@@ -105,6 +169,7 @@ Todas as dependências já estão instaladas:
 
 ## Checklist de Testes
 
+### Middleware
 - [ ] `/health` retorna `{ status: "ok" }` (200)
 - [ ] `/docs` serve Swagger UI (200)
 - [ ] Requisição sem header `x-tenant-slug` retorna 404
@@ -116,6 +181,14 @@ Todas as dependências já estão instaladas:
 - [ ] Rate limiting por tenant funciona (429 após 1000 req/60s)
 - [ ] Cache de tenant funciona (Redis)
 - [ ] Testes de integração para middleware passam
+
+### Database Security & Performance
+- [ ] RLS habilitado em todas as tabelas (exceto `_prisma_migrations`)
+- [ ] Políticas RLS criadas para isolamento por `barbershopId`
+- [ ] `current_setting('app.current_tenant')` configurado no middleware
+- [ ] Índices compostos criados para composite FKs
+- [ ] Supabase Advisors não reporta mais erros CRITICAL de RLS
+- [ ] Supabase Advisors não reporta mais warnings de unindexed FKs
 
 ---
 
@@ -130,6 +203,14 @@ Todas as dependências já estão instaladas:
 4. **Rotas Públicas:** `/health` e `/docs` devem ser acessíveis sem tenant para monitoramento e documentação.
 
 5. **TypeScript:** Garantir que os tipos Fastify estejam estendidos corretamente para `tenantId` e `tenantSlug` (já feito no Milestone 0).
+
+6. **Database Security (RLS):** Row Level Security adiciona camada de defesa extra além do middleware. É especialmente importante para:
+   - Prevenir acesso direto ao banco (ex: psql, Supabase Studio)
+   - Proteção contra bugs no código aplicativo
+   - Compliance e auditoria de segurança
+   - **ATENÇÃO:** RLS deve ser configurado ANTES de ir para produção
+
+7. **Database Performance (Indexes):** Composite FKs precisam de índices para evitar performance degradation. Queries sem índices podem causar timeouts em produção quando o volume de dados crescer.
 
 ---
 
