@@ -32,7 +32,7 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 |-----------|--------|-------------|
 | 0 | **COMPLETE** | Project Scaffolding |
 | 1 | **COMPLETE** | Database Schema & Core Infrastructure |
-| 2 | Pending | Fastify App & Core Middleware |
+| 2 | **COMPLETE** | Fastify App & Core Middleware |
 | 3 | Pending | Authentication (JWT + OTP) |
 | 4 | Pending | CRUD (Professionals, Clients, Services) |
 | 5 | Pending | Appointment Management |
@@ -99,15 +99,31 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 
 ## Milestone 2: Fastify App & Core Middleware
 
-**Status:** Pending
+**Status:** COMPLETE ✅
 
 ### Checklist
 
-- [ ] Tenant validation middleware
-- [ ] Rate limiting middleware (IP + tenant)
-- [ ] Integration tests for middleware
-- [ ] `/health` endpoint test
-- [ ] `/docs` Swagger UI test
+- [x] Tenant validation middleware
+  - [x] Validates `x-tenant-slug` header
+  - [x] Caches tenant lookups in Redis
+  - [x] Injects `tenantId` and `tenantSlug` into request
+  - [x] Returns 404 for invalid/missing tenants
+  - [x] Skips validation for public routes
+- [x] Rate limiting middleware (IP + tenant)
+  - [x] IP-based rate limiting (100/60s)
+  - [x] Tenant-based rate limiting (1000/60s)
+  - [x] Returns 429 with headers when exceeded
+  - [x] Skips rate limiting for public routes
+- [x] Database security (RLS)
+  - [x] Enabled RLS on all tables
+  - [x] Created RLS policies for tenant isolation
+  - [x] Added composite indexes for performance
+- [x] Integration tests for middleware
+  - [x] Unit tests for tenant middleware (9 tests)
+  - [x] Unit tests for rate limit middleware (8 tests)
+  - [x] Integration tests with Fastify (10 tests)
+- [x] `/health` endpoint test
+- [x] `/docs` Swagger UI test
 
 ---
 

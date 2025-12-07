@@ -1,5 +1,7 @@
 # Repository Guidelines
 
+- **No final de cada implementação, colocar um passo a passo do que eu (criador do sistema) preciso fazer para confirmar que está tudo funcionando**
+
 ## Project Structure & Module Organization
 - Monorepo via pnpm; backend in `packages/backend`.
 - Entrypoints: `api/index.ts` for Vercel, `src/server.ts` for local using `src/app.ts`.

@@ -4,6 +4,8 @@ import jwt from '@fastify/jwt'
 import cookie from '@fastify/cookie'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
+import { tenantMiddleware } from './middleware/tenant.js'
+import { rateLimitMiddleware } from './middleware/rateLimit.js'
 
 export interface AppOptions {
   logger?: boolean
@@ -79,6 +81,11 @@ export async function buildApp(options: AppOptions = {}): Promise<FastifyInstanc
       deepLinking: true,
     },
   })
+
+  // Register global middlewares
+  // Order matters: tenant validation first, then rate limiting
+  app.addHook('onRequest', tenantMiddleware)
+  app.addHook('onRequest', rateLimitMiddleware)
 
   // Health check endpoint (public, no tenant required)
   app.get(
