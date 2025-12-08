@@ -71,9 +71,15 @@ export class ServiceController {
     try {
       const data = createServiceSchema.parse(request.body)
       const barbershopId = (request as any).tenantId
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      // Require authentication for creating services
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
       }
 
       const service = await serviceService.createService({
@@ -95,9 +101,15 @@ export class ServiceController {
       const { id } = idParamSchema.parse(request.params)
       const data = updateServiceSchema.parse(request.body)
       const barbershopId = (request as any).tenantId
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      // Require authentication for updating services
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
       }
 
       const service = await serviceService.updateService(id, barbershopId, data)
@@ -117,9 +129,15 @@ export class ServiceController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const barbershopId = (request as any).tenantId
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      // Require authentication for deleting services
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
       }
 
       await serviceService.deleteService(id, barbershopId)

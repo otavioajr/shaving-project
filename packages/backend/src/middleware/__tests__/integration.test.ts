@@ -108,9 +108,9 @@ describe('Middleware Integration Tests', () => {
 
     it('should allow request when tenant is valid and active', async () => {
       vi.mocked(getCachedTenant).mockResolvedValue('tenant-id')
-      
+
       // Create a test route that uses tenant info
-      app.get('/api/test-tenant', async (request, reply) => {
+      app.get('/api/test-tenant', async (request, _reply) => {
         return {
           tenantId: request.tenantId,
           tenantSlug: request.tenantSlug,
@@ -134,7 +134,7 @@ describe('Middleware Integration Tests', () => {
       } as any)
       vi.mocked(cacheTenant).mockResolvedValue()
 
-      app.get('/api/test-tenant', async (request, reply) => {
+      app.get('/api/test-tenant', async (request, _reply) => {
         return { tenantId: request.tenantId }
       })
 
@@ -179,7 +179,7 @@ describe('Middleware Integration Tests', () => {
         reset: Date.now() + 60000,
       } as any)
 
-      app.get('/api/test', async (request, reply) => {
+      app.get('/api/test', async (_request, _reply) => {
         return { message: 'ok' }
       })
 

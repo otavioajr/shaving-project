@@ -122,9 +122,15 @@ export class AppointmentController {
       const { id } = idParamSchema.parse(request.params)
       const data = updateAppointmentSchema.parse(request.body)
       const barbershopId = (request as any).tenantId
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      // Require authentication for updating appointments
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
       }
 
       const appointment = await appointmentService.updateAppointment(id, barbershopId, data)
@@ -148,9 +154,15 @@ export class AppointmentController {
       const { id } = idParamSchema.parse(request.params)
       const data = updateStatusSchema.parse(request.body)
       const barbershopId = (request as any).tenantId
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      // Require authentication for updating appointment status
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
       }
 
       const appointment = await appointmentService.updateStatus(id, barbershopId, data)
@@ -170,9 +182,15 @@ export class AppointmentController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const barbershopId = (request as any).tenantId
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      // Require authentication for deleting appointments
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
       }
 
       await appointmentService.deleteAppointment(id, barbershopId)

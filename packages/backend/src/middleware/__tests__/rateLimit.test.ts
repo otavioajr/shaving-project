@@ -165,6 +165,7 @@ describe('rateLimitMiddleware', () => {
         limit: 100,
         remaining: 99,
         reset: Date.now() + 60000,
+        pending: Promise.resolve(),
       })
 
       mockRequest = {
@@ -191,6 +192,7 @@ describe('rateLimitMiddleware', () => {
         limit: 100,
         remaining: 0,
         reset: Date.now() + 60000,
+        pending: Promise.resolve(),
       })
 
       mockRequest = {
@@ -217,6 +219,7 @@ describe('rateLimitMiddleware', () => {
         limit: 100,
         remaining: 99,
         reset: Date.now() + 60000,
+        pending: Promise.resolve(),
       })
 
       mockRequest = {
@@ -241,6 +244,7 @@ describe('rateLimitMiddleware', () => {
         limit: 100,
         remaining: 99,
         reset: Date.now() + 60000,
+        pending: Promise.resolve(),
       })
 
       mockRequest = {
@@ -267,12 +271,14 @@ describe('rateLimitMiddleware', () => {
         limit: 100,
         remaining: 99,
         reset: Date.now() + 60000,
+        pending: Promise.resolve(),
       })
       vi.mocked(tenantRatelimit.limit).mockResolvedValue({
         success: true,
         limit: 1000,
         remaining: 999,
         reset: Date.now() + 60000,
+        pending: Promise.resolve(),
       })
 
       mockRequest = {
@@ -300,12 +306,14 @@ describe('rateLimitMiddleware', () => {
         limit: 100,
         remaining: 99,
         reset: Date.now() + 60000,
+        pending: Promise.resolve(),
       })
       vi.mocked(tenantRatelimit.limit).mockResolvedValue({
         success: false,
         limit: 1000,
         remaining: 0,
         reset: Date.now() + 60000,
+        pending: Promise.resolve(),
       })
 
       mockRequest = {

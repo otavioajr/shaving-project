@@ -80,9 +80,15 @@ export class ProfessionalController {
     try {
       const data = createProfessionalSchema.parse(request.body)
       const barbershopId = (request as any).tenantId
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      // Require authentication for creating professionals
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
       }
 
       const professional = await professionalService.createProfessional({
@@ -110,9 +116,15 @@ export class ProfessionalController {
       const { id } = idParamSchema.parse(request.params)
       const data = updateProfessionalSchema.parse(request.body)
       const barbershopId = (request as any).tenantId
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      // Require authentication for updating professionals
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
       }
 
       const professional = await professionalService.updateProfessional(id, barbershopId, data)
@@ -139,9 +151,15 @@ export class ProfessionalController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const barbershopId = (request as any).tenantId
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      // Require authentication for deleting professionals
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
       }
 
       await professionalService.deleteProfessional(id, barbershopId)
