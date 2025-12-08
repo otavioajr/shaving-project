@@ -43,3 +43,6 @@ temp/
 
 # Type declarations cache
 *.tsbuildinfo
+
+.gemini/
+gha-creds-*.json

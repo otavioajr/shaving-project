@@ -1,6 +1,6 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+---
+trigger: always_on
+---
 
 ## Project Overview
 
@@ -15,6 +15,7 @@ Multi-Tenant Barbershop SaaS Platform backend built for zero-cost deployment on 
 - **Testing:** Vitest + Supertest
 - **Key Libraries:** `zod`, `@fastify/jwt`, `@upstash/ratelimit`, `date-fns`, `web-push`
 - **No final de cada implementação, colocar um passo a passo do que eu (criador do sistema) preciso fazer para confirmar que está tudo funcionando**
+- **Always respond in Portuguese Brazil**
 
 ## Architecture
 

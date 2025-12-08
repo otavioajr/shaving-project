@@ -11,6 +11,8 @@ export const prisma =
       process.env.NODE_ENV === 'development'
         ? ['query', 'error', 'warn']
         : ['error'],
+    // Disable prepared statements for Supabase Connection Pooler (pgBouncer in transaction mode)
+    datasourceUrl: process.env.DATABASE_URL + '?pgbouncer=true',
   })
 
 if (process.env.NODE_ENV !== 'production') {
