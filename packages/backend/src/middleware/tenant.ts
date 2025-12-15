@@ -9,7 +9,7 @@ export async function tenantMiddleware(
   reply: FastifyReply
 ): Promise<void> {
   // Skip middleware for public routes
-  const path = request.url.split('?')[0] // Remove query string
+  const path = (request.url ?? '/').split('?')[0] // Remove query string
 
   // Check if path is exactly in PUBLIC_ROUTES or starts with /docs
   if (PUBLIC_ROUTES.includes(path) || path.startsWith('/docs')) {

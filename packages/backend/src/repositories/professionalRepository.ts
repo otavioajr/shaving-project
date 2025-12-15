@@ -67,21 +67,23 @@ export class ProfessionalRepository {
   }
 
   async update(id: string, barbershopId: string, data: Prisma.ProfessionalUpdateInput): Promise<Professional> {
+    const existing = await prisma.professional.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Professional not found')
+    }
     return prisma.professional.update({
-      where: {
-        id,
-        barbershopId,
-      },
+      where: { id },
       data,
     })
   }
 
   async delete(id: string, barbershopId: string): Promise<Professional> {
+    const existing = await prisma.professional.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Professional not found')
+    }
     return prisma.professional.delete({
-      where: {
-        id,
-        barbershopId,
-      },
+      where: { id },
     })
   }
 }

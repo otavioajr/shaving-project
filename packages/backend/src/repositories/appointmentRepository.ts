@@ -106,16 +106,24 @@ export class AppointmentRepository {
   }
 
   async update(id: string, barbershopId: string, data: Prisma.AppointmentUpdateInput): Promise<Appointment> {
+    const existing = await prisma.appointment.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Appointment not found')
+    }
     return prisma.appointment.update({
-      where: { id, barbershopId },
+      where: { id },
       data,
       include: { professional: true, client: true, service: true, createdBy: true },
     })
   }
 
   async delete(id: string, barbershopId: string): Promise<Appointment> {
+    const existing = await prisma.appointment.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Appointment not found')
+    }
     return prisma.appointment.delete({
-      where: { id, barbershopId },
+      where: { id },
       include: { professional: true, client: true, service: true, createdBy: true },
     })
   }

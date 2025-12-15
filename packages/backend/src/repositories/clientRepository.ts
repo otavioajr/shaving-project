@@ -67,21 +67,23 @@ export class ClientRepository {
   }
 
   async update(id: string, barbershopId: string, data: Prisma.ClientUpdateInput): Promise<Client> {
+    const existing = await prisma.client.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Client not found')
+    }
     return prisma.client.update({
-      where: {
-        id,
-        barbershopId,
-      },
+      where: { id },
       data,
     })
   }
 
   async delete(id: string, barbershopId: string): Promise<Client> {
+    const existing = await prisma.client.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Client not found')
+    }
     return prisma.client.delete({
-      where: {
-        id,
-        barbershopId,
-      },
+      where: { id },
     })
   }
 }

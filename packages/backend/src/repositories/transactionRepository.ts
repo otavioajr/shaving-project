@@ -73,16 +73,24 @@ export class TransactionRepository {
   }
 
   async update(id: string, barbershopId: string, data: Prisma.TransactionUpdateInput): Promise<Transaction> {
+    const existing = await prisma.transaction.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Transaction not found')
+    }
     return prisma.transaction.update({
-      where: { id, barbershopId },
+      where: { id },
       data,
       include: { createdBy: true },
     })
   }
 
   async delete(id: string, barbershopId: string): Promise<Transaction> {
+    const existing = await prisma.transaction.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Transaction not found')
+    }
     return prisma.transaction.delete({
-      where: { id, barbershopId },
+      where: { id },
       include: { createdBy: true },
     })
   }

@@ -91,6 +91,10 @@ export class ProfessionalController {
         return reply.status(401).send({ error: 'Authentication required' })
       }
 
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
+      }
+
       const professional = await professionalService.createProfessional({
         ...data,
         barbershopId,
@@ -127,6 +131,10 @@ export class ProfessionalController {
         return reply.status(401).send({ error: 'Authentication required' })
       }
 
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
+      }
+
       const professional = await professionalService.updateProfessional(id, barbershopId, data)
 
       // Remove password hash from response
@@ -160,6 +168,10 @@ export class ProfessionalController {
       // Require authentication for deleting professionals
       if (!user?.id) {
         return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       await professionalService.deleteProfessional(id, barbershopId)

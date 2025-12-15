@@ -22,7 +22,15 @@ export async function authRoutes(app: FastifyInstance) {
             properties: {
               accessToken: { type: 'string' },
               refreshToken: { type: 'string' },
-              professional: { type: 'object' },
+              professional: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                  email: { type: 'string', format: 'email' },
+                  role: { type: 'string', enum: ['ADMIN', 'BARBER'] },
+                },
+              },
             },
           },
           401: { type: 'object', properties: { error: { type: 'string' } } },
@@ -110,7 +118,22 @@ export async function authRoutes(app: FastifyInstance) {
           },
         },
         response: {
-          200: { type: 'object', properties: { message: { type: 'string' } } },
+          200: {
+            type: 'object',
+            properties: {
+              accessToken: { type: 'string' },
+              refreshToken: { type: 'string' },
+              professional: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                  email: { type: 'string', format: 'email' },
+                  role: { type: 'string', enum: ['ADMIN', 'BARBER'] },
+                },
+              },
+            },
+          },
           401: { type: 'object', properties: { error: { type: 'string' } } },
         },
       },

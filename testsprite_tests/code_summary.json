@@ -1,0 +1,684 @@
+{
+    "tech_stack": [
+        "TypeScript",
+        "Node.js 22",
+        "Fastify",
+        "PostgreSQL",
+        "Prisma ORM",
+        "Upstash Redis",
+        "JWT Authentication",
+        "Zod Validation",
+        "Bcrypt",
+        "Vitest"
+    ],
+    "features": [
+        {
+            "name": "Authentication",
+            "description": "Sistema de autenticação com JWT (access e refresh tokens) e OTP para recuperação de senha",
+            "files": [
+                "src/routes/auth.ts",
+                "src/controllers/authController.ts",
+                "src/services/authService.ts",
+                "src/middleware/auth.ts"
+            ],
+            "api_doc": {
+                "paths": {
+                    "/api/auth/login": {
+                        "post": {
+                            "summary": "Login com email e senha",
+                            "tags": [
+                                "Auth"
+                            ],
+                            "requestBody": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "required": [
+                                                "email",
+                                                "password"
+                                            ],
+                                            "properties": {
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email"
+                                                },
+                                                "password": {
+                                                    "type": "string",
+                                                    "minLength": 6
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "responses": {
+                                "200": {
+                                    "description": "Login successful",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "accessToken": {
+                                                        "type": "string"
+                                                    },
+                                                    "refreshToken": {
+                                                        "type": "string"
+                                                    },
+                                                    "professional": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "/api/auth/refresh": {
+                        "post": {
+                            "summary": "Renovar access token",
+                            "tags": [
+                                "Auth"
+                            ],
+                            "requestBody": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "required": [
+                                                "refreshToken"
+                                            ],
+                                            "properties": {
+                                                "refreshToken": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "/api/auth/logout": {
+                        "post": {
+                            "summary": "Logout do usuário",
+                            "tags": [
+                                "Auth"
+                            ]
+                        }
+                    },
+                    "/api/auth/request-otp": {
+                        "post": {
+                            "summary": "Solicitar código OTP",
+                            "tags": [
+                                "Auth"
+                            ],
+                            "requestBody": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "required": [
+                                                "email"
+                                            ],
+                                            "properties": {
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "/api/auth/verify-otp": {
+                        "post": {
+                            "summary": "Verificar código OTP",
+                            "tags": [
+                                "Auth"
+                            ],
+                            "requestBody": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "required": [
+                                                "email",
+                                                "otp"
+                                            ],
+                                            "properties": {
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email"
+                                                },
+                                                "otp": {
+                                                    "type": "string",
+                                                    "minLength": 6,
+                                                    "maxLength": 6
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Professional Management",
+            "description": "CRUD de profissionais (barbeiros e administradores) com controle de taxa de comissão e roles",
+            "files": [
+                "src/routes/professionals.ts",
+                "src/controllers/professionalController.ts",
+                "src/services/professionalService.ts",
+                "src/repositories/professionalRepository.ts"
+            ],
+            "api_doc": {
+                "paths": {
+                    "/api/professionals": {
+                        "get": {
+                            "summary": "Listar todos os profissionais",
+                            "tags": [
+                                "Professionals"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "name": "x-tenant-slug",
+                                    "in": "header",
+                                    "required": true,
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "name": "page",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "integer",
+                                        "default": 1
+                                    }
+                                },
+                                {
+                                    "name": "limit",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "integer",
+                                        "default": 10
+                                    }
+                                }
+                            ]
+                        },
+                        "post": {
+                            "summary": "Criar novo profissional",
+                            "tags": [
+                                "Professionals"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "name": "x-tenant-slug",
+                                    "in": "header",
+                                    "required": true,
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                }
+                            ],
+                            "requestBody": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "required": [
+                                                "name",
+                                                "email",
+                                                "password",
+                                                "commissionRate"
+                                            ],
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email"
+                                                },
+                                                "password": {
+                                                    "type": "string",
+                                                    "minLength": 6
+                                                },
+                                                "commissionRate": {
+                                                    "type": "number"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "ADMIN",
+                                                        "BARBER"
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "/api/professionals/{id}": {
+                        "get": {
+                            "summary": "Buscar profissional por ID",
+                            "tags": [
+                                "Professionals"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ]
+                        },
+                        "put": {
+                            "summary": "Atualizar profissional",
+                            "tags": [
+                                "Professionals"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ]
+                        },
+                        "delete": {
+                            "summary": "Deletar profissional",
+                            "tags": [
+                                "Professionals"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Client Management",
+            "description": "CRUD de clientes com suporte a notificações Web Push",
+            "files": [
+                "src/routes/clients.ts",
+                "src/controllers/clientController.ts",
+                "src/services/clientService.ts",
+                "src/repositories/clientRepository.ts"
+            ],
+            "api_doc": {
+                "paths": {
+                    "/api/clients": {
+                        "get": {
+                            "summary": "Listar todos os clientes",
+                            "tags": [
+                                "Clients"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "name": "x-tenant-slug",
+                                    "in": "header",
+                                    "required": true,
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "name": "page",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "integer",
+                                        "default": 1
+                                    }
+                                },
+                                {
+                                    "name": "limit",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "integer",
+                                        "default": 10
+                                    }
+                                }
+                            ]
+                        },
+                        "post": {
+                            "summary": "Criar novo cliente",
+                            "tags": [
+                                "Clients"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ]
+                        }
+                    },
+                    "/api/clients/{id}": {
+                        "get": {
+                            "summary": "Buscar cliente por ID",
+                            "tags": [
+                                "Clients"
+                            ]
+                        },
+                        "put": {
+                            "summary": "Atualizar cliente",
+                            "tags": [
+                                "Clients"
+                            ]
+                        },
+                        "delete": {
+                            "summary": "Deletar cliente",
+                            "tags": [
+                                "Clients"
+                            ]
+                        }
+                    },
+                    "/api/clients/{id}/subscribe": {
+                        "post": {
+                            "summary": "Cadastrar subscription de Web Push",
+                            "tags": [
+                                "Clients"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Service Management",
+            "description": "CRUD de serviços oferecidos pela barbearia com preço e duração",
+            "files": [
+                "src/routes/services.ts",
+                "src/controllers/serviceController.ts",
+                "src/services/serviceService.ts",
+                "src/repositories/serviceRepository.ts"
+            ],
+            "api_doc": {
+                "paths": {
+                    "/api/services": {
+                        "get": {
+                            "summary": "Listar todos os serviços",
+                            "tags": [
+                                "Services"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ]
+                        },
+                        "post": {
+                            "summary": "Criar novo serviço",
+                            "tags": [
+                                "Services"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ]
+                        }
+                    },
+                    "/api/services/{id}": {
+                        "get": {
+                            "summary": "Buscar serviço por ID",
+                            "tags": [
+                                "Services"
+                            ]
+                        },
+                        "put": {
+                            "summary": "Atualizar serviço",
+                            "tags": [
+                                "Services"
+                            ]
+                        },
+                        "delete": {
+                            "summary": "Deletar serviço",
+                            "tags": [
+                                "Services"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Appointment Management",
+            "description": "Sistema de agendamentos com validação de conflitos, status tracking e cálculo automático de comissões",
+            "files": [
+                "src/routes/appointments.ts",
+                "src/controllers/appointmentController.ts",
+                "src/services/appointmentService.ts",
+                "src/repositories/appointmentRepository.ts"
+            ],
+            "api_doc": {
+                "paths": {
+                    "/api/appointments": {
+                        "get": {
+                            "summary": "Listar agendamentos",
+                            "tags": [
+                                "Appointments"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "name": "x-tenant-slug",
+                                    "in": "header",
+                                    "required": true
+                                },
+                                {
+                                    "name": "professionalId",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "name": "clientId",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "name": "status",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "name": "startDate",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                {
+                                    "name": "endDate",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                }
+                            ]
+                        },
+                        "post": {
+                            "summary": "Criar novo agendamento",
+                            "tags": [
+                                "Appointments"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ]
+                        }
+                    },
+                    "/api/appointments/{id}": {
+                        "get": {
+                            "summary": "Buscar agendamento por ID"
+                        },
+                        "put": {
+                            "summary": "Atualizar agendamento"
+                        },
+                        "delete": {
+                            "summary": "Cancelar agendamento"
+                        }
+                    },
+                    "/api/appointments/{id}/status": {
+                        "patch": {
+                            "summary": "Atualizar status do agendamento",
+                            "description": "Calcula comissão automaticamente quando status muda para COMPLETED"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Transaction Management",
+            "description": "Gestão de transações financeiras (receitas e despesas) com categorização",
+            "files": [
+                "src/routes/transactions.ts",
+                "src/controllers/transactionController.ts",
+                "src/services/transactionService.ts",
+                "src/repositories/transactionRepository.ts"
+            ],
+            "api_doc": {
+                "paths": {
+                    "/api/transactions": {
+                        "get": {
+                            "summary": "Listar transações",
+                            "tags": [
+                                "Transactions"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "name": "type",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "string",
+                                        "enum": [
+                                            "INCOME",
+                                            "EXPENSE"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "category",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "name": "startDate",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                {
+                                    "name": "endDate",
+                                    "in": "query",
+                                    "schema": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                }
+                            ]
+                        },
+                        "post": {
+                            "summary": "Criar nova transação",
+                            "tags": [
+                                "Transactions"
+                            ],
+                            "security": [
+                                {
+                                    "bearerAuth": []
+                                }
+                            ]
+                        }
+                    },
+                    "/api/transactions/{id}": {
+                        "get": {
+                            "summary": "Buscar transação por ID"
+                        },
+                        "put": {
+                            "summary": "Atualizar transação"
+                        },
+                        "delete": {
+                            "summary": "Deletar transação"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Barbershop Management",
+            "description": "Gestão de tenants (barbearias) com controle de ativação",
+            "files": [
+                "src/routes/barbershops.ts",
+                "src/controllers/barbershopController.ts"
+            ],
+            "api_doc": {
+                "paths": {
+                    "/api/barbershops": {
+                        "get": {
+                            "summary": "Listar todas as barbearias",
+                            "tags": [
+                                "Barbershops"
+                            ]
+                        }
+                    },
+                    "/api/barbershops/{slug}": {
+                        "get": {
+                            "summary": "Buscar barbearia por slug",
+                            "tags": [
+                                "Barbershops"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
