@@ -4,6 +4,16 @@ import jwt from '@fastify/jwt'
 import cookie from '@fastify/cookie'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
+import { tenantMiddleware } from './middleware/tenant.js'
+import { rateLimitMiddleware } from './middleware/rateLimit.js'
+import { authMiddleware } from './middleware/auth.js'
+import { professionalRoutes } from './routes/professionals.js'
+import { clientRoutes } from './routes/clients.js'
+import { serviceRoutes } from './routes/services.js'
+import { appointmentRoutes } from './routes/appointments.js'
+import { transactionRoutes } from './routes/transactions.js'
+import { authRoutes } from './routes/auth.js'
+import { barbershopRoutes } from './routes/barbershops.js'
 
 export interface AppOptions {
   logger?: boolean
@@ -80,6 +90,12 @@ export async function buildApp(options: AppOptions = {}): Promise<FastifyInstanc
     },
   })
 
+  // Register global middlewares
+  // Order matters: tenant validation first, then auth, then rate limiting
+  app.addHook('onRequest', tenantMiddleware)
+  app.addHook('onRequest', authMiddleware)
+  app.addHook('onRequest', rateLimitMiddleware)
+
   // Health check endpoint (public, no tenant required)
   app.get(
     '/health',
@@ -125,6 +141,15 @@ export async function buildApp(options: AppOptions = {}): Promise<FastifyInstanc
       }
     }
   )
+
+  // Register business routes
+  await app.register(professionalRoutes, { prefix: '/api' })
+  await app.register(clientRoutes, { prefix: '/api' })
+  await app.register(serviceRoutes, { prefix: '/api' })
+  await app.register(appointmentRoutes, { prefix: '/api' })
+  await app.register(transactionRoutes, { prefix: '/api' })
+  await app.register(authRoutes, { prefix: '/api' })
+  await app.register(barbershopRoutes, { prefix: '/api' })
 
   return app
 }

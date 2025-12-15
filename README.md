@@ -61,6 +61,9 @@ pnpm db:generate
 # Run database migrations
 pnpm db:migrate
 
+# Seed database with test data (optional but recommended)
+pnpm db:seed
+
 # Start development server
 pnpm dev
 ```
@@ -75,6 +78,23 @@ See `packages/backend/.env.example` for all required variables:
 - `UPSTASH_REDIS_REST_TOKEN` - Redis REST token
 - `JWT_SECRET` - JWT signing secret (min 32 chars)
 - `CRON_SECRET` - Secret for cron endpoint protection
+
+## Database Seeding
+
+For local development, you can populate the database with test data:
+
+```bash
+pnpm db:seed
+```
+
+This creates:
+- **Barbershop:** `barbearia-teste` (slug for tenant header)
+- **Admin User:** `admin@barbearia-teste.com` / `senha123`
+- **Barber User:** `barber@barbearia-teste.com` / `senha123`
+- **Test Client:** João Silva
+- **Services:** Corte de Cabelo, Barba, Corte + Barba
+
+The script is idempotent and safe to run multiple times.
 
 ## Development
 
@@ -103,6 +123,15 @@ When the server is running, access Swagger UI at:
 http://localhost:3000/docs
 ```
 
+The Swagger UI is publicly accessible and does not require tenant authentication.
+
+## Security Features
+
+- **Row Level Security (RLS):** Enabled on all database tables for defense-in-depth tenant isolation
+- **Rate Limiting:** Dual-layer protection (IP + Tenant) using Upstash Redis
+- **Tenant Validation:** All requests validated against active barbershops
+- **Tenant Caching:** Redis cache reduces database queries (5-minute TTL)
+
 ## Multi-Tenant Architecture
 
 All requests (except public endpoints) require the `x-tenant-slug` header:
@@ -111,11 +140,24 @@ All requests (except public endpoints) require the `x-tenant-slug` header:
 curl -H "x-tenant-slug: my-barbershop" http://localhost:3000/api/...
 ```
 
+The middleware validates the tenant slug, caches lookups in Redis (5-minute TTL), and injects `tenantId` and `tenantSlug` into the request context.
+
+### Rate Limiting
+
+The API implements two-layer rate limiting:
+- **IP-based:** 100 requests per 60 seconds
+- **Tenant-based:** 1000 requests per 60 seconds
+
+Rate limit headers are included in all responses:
+- `X-RateLimit-Limit` - Maximum requests allowed
+- `X-RateLimit-Remaining` - Remaining requests in window
+- `X-RateLimit-Reset` - Reset time (ISO 8601)
+
 ### Public Endpoints
 
-- `GET /health` - Health check
-- `GET /docs` - Swagger UI
-- `POST /barbershops` - Self-registration
+- `GET /health` - Health check (no tenant/rate limit)
+- `GET /docs` - Swagger UI (no tenant/rate limit)
+- `GET /` - API info (no tenant/rate limit)
 
 ## Deployment
 

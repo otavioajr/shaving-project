@@ -10,8 +10,122 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Next Steps
-- Milestone 2: Fastify App & Core Middleware
 - Milestone 3: Authentication (JWT + OTP)
+
+---
+
+## [0.3.1] - 2025-12-07
+
+### Database Seed Script - COMPLETE ✅
+
+#### Added
+
+**Seed Script:**
+- `prisma/seed.ts` - Development database seeder
+  - Idempotent script (safe to run multiple times)
+  - Creates 1 barbershop with slug `barbearia-teste`
+  - Creates 2 professionals (admin + barber with credentials)
+  - Creates 1 test client
+  - Creates 3 services (Corte, Barba, Corte+Barba)
+  - Uses `DIRECT_URL` to bypass connection pooler (avoids prepared statement cache issues)
+  - Outputs test credentials for manual API testing
+
+**Documentation:**
+- Updated `docs/QUICK-TEST.md` with seed instructions and credential info
+- Added "Testar com Dados de Seed" section with example curl requests
+- Clear steps in preamble: install → db:generate → **db:seed** → dev
+
+#### Technical Details
+
+- **Idempotency:** Script checks if data exists before creating (uses `findUnique`/`findFirst`)
+- **Connection:** Uses `DIRECT_URL` environment variable to avoid Supabase pooler prepared statement cache
+- **Error Handling:** Tries/catch with proper `prisma.$disconnect()` cleanup
+- **Output:** Clear console logs (✅ created, ✓ already exists) + test credentials summary
+
+#### Verified
+
+- ✅ `pnpm db:seed` runs successfully (first execution)
+- ✅ `pnpm db:seed` is idempotent (second execution shows ✓ already exists)
+- ✅ Barbershop slug `barbearia-teste` is created and ready for API tests
+- ✅ Test credentials are printed and ready for use
+
+---
+
+## [0.3.0] - 2025-12-07
+
+### Milestone 2: Fastify App & Core Middleware - COMPLETE ✅
+
+#### Added
+
+**Middleware:**
+- `src/middleware/tenant.ts` - Tenant validation middleware
+  - Validates `x-tenant-slug` header
+  - Caches tenant lookups in Redis (5-minute TTL)
+  - Injects `tenantId` and `tenantSlug` into request context
+  - Returns 404 for missing/invalid/inactive tenants
+  - Skips validation for public routes (`/health`, `/docs`, `/`)
+- `src/middleware/rateLimit.ts` - Rate limiting middleware
+  - IP-based rate limiting (100 requests per 60 seconds)
+  - Tenant-based rate limiting (1000 requests per 60 seconds)
+  - Uses Upstash Redis for distributed rate limiting
+  - Returns 429 with appropriate headers when limits exceeded
+  - Skips rate limiting for public routes
+
+**Database Migrations:**
+- `prisma/migrations/20251207085846_add_rls_and_indexes/migration.sql` - RLS and performance indexes
+  - Enabled Row Level Security (RLS) on all tables (barbershops, professionals, clients, services, appointments, transactions)
+  - Created RLS policies for tenant isolation using `current_setting('app.current_tenant')`
+  - Added composite indexes for performance:
+    - `appointments(barbershopId, createdById)` - Optimizes queries filtering by creator
+    - `appointments(barbershopId, serviceId)` - Optimizes queries filtering by service
+    - `transactions(barbershopId, createdById)` - Optimizes queries filtering by creator
+  - Policies designed to work with Prisma in serverless (fallback to application-level filtering)
+
+**Application Updates:**
+- Updated `src/app.ts` to register global middlewares
+  - Tenant middleware registered first (validates tenant before rate limiting)
+  - Rate limit middleware registered second
+  - Public routes (`/health`, `/docs`, `/`) bypass both middlewares
+
+**Tests:**
+- `src/middleware/__tests__/tenant.test.ts` - 9 unit tests for tenant middleware
+  - Tests public route skipping
+  - Tests missing header handling
+  - Tests invalid/inactive tenant handling
+  - Tests caching behavior
+  - Tests tenant injection into request context
+- `src/middleware/__tests__/rateLimit.test.ts` - 8 unit tests for rate limit middleware
+  - Tests public route skipping
+  - Tests IP rate limiting
+  - Tests tenant rate limiting
+  - Tests header detection (x-forwarded-for, x-real-ip)
+  - Tests 429 response with headers
+- `src/middleware/__tests__/integration.test.ts` - 10 integration tests
+  - Tests public routes accessibility
+  - Tests tenant middleware integration with Fastify
+  - Tests rate limit middleware integration
+  - Tests caching behavior in real requests
+  - Tests tenant injection in route handlers
+
+#### Verified
+
+- ✅ Middleware registered and working in Fastify app
+- ✅ Public routes (`/health`, `/docs`, `/`) accessible without tenant header
+- ✅ Tenant validation returns 404 for missing/invalid tenants
+- ✅ Rate limiting returns 429 when limits exceeded
+- ✅ Tenant caching works (Redis lookup before database)
+- ✅ RLS enabled on all tables
+- ✅ Composite indexes created for performance
+- ✅ `npm test` - All middleware tests passing (27 tests total)
+
+#### Technical Details
+
+- **Middleware Order:** Tenant validation → Rate limiting (both global hooks)
+- **Cache Strategy:** Tenant lookups cached for 5 minutes in Redis
+- **Rate Limits:** IP (100/60s), Tenant (1000/60s) using sliding window
+- **RLS Strategy:** Defense-in-depth - primary isolation via application code, RLS adds protection for direct database access
+- **IP Detection:** Supports `x-forwarded-for`, `x-real-ip`, and direct `request.ip`
+- **Error Responses:** Consistent 404 for tenant errors, 429 for rate limit errors
 
 ---
 
@@ -199,8 +313,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Project Metadata
 
 **Started:** 2025-12-06
-**Current Version:** 0.2.0
-**Status:** Milestone 0 Complete, Milestone 1 Complete, Milestone 2 In Progress
+**Current Version:** 0.3.0
+**Status:** Milestone 0 Complete, Milestone 1 Complete, Milestone 2 Complete, Milestone 3 Pending
 
 ### Key Architecture Principles
 
