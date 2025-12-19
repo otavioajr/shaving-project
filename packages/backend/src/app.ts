@@ -14,6 +14,7 @@ import { appointmentRoutes } from './routes/appointments.js'
 import { transactionRoutes } from './routes/transactions.js'
 import { authRoutes } from './routes/auth.js'
 import { barbershopRoutes } from './routes/barbershops.js'
+import { serializeResponse } from './lib/serializer.js'
 
 export interface AppOptions {
   logger?: boolean
@@ -95,6 +96,14 @@ export async function buildApp(options: AppOptions = {}): Promise<FastifyInstanc
   app.addHook('onRequest', tenantMiddleware)
   app.addHook('onRequest', authMiddleware)
   app.addHook('onRequest', rateLimitMiddleware)
+  app.addHook('preSerialization', async (request, _reply, payload) => {
+    const path = (request.url ?? '/').split('?')[0]
+    if (!path.startsWith('/api')) {
+      return payload
+    }
+
+    return serializeResponse(payload)
+  })
 
   // Health check endpoint (public, no tenant required)
   app.get(

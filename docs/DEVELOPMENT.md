@@ -8,21 +8,21 @@ This document tracks the development progress of the Barbershop SaaS Platform.
 
 Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qualquer milestone, leia:
 
-1. **[docs/plans/principal-plan.md](docs/plans/principal-plan.md)** - Visão geral completa do projeto
-2. **[docs/CHANGELOG.md](docs/CHANGELOG.md)** - Histórico de mudanças
+1. **[plans/principal-plan.md](plans/principal-plan.md)** - Visão geral completa do projeto
+2. **[CHANGELOG.md](CHANGELOG.md)** - Histórico de mudanças
 3. O plano específico do milestone que você vai executar
 
 ### Planos por Milestone
 
-- **Milestone 1:** [01-database-schema.md](docs/plans/01-database-schema.md)
-- **Milestone 2:** [02-fastify-middleware.md](docs/plans/02-fastify-middleware.md)
-- **Milestone 3:** [03-authentication.md](docs/plans/03-authentication.md)
-- **Milestone 4:** [04-crud-entities.md](docs/plans/04-crud-entities.md)
-- **Milestone 5:** [05-appointments.md](docs/plans/05-appointments.md)
-- **Milestone 6:** [06-financial.md](docs/plans/06-financial.md)
-- **Milestone 7:** [07-notifications.md](docs/plans/07-notifications.md)
-- **Milestone 8:** [08-barbershop-management.md](docs/plans/08-barbershop-management.md)
-- **Milestone 9:** [09-testing-deployment.md](docs/plans/09-testing-deployment.md)
+- **Milestone 1:** [01-database-schema.md](plans/01-database-schema.md)
+- **Milestone 2:** [02-fastify-middleware.md](plans/02-fastify-middleware.md)
+- **Milestone 3:** [03-authentication.md](plans/03-authentication.md)
+- **Milestone 4:** [04-crud-entities.md](plans/04-crud-entities.md)
+- **Milestone 5:** [05-appointments.md](plans/05-appointments.md)
+- **Milestone 6:** [06-financial.md](plans/06-financial.md)
+- **Milestone 7:** [07-notifications.md](plans/07-notifications.md)
+- **Milestone 8:** [08-barbershop-management.md](plans/08-barbershop-management.md)
+- **Milestone 9:** [09-testing-deployment.md](plans/09-testing-deployment.md)
 
 ---
 
@@ -34,11 +34,11 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 | 1 | **COMPLETE** ✅ | Database Schema & Core Infrastructure |
 | 2 | **COMPLETE** ✅ | Fastify App & Core Middleware |
 | 3 | **COMPLETE** ✅ | Authentication (JWT + OTP) |
-| 4 | **COMPLETE** ✅ | CRUD (Professionals, Clients, Services) |
-| 5 | **COMPLETE** ✅ | Appointment Management |
-| 6 | **COMPLETE** ✅ | Financial Management (Transactions) |
-| 7 | Pending | Notifications (Web Push + Cron) |
-| 8 | **COMPLETE** ✅ | Barbershop Management |
+| 4 | In Progress | CRUD (Professionals, Clients, Services) |
+| 5 | In Progress | Appointment Management |
+| 6 | In Progress | Financial Management |
+| 7 | In Progress | Notifications (Web Push + Cron) |
+| 8 | In Progress | Barbershop Management |
 | 9 | In Progress | Testing, Docs & Deployment |
 
 ---
@@ -142,9 +142,9 @@ Quando for fazer deploy em **produção**, revise obrigatoriamente as variáveis
   - [x] Created RLS policies for tenant isolation
   - [x] Added composite indexes for performance
 - [x] Integration tests for middleware
-  - [x] Unit tests for tenant middleware (9 tests)
-  - [x] Unit tests for rate limit middleware (8 tests)
-  - [x] Integration tests with Fastify (10 tests)
+  - [x] Unit tests for tenant middleware (12 tests)
+  - [x] Unit tests for rate limit middleware (13 tests)
+  - [x] Integration tests with Fastify (11 tests)
 - [x] `/health` endpoint test
 - [x] `/docs` Swagger UI test
 
@@ -182,7 +182,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - [x] Auth controller (login, OTP, refresh, logout)
   - `src/controllers/authController.ts` - All auth endpoints
 - [x] Auth middleware (JWT verification, roles)
-  - `src/middleware/auth.ts` - Token verification, RBAC
+  - `src/middleware/auth.ts` - Token verification (RBAC ainda não aplicado)
 - [x] Unit tests for auth service
 - [x] Integration tests for auth endpoints
 
@@ -198,7 +198,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ## Milestone 4: CRUD (Professionals, Clients, Services)
 
-**Status:** COMPLETE ✅
+**Status:** IN PROGRESS
 
 ### Checklist
 
@@ -219,15 +219,16 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
   - `src/routes/services.ts`
 - [x] Pagination implementation
   - All list endpoints return `{ data: [], pagination: { page, limit, total, totalPages } }`
-- [x] Role-based access control
-- [x] Swagger documentation
-- [x] Unit and integration tests
+- [x] Auth required for create/update/delete operations
+- [ ] Role-based access control (RBAC) by `role` (ADMIN vs BARBER)
+- [x] Swagger documentation (schemas in routes)
+- [ ] Unit and integration tests for CRUD endpoints
 
 ---
 
 ## Milestone 5: Appointment Management
 
-**Status:** COMPLETE ✅
+**Status:** IN PROGRESS
 
 ### Checklist
 
@@ -239,18 +240,19 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - [x] Conflict validation logic
   - Prevents double-booking for same professional/time
   - Ignores CANCELLED appointments in conflict check
-- [x] Status transitions
-  - PENDING → CONFIRMED → COMPLETED/CANCELLED/NO_SHOW
+- [ ] Status transitions validation (enforce allowed changes)
+  - Planned: PENDING → CONFIRMED → COMPLETED/CANCELLED/NO_SHOW
 - [x] Commission calculation on COMPLETED
   - Snapshot pattern: price and commission stored at creation/completion
 - [x] Filtering (date, status, professional)
-- [x] Tests
+- [x] Auth required for create/update/delete operations
+- [ ] Tests
 
 ---
 
 ## Milestone 6: Financial Management
 
-**Status:** COMPLETE ✅
+**Status:** IN PROGRESS
 
 ### Checklist
 
@@ -259,20 +261,21 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
   - `src/services/transactionService.ts`
   - `src/controllers/transactionController.ts`
   - `src/routes/transactions.ts`
-- [x] Financial summary endpoint
-- [x] Commission report endpoint (via appointments)
-- [x] Tests
+- [x] Auth required for create/update/delete operations
+- [ ] Financial summary endpoint
+- [ ] Commission report endpoint (via appointments)
+- [ ] Tests
 
 ---
 
 ## Milestone 7: Notifications (Web Push + Cron)
 
-**Status:** Pending
+**Status:** IN PROGRESS
 
 ### Checklist
 
-- [ ] Web Push service
-- [ ] Push subscription management
+- [x] Persist push subscription on Client (`pushSubscription` field)
+- [ ] Web Push service (send notifications)
 - [ ] Cron endpoint (`/api/cron/notify`)
 - [ ] CRON_SECRET protection
 - [ ] Tests
@@ -281,44 +284,51 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ## Milestone 8: Barbershop Management
 
-**Status:** COMPLETE ✅
+**Status:** IN PROGRESS
 
 ### Checklist
 
-- [x] Self-registration endpoint (if applicable)
+- [ ] Self-registration endpoint (if applicable)
 - [x] Seed script (`prisma/seed.ts`)
 - [x] Barbershop read/update endpoints
   - `src/controllers/barbershopController.ts`
-  - `src/routes/barbershop.ts`
-- [x] Slug validation
-- [x] Tests
+  - `src/routes/barbershops.ts`
+- [ ] Slug validation (for create/update slug operations)
+- [ ] Require auth/RBAC for barbershop update
+- [ ] Tests
 
 ---
 
 ## Milestone 9: Testing, Docs & Deployment
 
-**Status:** In Progress
+**Status:** IN PROGRESS
 
 ### Checklist
 
-- [x] Test coverage >= 80% (Vitest: 67/67 passing)
+- [x] `pnpm test` passing (Vitest: 68/68 ✅)
+- [ ] Test coverage >= 80% (current: ~58% lines/stmts on `pnpm test:coverage`)
 - [x] Complete Swagger documentation
 - [x] README with setup instructions
 - [ ] GitHub Actions CI workflow
 - [ ] Vercel deployment
 - [ ] Production health check
-- [x] TestSprite E2E integration (4/10 passing, fixes documented)
+- [x] TestSprite E2E integration (10/10 passing, report available)
+
+### Maintenance Notes
+
+- 2025-12-19: Hook global de pre-serialization para converter Prisma Decimal em `number` e `Date` em ISO string nas respostas `/api`.
 
 ---
 
 ## TestSprite E2E Testing
 
-**Status:** Integrated (Fixes Pending)
+**Status:** Integrated (Current suite passing)
 
-### Test Results (2025-12-16)
+### Test Results (2025-12-18)
 
-**Vitest (Unit Tests):** 67/67 ✅ (100%)
-**TestSprite (E2E):** 4/10 (40%)
+**Vitest (Unit Tests):** 68/68 ✅
+**Vitest Coverage:** ~58% (target: 80%)
+**TestSprite (E2E):** 10/10 ✅ (100%)
 
 ### Reports & Plans
 
@@ -326,19 +336,9 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - **Plan A (Fix Tests):** `docs/plans/10-testsprite-fix-tests.md`
 - **Plan B (OTP Endpoint):** `docs/plans/11-testsprite-otp-endpoint.md`
 
-### Issue Summary
+### Notes
 
-| Category | Tests | Root Cause |
-|----------|-------|------------|
-| Schema Mismatch | TC005, TC006 | Generated tests used wrong field names |
-| Error Code | TC007 | Expected 401/403, API returns 404 for invalid tenant |
-| OTP Dependency | TC004, TC009, TC010 | Tests can't access Redis OTP |
-| False Positive | TC008 | Skips tests when OTP unavailable |
-
-### Next Steps
-
-1. Execute Plan A to fix schema mismatches (estimated: 9/10 pass)
-2. Optional: Execute Plan B for full OTP E2E testing
+- Earlier TestSprite failures (schema mismatch / tenant error code expectations / OTP dependency) were addressed; Plan A/B remain as reference in `docs/plans/`.
 
 ---
 
@@ -349,7 +349,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 1. **Prisma Singleton:** Always use `globalThis` pattern to prevent connection exhaustion in serverless
 2. **OTP Storage:** NEVER store in PostgreSQL, only Redis with TTL
 3. **Tenant Isolation:** ALL queries MUST filter by `barbershopId`
-4. **Pagination:** ALL listing routes MUST require `page` and `limit`
+4. **Pagination:** ALL listing routes MUST implement pagination via `page`/`limit` (defaults ok)
 5. **Snapshots:** Store price/commission at transaction time
 
 ### Infrastructure
@@ -360,4 +360,4 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ---
 
-*Last updated: $(date)*
+*Last updated: 2025-12-19*

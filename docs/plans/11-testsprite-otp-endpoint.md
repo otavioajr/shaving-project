@@ -16,6 +16,10 @@ Add a test-only endpoint to retrieve OTP codes from Redis, enabling true E2E tes
 
 **Use Case:** TestSprite (or other E2E test frameworks) can complete the full OTP workflow without needing direct Redis access.
 
+**Status:** Implemented
+
+**Implemented at:** `packages/backend/src/routes/auth.ts` (behind `ENABLE_TEST_OTP_ENDPOINT=true` and `NODE_ENV!=production`)
+
 ---
 
 ## Security Considerations
