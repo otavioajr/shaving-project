@@ -71,6 +71,21 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
   pnpm test:coverage
   ```
 
+## TestSprite (E2E)
+Para rodar os testes E2E gerados pelo TestSprite contra o backend local:
+
+1. No `packages/backend/.env`, habilite (somente dev/test):
+   ```bash
+   ENABLE_TEST_OTP_ENDPOINT="true"
+   ```
+   **IMPORTANTE:** em produção isso deve ficar `false` e `NODE_ENV` deve ser `production`.
+2. Suba o backend: `pnpm dev`
+3. Rode os testes gerados (exemplos):
+   ```bash
+   python3 testsprite_tests/TC004_request_and_verify_otp_workflow.py
+   python3 testsprite_tests/TC005_crud_operations_for_professionals_with_tenant_isolation.py
+   ```
+
 Pronto: se os comandos acima passarem e as respostas baterem com o esperado, o que já está implementado está funcionando.
 
 ---

@@ -1,6 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { appointmentService } from '../services/appointmentService.js'
-import { serializeResponse } from '../lib/serializer.js'
 import { z } from 'zod'
 
 const createAppointmentSchema = z.object({
@@ -48,7 +47,7 @@ export class AppointmentController {
       }
 
       const result = await appointmentService.listAppointments(barbershopId, { page, limit }, filters)
-      return reply.status(200).send(serializeResponse(result))
+      return reply.status(200).send(result)
     } catch (error) {
       if (error instanceof z.ZodError) {
         return reply.status(400).send({ error: 'Validation failed', details: error.errors })
@@ -72,7 +71,7 @@ export class AppointmentController {
         return reply.status(404).send({ error: 'Appointment not found' })
       }
 
-      return reply.status(200).send(serializeResponse(appointment))
+      return reply.status(200).send(appointment)
     } catch (error) {
       if (error instanceof z.ZodError) {
         return reply.status(400).send({ error: 'Validation failed', details: error.errors })
@@ -101,7 +100,7 @@ export class AppointmentController {
         createdById: userId,
       })
 
-      return reply.status(201).send(serializeResponse(appointment))
+      return reply.status(201).send(appointment)
     } catch (error) {
       if (error instanceof z.ZodError) {
         return reply.status(400).send({ error: 'Validation failed', details: error.errors })
@@ -134,7 +133,7 @@ export class AppointmentController {
       }
 
       const appointment = await appointmentService.updateAppointment(id, barbershopId, data)
-      return reply.status(200).send(serializeResponse(appointment))
+      return reply.status(200).send(appointment)
     } catch (error) {
       if (error instanceof z.ZodError) {
         return reply.status(400).send({ error: 'Validation failed', details: error.errors })
@@ -166,7 +165,7 @@ export class AppointmentController {
       }
 
       const appointment = await appointmentService.updateStatus(id, barbershopId, data)
-      return reply.status(200).send(serializeResponse(appointment))
+      return reply.status(200).send(appointment)
     } catch (error) {
       if (error instanceof z.ZodError) {
         return reply.status(400).send({ error: 'Validation failed', details: error.errors })

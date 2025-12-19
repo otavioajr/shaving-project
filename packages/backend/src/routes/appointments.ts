@@ -1,6 +1,56 @@
 import type { FastifyInstance } from 'fastify'
 import { appointmentController } from '../controllers/appointmentController.js'
 
+const errorResponseSchema = {
+  type: 'object',
+  properties: {
+    error: { type: 'string' },
+    message: { type: 'string' },
+    details: { type: 'array' },
+  },
+  additionalProperties: true,
+} as const
+
+const paginationSchema = {
+  type: 'object',
+  properties: {
+    page: { type: 'number' },
+    limit: { type: 'number' },
+    total: { type: 'number' },
+    totalPages: { type: 'number' },
+  },
+  additionalProperties: true,
+} as const
+
+const appointmentSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    barbershopId: { type: 'string' },
+    professionalId: { type: 'string' },
+    clientId: { type: 'string' },
+    serviceId: { type: 'string' },
+    createdById: { type: 'string' },
+    date: { type: 'string', format: 'date-time' },
+    status: { type: 'string', enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'] },
+    price: { type: 'number' },
+    commissionValue: { type: 'number', nullable: true },
+    notes: { type: 'string', nullable: true },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+  },
+  additionalProperties: true,
+} as const
+
+const appointmentListSchema = {
+  type: 'object',
+  properties: {
+    data: { type: 'array', items: appointmentSchema },
+    pagination: paginationSchema,
+  },
+  additionalProperties: true,
+} as const
+
 export async function appointmentRoutes(app: FastifyInstance) {
   app.get(
     '/appointments',
@@ -22,11 +72,7 @@ export async function appointmentRoutes(app: FastifyInstance) {
         },
         response: {
           200: {
-            type: 'object',
-            properties: {
-              data: { type: 'array' },
-              pagination: { type: 'object' },
-            },
+            ...appointmentListSchema,
           },
         },
       },
@@ -41,7 +87,7 @@ export async function appointmentRoutes(app: FastifyInstance) {
         tags: ['Appointments'],
         summary: 'Get appointment by ID',
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
-        response: { 200: { type: 'object' }, 404: { type: 'object' } },
+        response: { 200: appointmentSchema, 404: errorResponseSchema },
       },
     },
     appointmentController.getById.bind(appointmentController)
@@ -64,7 +110,13 @@ export async function appointmentRoutes(app: FastifyInstance) {
             notes: { type: 'string' },
           },
         },
-        response: { 201: { type: 'object' }, 409: { type: 'object' } },
+        response: {
+          201: appointmentSchema,
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          404: errorResponseSchema,
+          409: errorResponseSchema,
+        },
       },
     },
     appointmentController.create.bind(appointmentController)
@@ -87,7 +139,13 @@ export async function appointmentRoutes(app: FastifyInstance) {
             notes: { type: 'string' },
           },
         },
-        response: { 200: { type: 'object' }, 404: { type: 'object' }, 409: { type: 'object' } },
+        response: {
+          200: appointmentSchema,
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          404: errorResponseSchema,
+          409: errorResponseSchema,
+        },
       },
     },
     appointmentController.update.bind(appointmentController)
@@ -107,7 +165,7 @@ export async function appointmentRoutes(app: FastifyInstance) {
             status: { type: 'string', enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'] },
           },
         },
-        response: { 200: { type: 'object' }, 404: { type: 'object' } },
+        response: { 200: appointmentSchema, 400: errorResponseSchema, 401: errorResponseSchema, 404: errorResponseSchema },
       },
     },
     appointmentController.updateStatus.bind(appointmentController)
@@ -120,7 +178,7 @@ export async function appointmentRoutes(app: FastifyInstance) {
         tags: ['Appointments'],
         summary: 'Delete appointment',
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
-        response: { 204: { type: 'null' }, 404: { type: 'object' } },
+        response: { 204: { type: 'null' }, 400: errorResponseSchema, 401: errorResponseSchema, 404: errorResponseSchema },
       },
     },
     appointmentController.delete.bind(appointmentController)
