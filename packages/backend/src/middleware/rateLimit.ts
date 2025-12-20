@@ -14,7 +14,7 @@ export async function rateLimitMiddleware(
   }
 
   // Skip rate limiting for public routes
-  const path = request.url.split('?')[0] // Remove query string
+  const path = (request.url || request.raw?.url || '/').split('?')[0] // Remove query string
 
   // Check if path is exactly in PUBLIC_ROUTES or starts with /docs
   if (PUBLIC_ROUTES.includes(path) || path.startsWith('/docs')) {
@@ -30,7 +30,7 @@ export async function rateLimitMiddleware(
 
   // Rate limit by IP
   const ipLimit = await ipRatelimit.limit(clientIp)
-  
+
   if (!ipLimit.success) {
     setRateLimitHeaders(ipLimit)
     reply.status(429).send({
@@ -45,7 +45,7 @@ export async function rateLimitMiddleware(
   // Rate limit by tenant (if tenant is available)
   if (request.tenantId) {
     const tenantLimit = await tenantRatelimit.limit(request.tenantId)
-    
+
     if (!tenantLimit.success) {
       setRateLimitHeaders(tenantLimit)
       reply.status(429).send({

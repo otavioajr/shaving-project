@@ -9,8 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- API agora serializa Prisma Decimal como `number` (e `Date` como ISO string) nas respostas `/api` para manter o contrato com os schemas.
+
+### Docs
+- Alinhado `docs/DEVELOPMENT.md` e `docs/QUICK-TEST.md` com o estado atual do backend (status de milestones, números de testes/cobertura e TestSprite).
+- Corrigidos links relativos em `docs/plans/*.md` para navegação correta.
+
 ### Next Steps
-- Milestone 3: Authentication (JWT + OTP)
+- Milestone 4: aplicar RBAC (roles) e testes do CRUD
+- Milestone 5: validar transições de status e testes de appointments
+- Milestone 6: adicionar endpoints de summary/commission report e testes
+- Milestone 8: proteger update de barbershop com auth/RBAC
+- Milestone 9: CI (lint/test), deploy Vercel e elevar cobertura para >= 80%
 
 ---
 

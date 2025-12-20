@@ -2,10 +2,15 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { buildApp } from '../../app.js'
 import { prisma } from '../../lib/prisma.js'
 import { ipRatelimit, tenantRatelimit, getCachedTenant, cacheTenant } from '../../lib/redis.js'
-import request from 'supertest'
 
 // Mock dependencies
-vi.mock('../../lib/prisma.js')
+vi.mock('../../lib/prisma.js', () => ({
+  prisma: {
+    barbershop: {
+      findUnique: vi.fn(),
+    },
+  },
+}))
 vi.mock('../../lib/redis.js', () => ({
   redis: {},
   ipRatelimit: {
@@ -31,6 +36,18 @@ describe('Middleware Integration Tests', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
+    vi.mocked(ipRatelimit.limit).mockResolvedValue({
+      success: true,
+      limit: 100,
+      remaining: 99,
+      reset: Date.now() + 60000,
+    } as any)
+    vi.mocked(tenantRatelimit.limit).mockResolvedValue({
+      success: true,
+      limit: 1000,
+      remaining: 999,
+      reset: Date.now() + 60000,
+    } as any)
     app = await buildApp({ logger: false })
   })
 
@@ -40,54 +57,68 @@ describe('Middleware Integration Tests', () => {
 
   describe('Public Routes', () => {
     it('should allow access to /health without tenant header', async () => {
-      const response = await request(app.server)
-        .get('/health')
-        .expect(200)
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+      })
 
-      expect(response.body).toHaveProperty('status', 'ok')
-      expect(response.body).toHaveProperty('timestamp')
-      expect(response.body).toHaveProperty('environment')
+      expect(response.statusCode).toBe(200)
+      const body = response.json()
+      expect(body).toHaveProperty('status', 'ok')
+      expect(body).toHaveProperty('timestamp')
+      expect(body).toHaveProperty('environment')
     })
 
     it('should allow access to /docs without tenant header', async () => {
-      const response = await request(app.server)
-        .get('/docs')
-        .expect(200)
+      const response = await app.inject({
+        method: 'GET',
+        url: '/docs',
+      })
 
+      expect(response.statusCode).toBe(200)
       expect(response.headers['content-type']).toContain('text/html')
     })
 
     it('should allow access to / without tenant header', async () => {
-      const response = await request(app.server)
-        .get('/')
-        .expect(200)
+      const response = await app.inject({
+        method: 'GET',
+        url: '/',
+      })
 
-      expect(response.body).toHaveProperty('name', 'Barbershop SaaS API')
-      expect(response.body).toHaveProperty('version', '1.0.0')
+      expect(response.statusCode).toBe(200)
+      const body = response.json()
+      expect(body).toHaveProperty('name', 'Barbershop SaaS API')
+      expect(body).toHaveProperty('version', '1.0.0')
     })
   })
 
   describe('Tenant Middleware', () => {
     it('should return 404 when x-tenant-slug header is missing', async () => {
-      const response = await request(app.server)
-        .get('/api/test')
-        .expect(404)
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/test',
+      })
 
-      expect(response.body).toHaveProperty('error', 'Tenant not found')
-      expect(response.body).toHaveProperty('message', 'Missing x-tenant-slug header')
+      expect(response.statusCode).toBe(404)
+      const body = response.json()
+      expect(body).toHaveProperty('error', 'Tenant not found')
+      expect(body).toHaveProperty('message', 'Missing x-tenant-slug header')
     })
 
     it('should return 404 when tenant does not exist', async () => {
       vi.mocked(getCachedTenant).mockResolvedValue(null)
       vi.mocked(prisma.barbershop.findUnique).mockResolvedValue(null)
 
-      const response = await request(app.server)
-        .get('/api/test')
-        .set('x-tenant-slug', 'non-existent')
-        .expect(404)
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/test',
+        headers: { 'x-tenant-slug': 'non-existent' },
+      })
 
-      expect(response.body).toHaveProperty('error', 'Tenant not found')
-      expect(response.body.message).toContain('does not exist')
+      expect(response.statusCode).toBe(404)
+      const body = response.json()
+      expect(body).toHaveProperty('error', 'Tenant not found')
+      expect(body.message).toContain('does not exist')
     })
 
     it('should return 404 when tenant is inactive', async () => {
@@ -97,13 +128,16 @@ describe('Middleware Integration Tests', () => {
         isActive: false,
       } as any)
 
-      const response = await request(app.server)
-        .get('/api/test')
-        .set('x-tenant-slug', 'inactive-tenant')
-        .expect(404)
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/test',
+        headers: { 'x-tenant-slug': 'inactive-tenant' },
+      })
 
-      expect(response.body).toHaveProperty('error', 'Tenant not found')
-      expect(response.body.message).toContain('is inactive')
+      expect(response.statusCode).toBe(404)
+      const body = response.json()
+      expect(body).toHaveProperty('error', 'Tenant not found')
+      expect(body.message).toContain('is inactive')
     })
 
     it('should allow request when tenant is valid and active', async () => {
@@ -117,13 +151,16 @@ describe('Middleware Integration Tests', () => {
         }
       })
 
-      const response = await request(app.server)
-        .get('/api/test-tenant')
-        .set('x-tenant-slug', 'valid-tenant')
-        .expect(200)
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/test-tenant',
+        headers: { 'x-tenant-slug': 'valid-tenant' },
+      })
 
-      expect(response.body).toHaveProperty('tenantId', 'tenant-id')
-      expect(response.body).toHaveProperty('tenantSlug', 'valid-tenant')
+      expect(response.statusCode).toBe(200)
+      const body = response.json()
+      expect(body).toHaveProperty('tenantId', 'tenant-id')
+      expect(body).toHaveProperty('tenantSlug', 'valid-tenant')
     })
 
     it('should cache tenant after first lookup', async () => {
@@ -139,19 +176,21 @@ describe('Middleware Integration Tests', () => {
       })
 
       // First request - should query database
-      await request(app.server)
-        .get('/api/test-tenant')
-        .set('x-tenant-slug', 'valid-tenant')
-        .expect(200)
+      await app.inject({
+        method: 'GET',
+        url: '/api/test-tenant',
+        headers: { 'x-tenant-slug': 'valid-tenant' },
+      })
 
       expect(prisma.barbershop.findUnique).toHaveBeenCalledTimes(1)
       expect(cacheTenant).toHaveBeenCalledWith('valid-tenant', 'tenant-id')
 
       // Second request - should use cache
-      await request(app.server)
-        .get('/api/test-tenant')
-        .set('x-tenant-slug', 'valid-tenant')
-        .expect(200)
+      await app.inject({
+        method: 'GET',
+        url: '/api/test-tenant',
+        headers: { 'x-tenant-slug': 'valid-tenant' },
+      })
 
       // Should not query database again (cache hit)
       expect(prisma.barbershop.findUnique).toHaveBeenCalledTimes(1)
@@ -183,12 +222,15 @@ describe('Middleware Integration Tests', () => {
         return { message: 'ok' }
       })
 
-      const response = await request(app.server)
-        .get('/api/test')
-        .set('x-tenant-slug', 'valid-tenant')
-        .expect(200)
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/test',
+        headers: { 'x-tenant-slug': 'valid-tenant' },
+      })
 
-      expect(response.body).toHaveProperty('message', 'ok')
+      expect(response.statusCode).toBe(200)
+      const body = response.json()
+      expect(body).toHaveProperty('message', 'ok')
       expect(response.headers['x-ratelimit-limit']).toBe('1000')
       expect(response.headers['x-ratelimit-remaining']).toBe('999')
     })
@@ -201,13 +243,16 @@ describe('Middleware Integration Tests', () => {
         reset: Date.now() + 60000,
       } as any)
 
-      const response = await request(app.server)
-        .get('/api/test')
-        .set('x-tenant-slug', 'valid-tenant')
-        .expect(429)
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/test',
+        headers: { 'x-tenant-slug': 'valid-tenant' },
+      })
 
-      expect(response.body).toHaveProperty('error', 'Too Many Requests')
-      expect(response.body).toHaveProperty('message', 'Rate limit exceeded. Please try again later.')
+      expect(response.statusCode).toBe(429)
+      const body = response.json()
+      expect(body).toHaveProperty('error', 'Too Many Requests')
+      expect(body).toHaveProperty('message', 'Rate limit exceeded. Please try again later.')
       expect(response.headers['x-ratelimit-limit']).toBe('100')
       expect(response.headers['x-ratelimit-remaining']).toBe('0')
     })
@@ -227,13 +272,16 @@ describe('Middleware Integration Tests', () => {
         reset: Date.now() + 60000,
       } as any)
 
-      const response = await request(app.server)
-        .get('/api/test')
-        .set('x-tenant-slug', 'valid-tenant')
-        .expect(429)
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/test',
+        headers: { 'x-tenant-slug': 'valid-tenant' },
+      })
 
-      expect(response.body).toHaveProperty('error', 'Too Many Requests')
-      expect(response.body).toHaveProperty('message', 'Tenant rate limit exceeded. Please try again later.')
+      expect(response.statusCode).toBe(429)
+      const body = response.json()
+      expect(body).toHaveProperty('error', 'Too Many Requests')
+      expect(body).toHaveProperty('message', 'Tenant rate limit exceeded. Please try again later.')
       expect(response.headers['x-ratelimit-limit']).toBe('1000')
       expect(response.headers['x-ratelimit-remaining']).toBe('0')
     })

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "test_root_info_endpoint",
+    "description": "Verify that the root info endpoint '/' returns a 200 OK status and the expected root information."
+  },
+  {
+    "id": "TC002",
+    "title": "test_health_check_endpoint",
+    "description": "Verify that the health check endpoint '/health' returns a 200 OK status indicating the service is healthy."
+  },
+  {
+    "id": "TC003",
+    "title": "test_swagger_ui_documentation_endpoint",
+    "description": "Verify that the Swagger UI documentation endpoint '/docs' returns a 200 OK status and serves the API documentation correctly."
+  },
+  {
+    "id": "TC004",
+    "title": "test_auth_login_with_email_password",
+    "description": "Verify that the '/api/auth/login' endpoint allows users to login with valid email and password, returning tokens and professional data, and returns 401 for invalid credentials."
+  },
+  {
+    "id": "TC005",
+    "title": "test_auth_refresh_access_token",
+    "description": "Verify that the '/api/auth/refresh' endpoint refreshes the access token when provided a valid refresh token, and returns 401 for invalid or expired tokens."
+  },
+  {
+    "id": "TC006",
+    "title": "test_auth_logout",
+    "description": "Verify that the '/api/auth/logout' endpoint successfully logs out the user and invalidates tokens."
+  },
+  {
+    "id": "TC007",
+    "title": "test_auth_request_otp",
+    "description": "Verify that the '/api/auth/request-otp' endpoint sends an OTP to the user and returns a 200 OK status."
+  },
+  {
+    "id": "TC008",
+    "title": "test_auth_verify_otp",
+    "description": "Verify that the '/api/auth/verify-otp' endpoint validates the OTP correctly, returns tokens and professional data on success, and returns 401 for invalid OTP."
+  },
+  {
+    "id": "TC009",
+    "title": "test_auth_test_otp_retrieval",
+    "description": "Verify that the test-only endpoint '/api/auth/test/otp/{identifier}' returns the OTP value for the given identifier and returns 404 if not found."
+  },
+  {
+    "id": "TC010",
+    "title": "test_professionals_list_pagination",
+    "description": "Verify that the '/api/professionals' GET endpoint returns a paginated list of professionals with correct tenant isolation and role-based access control."
+  }
+]

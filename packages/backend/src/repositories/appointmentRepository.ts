@@ -2,6 +2,18 @@ import { prisma } from '../lib/prisma.js'
 import type { Prisma, Appointment, AppointmentStatus } from '@prisma/client'
 import { addMinutes, subMinutes } from 'date-fns'
 
+const professionalPublicSelect = {
+  id: true,
+  barbershopId: true,
+  name: true,
+  email: true,
+  commissionRate: true,
+  role: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
+} as const
+
 export interface PaginationParams {
   page: number
   limit: number
@@ -29,7 +41,12 @@ export class AppointmentRepository {
   async findById(id: string, barbershopId: string): Promise<Appointment | null> {
     return prisma.appointment.findFirst({
       where: { id, barbershopId },
-      include: { professional: true, client: true, service: true, createdBy: true },
+      include: {
+        professional: { select: professionalPublicSelect },
+        createdBy: { select: professionalPublicSelect },
+        client: true,
+        service: true,
+      },
     })
   }
 
@@ -60,7 +77,12 @@ export class AppointmentRepository {
         skip,
         take: limit,
         orderBy: { date: 'asc' },
-        include: { professional: true, client: true, service: true, createdBy: true },
+        include: {
+          professional: { select: professionalPublicSelect },
+          createdBy: { select: professionalPublicSelect },
+          client: true,
+          service: true,
+        },
       }),
       prisma.appointment.count({ where }),
     ])
@@ -101,22 +123,45 @@ export class AppointmentRepository {
   async create(data: Prisma.AppointmentCreateInput): Promise<Appointment> {
     return prisma.appointment.create({
       data,
-      include: { professional: true, client: true, service: true, createdBy: true },
+      include: {
+        professional: { select: professionalPublicSelect },
+        createdBy: { select: professionalPublicSelect },
+        client: true,
+        service: true,
+      },
     })
   }
 
   async update(id: string, barbershopId: string, data: Prisma.AppointmentUpdateInput): Promise<Appointment> {
+    const existing = await prisma.appointment.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Appointment not found')
+    }
     return prisma.appointment.update({
-      where: { id, barbershopId },
+      where: { id },
       data,
-      include: { professional: true, client: true, service: true, createdBy: true },
+      include: {
+        professional: { select: professionalPublicSelect },
+        createdBy: { select: professionalPublicSelect },
+        client: true,
+        service: true,
+      },
     })
   }
 
   async delete(id: string, barbershopId: string): Promise<Appointment> {
+    const existing = await prisma.appointment.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Appointment not found')
+    }
     return prisma.appointment.delete({
-      where: { id, barbershopId },
-      include: { professional: true, client: true, service: true, createdBy: true },
+      where: { id },
+      include: {
+        professional: { select: professionalPublicSelect },
+        createdBy: { select: professionalPublicSelect },
+        client: true,
+        service: true,
+      },
     })
   }
 }

@@ -82,6 +82,10 @@ export class ClientController {
         return reply.status(401).send({ error: 'Authentication required' })
       }
 
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
+      }
+
       const client = await clientService.createClient({
         ...data,
         barbershopId,
@@ -115,6 +119,10 @@ export class ClientController {
         return reply.status(401).send({ error: 'Authentication required' })
       }
 
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
+      }
+
       const client = await clientService.updateClient(id, barbershopId, data)
       return reply.status(200).send(client)
     } catch (error) {
@@ -144,6 +152,10 @@ export class ClientController {
       // Require authentication for deleting clients
       if (!user?.id) {
         return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       await clientService.deleteClient(id, barbershopId)

@@ -47,7 +47,8 @@ export async function verifyOTP(
   code: string
 ): Promise<boolean> {
   const key = `${OTP_PREFIX}:${barbershopId}:${email}`
-  const storedCode = await redis.get<string>(key)
+  const storedCodeRaw = await redis.get(key)
+  const storedCode = storedCodeRaw === null ? null : String(storedCodeRaw)
 
   if (storedCode === code) {
     await redis.del(key) // Delete after successful verification
@@ -83,8 +84,10 @@ export async function getRefreshToken(
   tokenId: string
 ): Promise<{ createdAt: number; expiresAt: number } | null> {
   const key = `${REFRESH_TOKEN_PREFIX}:${professionalId}:${tokenId}`
-  const data = await redis.get<string>(key)
-  return data ? JSON.parse(data) : null
+  const data = await redis.get(key)
+  if (!data) return null
+  if (typeof data === 'string') return JSON.parse(data)
+  return data as { createdAt: number; expiresAt: number }
 }
 
 export async function deleteRefreshToken(

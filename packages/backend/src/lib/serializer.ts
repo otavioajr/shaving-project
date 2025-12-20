@@ -8,6 +8,10 @@ export function serializeResponse<T>(obj: T): any {
     return obj
   }
 
+  if (obj instanceof Date) {
+    return obj.toISOString()
+  }
+
   if (obj instanceof Decimal) {
     return obj.toNumber()
   }

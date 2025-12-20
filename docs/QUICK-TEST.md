@@ -15,7 +15,11 @@ Guia curto para validar o que já existe no backend e ver algo rodando em poucos
    ```bash
    pnpm db:generate
    ```
-3. **Popular dados de teste (NOVO):**
+3. Rode as migrations (necessário em um banco “novo”):
+   ```bash
+   pnpm db:migrate
+   ```
+4. **Popular dados de teste (NOVO):**
    ```bash
    pnpm db:seed
    ```
@@ -28,7 +32,7 @@ Guia curto para validar o que já existe no backend e ver algo rodando em poucos
    
    ✅ Seguro rodar múltiplas vezes (idempotente)
 
-4. Suba o servidor em modo dev (porta 3000):
+5. Suba o servidor em modo dev (porta 3000):
    ```bash
    pnpm dev
    ```
@@ -53,12 +57,13 @@ Guia curto para validar o que já existe no backend e ver algo rodando em poucos
 Agora que você rodou `pnpm db:seed`, você pode testar rotas protegidas:
 
 ```bash
-# Teste rota protegida com tenant válido
+# Teste listagem com tenant válido
 curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/professionals
 ```
 
 **Esperado:**
-- Status: `401 Unauthorized` (requer autenticação) **OU** `200 OK` (se a rota for pública)
+- Status: `200 OK` (listagem não exige auth; create/update/delete exigem)
+- Body: `{ data: [...], pagination: { page, limit, total, totalPages } }`
 - Headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` (rate limit ativado)
 
 ## Testes automatizados
@@ -71,7 +76,30 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
   pnpm test:coverage
   ```
 
-Pronto: se os comandos acima passarem e as respostas baterem com o esperado, o que já está implementado está funcionando.
+## TestSprite (E2E)
+Para rodar os testes E2E gerados pelo TestSprite contra o backend local:
+
+1. No `packages/backend/.env`, habilite (somente dev/test):
+   ```bash
+   ENABLE_TEST_OTP_ENDPOINT="true"
+   ```
+   **IMPORTANTE:** em produção isso deve ficar `false` e `NODE_ENV` deve ser `production`.
+2. Suba o backend: `pnpm dev`
+3. Rode os testes gerados (exemplos do report atual):
+   ```bash
+   python3 testsprite_tests/TC001_test_root_info_endpoint.py
+   python3 testsprite_tests/TC002_test_health_check_endpoint.py
+   python3 testsprite_tests/TC003_test_swagger_ui_documentation_endpoint.py
+   python3 testsprite_tests/TC004_test_auth_login_with_email_password.py
+   python3 testsprite_tests/TC005_test_auth_refresh_access_token.py
+   python3 testsprite_tests/TC006_test_auth_logout.py
+   python3 testsprite_tests/TC007_test_auth_request_otp.py
+   python3 testsprite_tests/TC008_test_auth_verify_otp.py
+   python3 testsprite_tests/TC009_test_auth_test_otp_retrieval.py
+   python3 testsprite_tests/TC010_test_professionals_list_pagination.py
+   ```
+
+Veja o report consolidado em `testsprite_tests/testsprite-mcp-test-report.md`.
 
 ---
 
@@ -131,11 +159,11 @@ curl -i http://localhost:3000/api/professionals
 **Pré-requisito:** Criar um tenant no banco
 ```bash
 # Opção 1: Via Prisma Studio
-npm run db:studio
+pnpm db:studio
 # Criar um Barbershop com slug "barbearia-teste"
 
 # Opção 2: Via seed (se existir)
-npm run db:seed
+pnpm db:seed
 ```
 
 **Teste:**
@@ -144,11 +172,11 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
 ```
 
 **Verificar:**
-- ✅ Status: `401 Unauthorized` (se exige auth) **OU** `200 OK`
+- ✅ Status: `200 OK` (GET list; POST/PUT/DELETE sem token retornam `401`)
 - ✅ **COM headers** `X-RateLimit-*`:
   ```
-  X-RateLimit-Limit: 100
-  X-RateLimit-Remaining: 99
+  X-RateLimit-Limit: 1000
+  X-RateLimit-Remaining: 999
   X-RateLimit-Reset: 2025-12-07T...
   ```
 

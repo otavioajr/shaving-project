@@ -58,21 +58,23 @@ export class ServiceRepository {
   }
 
   async update(id: string, barbershopId: string, data: Prisma.ServiceUpdateInput): Promise<Service> {
+    const existing = await prisma.service.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Service not found')
+    }
     return prisma.service.update({
-      where: {
-        id,
-        barbershopId,
-      },
+      where: { id },
       data,
     })
   }
 
   async delete(id: string, barbershopId: string): Promise<Service> {
+    const existing = await prisma.service.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Service not found')
+    }
     return prisma.service.delete({
-      where: {
-        id,
-        barbershopId,
-      },
+      where: { id },
     })
   }
 }

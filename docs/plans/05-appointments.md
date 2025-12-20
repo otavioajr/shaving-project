@@ -4,9 +4,9 @@
 
 Antes de iniciar este milestone, LEIA os seguintes arquivos para contexto completo:
 
-1. **[docs/plans/principal-plan.md](docs/plans/principal-plan.md)** - Visão geral do projeto, arquitetura, tech stack e regras críticas
-2. **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Status atual dos milestones e o que já foi implementado
-3. **[docs/CHANGELOG.md](docs/CHANGELOG.md)** - Histórico detalhado de todas as mudanças feitas no projeto
+1. **[principal-plan.md](principal-plan.md)** - Visão geral do projeto, arquitetura, tech stack e regras críticas
+2. **[DEVELOPMENT.md](../DEVELOPMENT.md)** - Status atual dos milestones e o que já foi implementado
+3. **[CHANGELOG.md](../CHANGELOG.md)** - Histórico detalhado de todas as mudanças feitas no projeto
 
 ---
 
@@ -260,4 +260,3 @@ Todas as dependências já estão instaladas:
 
 Após completar este milestone, o próximo será:
 - **MILESTONE 6:** Financial Management
-

@@ -1,6 +1,18 @@
 import { prisma } from '../lib/prisma.js'
 import type { Prisma, Transaction, TransactionType } from '@prisma/client'
 
+const professionalPublicSelect = {
+  id: true,
+  barbershopId: true,
+  name: true,
+  email: true,
+  commissionRate: true,
+  role: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
+} as const
+
 export interface PaginationParams {
   page: number
   limit: number
@@ -27,7 +39,7 @@ export class TransactionRepository {
   async findById(id: string, barbershopId: string): Promise<Transaction | null> {
     return prisma.transaction.findFirst({
       where: { id, barbershopId },
-      include: { createdBy: true },
+      include: { createdBy: { select: professionalPublicSelect } },
     })
   }
 
@@ -57,7 +69,7 @@ export class TransactionRepository {
         skip,
         take: limit,
         orderBy: { date: 'desc' },
-        include: { createdBy: true },
+        include: { createdBy: { select: professionalPublicSelect } },
       }),
       prisma.transaction.count({ where }),
     ])
@@ -68,22 +80,30 @@ export class TransactionRepository {
   async create(data: Prisma.TransactionCreateInput): Promise<Transaction> {
     return prisma.transaction.create({
       data,
-      include: { createdBy: true },
+      include: { createdBy: { select: professionalPublicSelect } },
     })
   }
 
   async update(id: string, barbershopId: string, data: Prisma.TransactionUpdateInput): Promise<Transaction> {
+    const existing = await prisma.transaction.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Transaction not found')
+    }
     return prisma.transaction.update({
-      where: { id, barbershopId },
+      where: { id },
       data,
-      include: { createdBy: true },
+      include: { createdBy: { select: professionalPublicSelect } },
     })
   }
 
   async delete(id: string, barbershopId: string): Promise<Transaction> {
+    const existing = await prisma.transaction.findFirst({ where: { id, barbershopId } })
+    if (!existing) {
+      throw new Error('Transaction not found')
+    }
     return prisma.transaction.delete({
-      where: { id, barbershopId },
-      include: { createdBy: true },
+      where: { id },
+      include: { createdBy: { select: professionalPublicSelect } },
     })
   }
 }

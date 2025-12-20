@@ -81,20 +81,24 @@ export class TransactionController {
     try {
       const data = createTransactionSchema.parse(request.body)
       const barbershopId = (request as any).tenantId
-      const userId = (request as any).user?.id
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
       }
 
-      if (!userId) {
+      if (!user?.id) {
         return reply.status(401).send({ error: 'User not authenticated' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const transaction = await transactionService.createTransaction({
         ...data,
         barbershopId,
-        createdById: userId,
+        createdById: user.id,
       })
 
       return reply.status(201).send(transaction)
@@ -114,9 +118,18 @@ export class TransactionController {
       const { id } = idParamSchema.parse(request.params)
       const data = updateTransactionSchema.parse(request.body)
       const barbershopId = (request as any).tenantId
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const transaction = await transactionService.updateTransaction(id, barbershopId, data)
@@ -136,9 +149,18 @@ export class TransactionController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const barbershopId = (request as any).tenantId
+      const user = (request as any).user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       await transactionService.deleteTransaction(id, barbershopId)
