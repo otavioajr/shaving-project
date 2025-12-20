@@ -11,10 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - API agora serializa Prisma Decimal como `number` (e `Date` como ISO string) nas respostas `/api` para manter o contrato com os schemas.
+- ESLint do backend agora passa sem warnings/erros (remoção de `any` explícito, ajustes de controllers/services e tipagem de testes).
 
 ### Docs
 - Alinhado `docs/DEVELOPMENT.md` e `docs/QUICK-TEST.md` com o estado atual do backend (status de milestones, números de testes/cobertura e TestSprite).
 - Corrigidos links relativos em `docs/plans/*.md` para navegação correta.
+- Documentado `pnpm lint` como verificação obrigatória em toda implementação (README e QUICK-TEST).
+- Adicionado checklist de PR/merge (“Definition of Done”) em `docs/PR-CHECKLIST.md`.
 
 ### Next Steps
 - Milestone 4: aplicar RBAC (roles) e testes do CRUD

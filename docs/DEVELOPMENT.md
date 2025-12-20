@@ -306,6 +306,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 ### Checklist
 
 - [x] `pnpm test` passing (Vitest: 68/68 ✅)
+- [x] `pnpm lint` passing (0 warnings/errors)
 - [ ] Test coverage >= 80% (current: ~58% lines/stmts on `pnpm test:coverage`)
 - [x] Complete Swagger documentation
 - [x] README with setup instructions
@@ -313,10 +314,12 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - [ ] Vercel deployment
 - [ ] Production health check
 - [x] TestSprite E2E integration (10/10 passing, report available)
+- [ ] PR/Merge checklist followed (`docs/PR-CHECKLIST.md`)
 
 ### Maintenance Notes
 
 - 2025-12-19: Hook global de pre-serialization para converter Prisma Decimal em `number` e `Date` em ISO string nas respostas `/api`.
+- 2025-12-20: ESLint do backend passou sem warnings/erros após ajustes de tipagem e limpeza de `any` explícito.
 
 ---
 
@@ -360,4 +363,4 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ---
 
-*Last updated: 2025-12-19*
+*Last updated: 2025-12-20*

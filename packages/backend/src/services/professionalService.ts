@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { professionalRepository, type PaginationParams } from '../repositories/professionalRepository.js'
-import type { Professional, Role } from '@prisma/client'
+import type { Professional, Role, Prisma } from '@prisma/client'
 
 export interface CreateProfessionalInput {
   name: string
@@ -67,7 +67,7 @@ export class ProfessionalService {
     }
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: Prisma.ProfessionalUpdateInput = {
       ...(input.name && { name: input.name }),
       ...(input.email && { email: input.email }),
       ...(input.commissionRate !== undefined && { commissionRate: input.commissionRate }),

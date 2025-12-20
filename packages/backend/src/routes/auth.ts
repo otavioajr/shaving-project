@@ -169,12 +169,13 @@ export async function authRoutes(app: FastifyInstance) {
                 expiresIn: { type: 'number' },
               },
             },
+            400: { type: 'object', properties: { error: { type: 'string' } } },
             404: { type: 'object', properties: { error: { type: 'string' } } },
           },
         },
       },
       async (request, reply) => {
-        const tenantId = (request as any).tenantId
+        const tenantId = request.tenantId
         if (!tenantId) {
           return reply.code(400).send({ error: 'Tenant context required' })
         }

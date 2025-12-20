@@ -41,12 +41,14 @@ describe('Serialization Hook', () => {
       limit: 100,
       remaining: 99,
       reset: Date.now() + 60000,
+      pending: Promise.resolve(),
     }
     const tenantLimit: Awaited<ReturnType<typeof tenantRatelimit.limit>> = {
       success: true,
       limit: 1000,
       remaining: 999,
       reset: Date.now() + 60000,
+      pending: Promise.resolve(),
     }
     vi.mocked(ipRatelimit.limit).mockResolvedValue(ipLimit)
     vi.mocked(tenantRatelimit.limit).mockResolvedValue(tenantLimit)

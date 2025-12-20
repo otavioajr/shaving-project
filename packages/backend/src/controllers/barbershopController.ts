@@ -9,29 +9,25 @@ const updateBarbershopSchema = z.object({
 
 export class BarbershopController {
   async get(request: FastifyRequest, reply: FastifyReply) {
-    try {
-      const barbershopId = (request as any).tenantId
+    const barbershopId = request.tenantId
 
-      if (!barbershopId) {
-        return reply.status(401).send({ error: 'Tenant not identified' })
-      }
-
-      const barbershop = await barbershopService.getBarbershop(barbershopId)
-
-      if (!barbershop) {
-        return reply.status(404).send({ error: 'Barbershop not found' })
-      }
-
-      return reply.status(200).send(barbershop)
-    } catch (error) {
-      throw error
+    if (!barbershopId) {
+      return reply.status(401).send({ error: 'Tenant not identified' })
     }
+
+    const barbershop = await barbershopService.getBarbershop(barbershopId)
+
+    if (!barbershop) {
+      return reply.status(404).send({ error: 'Barbershop not found' })
+    }
+
+    return reply.status(200).send(barbershop)
   }
 
   async update(request: FastifyRequest, reply: FastifyReply) {
     try {
       const data = updateBarbershopSchema.parse(request.body)
-      const barbershopId = (request as any).tenantId
+      const barbershopId = request.tenantId
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })

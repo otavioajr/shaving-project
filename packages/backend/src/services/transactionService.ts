@@ -1,6 +1,6 @@
 import { transactionRepository, type PaginationParams, type ListFilters } from '../repositories/transactionRepository.js'
 import { professionalRepository } from '../repositories/professionalRepository.js'
-import type { Transaction, TransactionType, PaymentMethod } from '@prisma/client'
+import type { Transaction, TransactionType, PaymentMethod, Prisma } from '@prisma/client'
 
 export interface CreateTransactionInput {
   amount: number
@@ -56,7 +56,7 @@ export class TransactionService {
       throw new Error('Transaction not found')
     }
 
-    const updateData: any = {}
+    const updateData: Prisma.TransactionUpdateInput = {}
     if (input.amount !== undefined) updateData.amount = input.amount
     if (input.type !== undefined) updateData.type = input.type
     if (input.category !== undefined) updateData.category = input.category

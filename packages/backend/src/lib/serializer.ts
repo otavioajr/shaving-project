@@ -3,7 +3,7 @@ import { Decimal } from '@prisma/client/runtime/library'
 /**
  * Recursively converts Prisma Decimal values to numbers for JSON serialization
  */
-export function serializeResponse<T>(obj: T): any {
+export function serializeResponse<T>(obj: T): unknown {
   if (obj === null || obj === undefined) {
     return obj
   }
@@ -21,7 +21,7 @@ export function serializeResponse<T>(obj: T): any {
   }
 
   if (typeof obj === 'object') {
-    const serialized: any = {}
+    const serialized: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(obj)) {
       serialized[key] = serializeResponse(value)
     }

@@ -2,7 +2,7 @@ import { appointmentRepository, type PaginationParams, type ListFilters } from '
 import { serviceRepository } from '../repositories/serviceRepository.js'
 import { professionalRepository } from '../repositories/professionalRepository.js'
 import { clientRepository } from '../repositories/clientRepository.js'
-import type { Appointment, AppointmentStatus } from '@prisma/client'
+import type { Appointment, AppointmentStatus, Prisma } from '@prisma/client'
 
 export interface CreateAppointmentInput {
   professionalId: string
@@ -100,7 +100,7 @@ export class AppointmentService {
       }
     }
 
-    const updateData: any = {}
+    const updateData: Prisma.AppointmentUpdateInput = {}
     if (input.date) updateData.date = new Date(input.date)
     if (input.professionalId) {
       const professional = await professionalRepository.findById(input.professionalId, barbershopId)
@@ -128,7 +128,7 @@ export class AppointmentService {
     const appointment = await appointmentRepository.findById(id, barbershopId)
     if (!appointment) throw new Error('Appointment not found')
 
-    const updateData: any = { status: input.status }
+    const updateData: Prisma.AppointmentUpdateInput = { status: input.status }
 
     // Calculate commission when appointment is completed
     if (input.status === 'COMPLETED' && !appointment.commissionValue) {

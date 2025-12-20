@@ -1,17 +1,17 @@
 import { clientRepository, type PaginationParams } from '../repositories/clientRepository.js'
-import type { Client } from '@prisma/client'
+import { Prisma, type Client } from '@prisma/client'
 
 export interface CreateClientInput {
   name: string
   phone: string
-  pushSubscription?: Record<string, any>
+  pushSubscription?: Prisma.InputJsonValue | null
   barbershopId: string
 }
 
 export interface UpdateClientInput {
   name?: string
   phone?: string
-  pushSubscription?: Record<string, any>
+  pushSubscription?: Prisma.InputJsonValue | null
 }
 
 export class ClientService {
@@ -33,7 +33,7 @@ export class ClientService {
     return clientRepository.create({
       name: input.name,
       phone: input.phone,
-      pushSubscription: input.pushSubscription || undefined,
+      pushSubscription: input.pushSubscription ?? undefined,
       barbershop: {
         connect: { id: input.barbershopId },
       },
@@ -55,12 +55,12 @@ export class ClientService {
       }
     }
 
-    const updateData: any = {
+    const updateData: Prisma.ClientUpdateInput = {
       ...(input.name && { name: input.name }),
       ...(input.phone && { phone: input.phone }),
     }
     if (input.pushSubscription !== undefined) {
-      updateData.pushSubscription = input.pushSubscription || null
+      updateData.pushSubscription = input.pushSubscription === null ? Prisma.DbNull : input.pushSubscription
     }
 
     return clientRepository.update(id, barbershopId, updateData)

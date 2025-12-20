@@ -1,5 +1,5 @@
 import { serviceRepository, type PaginationParams } from '../repositories/serviceRepository.js'
-import type { Service } from '@prisma/client'
+import type { Service, Prisma } from '@prisma/client'
 
 export interface CreateServiceInput {
   name: string
@@ -40,7 +40,7 @@ export class ServiceService {
       throw new Error('Service not found')
     }
 
-    const updateData: any = {
+    const updateData: Prisma.ServiceUpdateInput = {
       ...(input.name && { name: input.name }),
       ...(input.price !== undefined && { price: input.price }),
       ...(input.duration !== undefined && { duration: input.duration }),

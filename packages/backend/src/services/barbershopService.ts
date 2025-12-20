@@ -1,5 +1,5 @@
 import { barbershopRepository } from '../repositories/barbershopRepository.js'
-import type { Barbershop } from '@prisma/client'
+import type { Barbershop, Prisma } from '@prisma/client'
 
 export interface UpdateBarbershopInput {
   name?: string
@@ -17,7 +17,7 @@ export class BarbershopService {
       throw new Error('Barbershop not found')
     }
 
-    const updateData: any = {}
+    const updateData: Prisma.BarbershopUpdateInput = {}
     if (input.name !== undefined) updateData.name = input.name
     if (input.isActive !== undefined) updateData.isActive = input.isActive
 
