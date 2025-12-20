@@ -78,8 +78,9 @@ export class AuthService {
   async verifyOTP(email: string, barbershopId: string, otp: string): Promise<boolean> {
     const key = `barbershop:otp:${barbershopId}:${email}`
     const storedOTP = await redis.get(key)
+    const storedOTPString = storedOTP === null ? null : String(storedOTP)
 
-    if (!storedOTP || storedOTP !== otp) {
+    if (!storedOTPString || storedOTPString !== otp) {
       return false
     }
 

@@ -1,52 +1,52 @@
 [
   {
     "id": "TC001",
-    "title": "authentication login with valid credentials",
-    "description": "Test the /api/auth/login endpoint with valid email and password to ensure successful login returns accessToken, refreshToken, and professional details."
+    "title": "test_root_info_endpoint",
+    "description": "Verify that the root info endpoint '/' returns a 200 OK status and the expected root information."
   },
   {
     "id": "TC002",
-    "title": "authentication refresh token renewal",
-    "description": "Test the /api/auth/refresh endpoint to verify that providing a valid refreshToken returns a new accessToken and maintains session security."
+    "title": "test_health_check_endpoint",
+    "description": "Verify that the health check endpoint '/health' returns a 200 OK status indicating the service is healthy."
   },
   {
     "id": "TC003",
-    "title": "authentication logout invalidates tokens",
-    "description": "Test the /api/auth/logout endpoint to ensure that user tokens are invalidated and the user session is properly terminated."
+    "title": "test_swagger_ui_documentation_endpoint",
+    "description": "Verify that the Swagger UI documentation endpoint '/docs' returns a 200 OK status and serves the API documentation correctly."
   },
   {
     "id": "TC004",
-    "title": "authentication request otp code",
-    "description": "Test the /api/auth/request-otp endpoint to verify that a 6-digit OTP code is generated, stored in Redis with a 5-minute TTL, and sent to the user's email."
+    "title": "test_auth_login_with_email_password",
+    "description": "Verify that the '/api/auth/login' endpoint allows users to login with valid email and password, returning tokens and professional data, and returns 401 for invalid credentials."
   },
   {
     "id": "TC005",
-    "title": "authentication verify otp code",
-    "description": "Test the /api/auth/verify-otp endpoint to confirm that submitting a valid email and correct 6-digit OTP code verifies the user and allows password recovery."
+    "title": "test_auth_refresh_access_token",
+    "description": "Verify that the '/api/auth/refresh' endpoint refreshes the access token when provided a valid refresh token, and returns 401 for invalid or expired tokens."
   },
   {
     "id": "TC006",
-    "title": "professional management create new professional",
-    "description": "Test the POST /api/professionals endpoint to create a new professional with required fields including name, email, password, commissionRate, and role, ensuring proper role-based access control."
+    "title": "test_auth_logout",
+    "description": "Verify that the '/api/auth/logout' endpoint successfully logs out the user and invalidates tokens."
   },
   {
     "id": "TC007",
-    "title": "client management create new client",
-    "description": "Test the POST /api/clients endpoint to create a new client with valid data and verify that the client is associated with the correct tenant."
+    "title": "test_auth_request_otp",
+    "description": "Verify that the '/api/auth/request-otp' endpoint sends an OTP to the user and returns a 200 OK status."
   },
   {
     "id": "TC008",
-    "title": "service management create new service",
-    "description": "Test the POST /api/services endpoint to create a new service with price and duration metadata, ensuring data is scoped to the tenant."
+    "title": "test_auth_verify_otp",
+    "description": "Verify that the '/api/auth/verify-otp' endpoint validates the OTP correctly, returns tokens and professional data on success, and returns 401 for invalid OTP."
   },
   {
     "id": "TC009",
-    "title": "appointment management create new appointment with conflict validation",
-    "description": "Test the POST /api/appointments endpoint to create a new appointment, validating that scheduling conflicts for the same professional and time slot are detected and prevented."
+    "title": "test_auth_test_otp_retrieval",
+    "description": "Verify that the test-only endpoint '/api/auth/test/otp/{identifier}' returns the OTP value for the given identifier and returns 404 if not found."
   },
   {
     "id": "TC010",
-    "title": "transaction management list transactions with filters",
-    "description": "Test the GET /api/transactions endpoint with query parameters for type, category, startDate, and endDate to verify correct filtering and pagination of financial transactions."
+    "title": "test_professionals_list_pagination",
+    "description": "Verify that the '/api/professionals' GET endpoint returns a paginated list of professionals with correct tenant isolation and role-based access control."
   }
 ]

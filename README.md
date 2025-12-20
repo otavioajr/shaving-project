@@ -125,6 +125,8 @@ http://localhost:3000/docs
 
 The Swagger UI is publicly accessible and does not require tenant authentication.
 
+Monetary/percentage fields stored as Prisma Decimal are serialized as `number` (and `Date` as ISO strings) in `/api` responses to match the documented schemas.
+
 ## Security Features
 
 - **Row Level Security (RLS):** Enabled on all database tables for defense-in-depth tenant isolation
