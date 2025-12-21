@@ -17,11 +17,21 @@ BASE_URL="${BASE_URL:-http://localhost:3000}"
 TENANT="${TENANT:-barbearia-teste}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@barbearia-teste.com}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-senha123}"
+REQUIRE_AUTH_TESTS="${REQUIRE_AUTH_TESTS:-1}"
+PUBLIC_ONLY="${PUBLIC_ONLY:-0}"
 
 # Counters
 TOTAL_TESTS=0
+EXECUTED_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
+SKIPPED_TESTS=0
+SKIPPED_SECTIONS=()
+
+# Flags
+AUTH_REQUIRED=1
+AUTH_TESTS_SKIPPED=0
+PUBLIC_ONLY_MODE=0
 
 # Function to print test header
 print_header() {
@@ -38,6 +48,7 @@ print_test() {
     local actual_status="$3"
 
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
+    EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
 
     if [ "$expected_status" == "$actual_status" ]; then
         echo -e "${GREEN}✓ $test_name - PASSED${NC} (Status: $actual_status)"
@@ -48,9 +59,93 @@ print_test() {
     fi
 }
 
+# Function to print skipped test
+skip_test() {
+    local test_name="$1"
+    local reason="$2"
+
+    TOTAL_TESTS=$((TOTAL_TESTS + 1))
+    SKIPPED_TESTS=$((SKIPPED_TESTS + 1))
+    echo -e "${YELLOW}↷ $test_name - SKIPPED${NC} (${reason})"
+}
+
+add_skipped_section() {
+    local section_name="$1"
+    if ! printf '%s\n' "${SKIPPED_SECTIONS[@]}" | grep -q "^${section_name}$"; then
+        SKIPPED_SECTIONS+=("$section_name")
+    fi
+}
+
+# Normalize boolean-ish values
+is_truthy() {
+    case "$1" in
+        1|true|TRUE|yes|YES) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 # Function to extract HTTP status code
 get_status() {
     echo "$1" | head -n 1 | cut -d' ' -f2
+}
+
+# Resolve auth requirements
+if is_truthy "$PUBLIC_ONLY"; then
+    AUTH_REQUIRED=0
+    PUBLIC_ONLY_MODE=1
+fi
+if ! is_truthy "$REQUIRE_AUTH_TESTS"; then
+    AUTH_REQUIRED=0
+fi
+
+# Summary helper
+print_summary() {
+    print_header "RESUMO DOS TESTES"
+    echo ""
+    echo -e "Total de testes: ${TOTAL_TESTS}"
+    echo -e "Executados: ${EXECUTED_TESTS}"
+    echo -e "${GREEN}Testes passados: ${PASSED_TESTS}${NC}"
+    echo -e "${RED}Testes falhos: ${FAILED_TESTS}${NC}"
+    echo -e "${YELLOW}Testes pulados: ${SKIPPED_TESTS}${NC}"
+    if [ ${#SKIPPED_SECTIONS[@]} -gt 0 ]; then
+        echo ""
+        echo -e "${YELLOW}Seções puladas:${NC} ${SKIPPED_SECTIONS[*]}"
+    fi
+    echo ""
+}
+
+# Auth skip helper
+skip_auth_tests() {
+    local reason="$1"
+
+    AUTH_TESTS_SKIPPED=1
+    add_skipped_section "PROFESSIONALS CRUD"
+    skip_test "TC023: Criar professional COM auth" "$reason"
+    skip_test "TC024: Atualizar professional" "$reason"
+    skip_test "TC025: Deletar professional" "$reason"
+    skip_test "TC026: Buscar professional DELETADO" "$reason"
+
+    add_skipped_section "CLIENTS CRUD"
+    skip_test "TC028: Criar client COM auth" "$reason"
+    skip_test "TC029: Atualizar client" "$reason"
+    skip_test "TC030: Deletar client" "$reason"
+
+    add_skipped_section "SERVICES CRUD"
+    skip_test "TC032: Criar service COM auth" "$reason"
+    skip_test "TC033: Atualizar service" "$reason"
+
+    add_skipped_section "APPOINTMENTS"
+    skip_test "TC035: Criar appointment COM auth" "$reason"
+    skip_test "TC036: Atualizar status para CONFIRMED" "$reason"
+    skip_test "TC037: Atualizar status para COMPLETED" "$reason"
+
+    add_skipped_section "TRANSACTIONS"
+    skip_test "TC040: Criar transaction (INCOME)" "$reason"
+    skip_test "TC041: Criar transaction (EXPENSE)" "$reason"
+    skip_test "TC042: Filtrar transactions por tipo" "$reason"
+
+    add_skipped_section "BARBERSHOP"
+    skip_test "TC045: Atualizar barbershop" "$reason"
 }
 
 # Check if server is running
@@ -129,7 +224,25 @@ ACCESS_TOKEN=$(echo "$response" | grep -o '"accessToken":"[^"]*' | cut -d'"' -f4
 REFRESH_TOKEN=$(echo "$response" | grep -o '"refreshToken":"[^"]*' | cut -d'"' -f4)
 
 if [ -z "$ACCESS_TOKEN" ]; then
-    echo -e "${YELLOW}⚠ Não foi possível extrair access token. Alguns testes serão pulados.${NC}"
+    echo -e "${YELLOW}⚠ Não foi possível extrair access token.${NC}"
+fi
+
+if [ -z "$ACCESS_TOKEN" ] || [ "$status" != "200" ]; then
+    if [ "$AUTH_REQUIRED" -eq 1 ]; then
+        AUTH_REQUIRED_FAILURE=1
+        skip_auth_tests "access token ausente ou login falhou"
+        echo -e "${RED}✗ ACCESS_TOKEN ausente e testes autenticados são obrigatórios.${NC}"
+        print_summary
+        exit 1
+    else
+        skip_auth_tests "access token ausente (PUBLIC_ONLY)"
+        echo -e "${YELLOW}⚠ Rodando apenas testes públicos (PUBLIC_ONLY).${NC}"
+    fi
+fi
+
+if [ "$PUBLIC_ONLY_MODE" -eq 1 ] && [ "$AUTH_TESTS_SKIPPED" -eq 0 ]; then
+    skip_auth_tests "PUBLIC_ONLY"
+    ACCESS_TOKEN=""
 fi
 
 # TC012: Login com credenciais inválidas
@@ -151,6 +264,8 @@ if [ -n "$REFRESH_TOKEN" ]; then
       -d "{\"refreshToken\": \"${REFRESH_TOKEN}\"}")
     status=$(get_status "$response")
     print_test "TC013: Refresh token" "200" "$status"
+else
+    skip_test "TC013: Refresh token" "refresh token ausente"
 fi
 
 # TC016: Request OTP
@@ -219,6 +334,17 @@ if [ -n "$ACCESS_TOKEN" ]; then
         response=$(curl -s -i -H "x-tenant-slug: ${TENANT}" "${BASE_URL}/api/professionals/${NEW_PROF_ID}")
         status=$(get_status "$response")
         print_test "TC026: Buscar professional DELETADO" "404" "$status"
+    else
+        skip_test "TC024: Atualizar professional" "criação falhou ou ID ausente"
+        skip_test "TC025: Deletar professional" "criação falhou ou ID ausente"
+        skip_test "TC026: Buscar professional DELETADO" "criação falhou ou ID ausente"
+    fi
+else
+    if [ "$AUTH_TESTS_SKIPPED" -eq 0 ]; then
+        skip_test "TC023: Criar professional COM auth" "access token ausente"
+        skip_test "TC024: Atualizar professional" "access token ausente"
+        skip_test "TC025: Deletar professional" "access token ausente"
+        skip_test "TC026: Buscar professional DELETADO" "access token ausente"
     fi
 fi
 
@@ -264,6 +390,15 @@ if [ -n "$ACCESS_TOKEN" ]; then
           -H "Authorization: Bearer ${ACCESS_TOKEN}")
         status=$(get_status "$response")
         print_test "TC030: Deletar client" "204" "$status"
+    else
+        skip_test "TC029: Atualizar client" "criação falhou ou ID ausente"
+        skip_test "TC030: Deletar client" "criação falhou ou ID ausente"
+    fi
+else
+    if [ "$AUTH_TESTS_SKIPPED" -eq 0 ]; then
+        skip_test "TC028: Criar client COM auth" "access token ausente"
+        skip_test "TC029: Atualizar client" "access token ausente"
+        skip_test "TC030: Deletar client" "access token ausente"
     fi
 fi
 
@@ -303,6 +438,13 @@ if [ -n "$ACCESS_TOKEN" ]; then
           -d '{"price": 60}')
         status=$(get_status "$response")
         print_test "TC033: Atualizar service" "200" "$status"
+    else
+        skip_test "TC033: Atualizar service" "criação falhou ou ID ausente"
+    fi
+else
+    if [ "$AUTH_TESTS_SKIPPED" -eq 0 ]; then
+        skip_test "TC032: Criar service COM auth" "access token ausente"
+        skip_test "TC033: Atualizar service" "access token ausente"
     fi
 fi
 
@@ -365,7 +507,20 @@ if [ -n "$ACCESS_TOKEN" ]; then
               -d '{"status": "COMPLETED"}')
             status=$(get_status "$response")
             print_test "TC037: Atualizar status para COMPLETED" "200" "$status"
+        else
+            skip_test "TC036: Atualizar status para CONFIRMED" "criação falhou ou ID ausente"
+            skip_test "TC037: Atualizar status para COMPLETED" "criação falhou ou ID ausente"
         fi
+    else
+        skip_test "TC035: Criar appointment COM auth" "dados base ausentes (seed)"
+        skip_test "TC036: Atualizar status para CONFIRMED" "dados base ausentes (seed)"
+        skip_test "TC037: Atualizar status para COMPLETED" "dados base ausentes (seed)"
+    fi
+else
+    if [ "$AUTH_TESTS_SKIPPED" -eq 0 ]; then
+        skip_test "TC035: Criar appointment COM auth" "access token ausente"
+        skip_test "TC036: Atualizar status para CONFIRMED" "access token ausente"
+        skip_test "TC037: Atualizar status para COMPLETED" "access token ausente"
     fi
 fi
 
@@ -418,6 +573,12 @@ if [ -n "$ACCESS_TOKEN" ]; then
     response=$(curl -s -i -H "x-tenant-slug: ${TENANT}" "${BASE_URL}/api/transactions?type=INCOME")
     status=$(get_status "$response")
     print_test "TC042: Filtrar transactions por tipo" "200" "$status"
+else
+    if [ "$AUTH_TESTS_SKIPPED" -eq 0 ]; then
+        skip_test "TC040: Criar transaction (INCOME)" "access token ausente"
+        skip_test "TC041: Criar transaction (EXPENSE)" "access token ausente"
+        skip_test "TC042: Filtrar transactions por tipo" "access token ausente"
+    fi
 fi
 
 # ============================================
@@ -439,24 +600,35 @@ if [ -n "$ACCESS_TOKEN" ]; then
       -d '{"name": "Barbearia Teste"}')
     status=$(get_status "$response")
     print_test "TC045: Atualizar barbershop" "200" "$status"
+else
+    if [ "$AUTH_TESTS_SKIPPED" -eq 0 ]; then
+        skip_test "TC045: Atualizar barbershop" "access token ausente"
+    fi
 fi
 
 # ============================================
 # SUMMARY
 # ============================================
-print_header "RESUMO DOS TESTES"
-echo ""
-echo -e "Total de testes: ${TOTAL_TESTS}"
-echo -e "${GREEN}Testes passados: ${PASSED_TESTS}${NC}"
-echo -e "${RED}Testes falhos: ${FAILED_TESTS}${NC}"
-echo ""
+print_summary
 
-if [ $FAILED_TESTS -eq 0 ]; then
+if [ $FAILED_TESTS -eq 0 ] && [ $SKIPPED_TESTS -eq 0 ]; then
     echo -e "${GREEN}✓ TODOS OS TESTES PASSARAM!${NC}"
     echo ""
     exit 0
-else
-    echo -e "${RED}✗ ALGUNS TESTES FALHARAM${NC}"
-    echo ""
-    exit 1
 fi
+
+if [ $FAILED_TESTS -eq 0 ] && [ $SKIPPED_TESTS -gt 0 ]; then
+    if [ "$AUTH_REQUIRED" -eq 1 ]; then
+        echo -e "${RED}✗ TESTES AUTENTICADOS FORAM PULADOS (obrigatórios).${NC}"
+        echo ""
+        exit 1
+    fi
+
+    echo -e "${YELLOW}⚠ TODOS OS TESTES EXECUTADOS PASSARAM, MAS HOUVE PULOS.${NC}"
+    echo ""
+    exit 0
+fi
+
+echo -e "${RED}✗ ALGUNS TESTES FALHARAM${NC}"
+echo ""
+exit 1

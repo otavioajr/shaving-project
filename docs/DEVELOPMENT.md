@@ -348,6 +348,13 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ## Notes
 
+### E2E Script (Local)
+
+- Script: `scripts/e2e-test.sh`
+- Default behavior: exige testes autenticados (falha se `ACCESS_TOKEN` não for obtido)
+- Para rodar somente endpoints públicos: `PUBLIC_ONLY=1 ./scripts/e2e-test.sh`
+- Para desabilitar a exigência de auth explicitamente: `REQUIRE_AUTH_TESTS=0 ./scripts/e2e-test.sh`
+
 ### Critical Implementation Points
 
 1. **Prisma Singleton:** Always use `globalThis` pattern to prevent connection exhaustion in serverless

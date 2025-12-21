@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `src/services/transactionService.ts` - Usa `serializeTransactionWithRelations()` (serializa também nested relations)
   - **Validação:** E2E tests 34/34 ✅, Vitest 68/68 ✅, Lint 0 errors ✅
 - ESLint do backend agora passa sem warnings/erros (remoção de `any` explícito, ajustes de controllers/services e tipagem de testes).
+- E2E script agora falha quando `ACCESS_TOKEN` não é obtido (testes autenticados obrigatórios) e reporta testes pulados com clareza.
 
 ### Docs
 - Alinhado `docs/DEVELOPMENT.md` e `docs/QUICK-TEST.md` com o estado atual do backend (status de milestones, números de testes/cobertura e TestSprite).
