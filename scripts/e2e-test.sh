@@ -324,8 +324,12 @@ if [ -n "$ACCESS_TOKEN" ]; then
     SERVICE_ID_APPT=$(curl -s -H "x-tenant-slug: ${TENANT}" "${BASE_URL}/api/services" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
 
     if [ -n "$PROF_ID" ] && [ -n "$CLIENT_ID_APPT" ] && [ -n "$SERVICE_ID_APPT" ]; then
-        # Create appointment for tomorrow at 10:00
-        TOMORROW=$(date -u -v+1d '+%Y-%m-%dT10:00:00.000Z' 2>/dev/null || date -u -d '+1 day' '+%Y-%m-%dT10:00:00.000Z')
+        # Create appointment with unique timestamp based on epoch seconds
+        # This ensures each test run uses a different time slot to avoid 409 conflicts
+        EPOCH_SECS=$(date +%s)
+        DAYS_OFFSET=$(( (EPOCH_SECS % 30) + 1 ))   # 1-30 days in future
+        HOUR_OFFSET=$(( (EPOCH_SECS % 8) + 9 ))    # 9-16 hours (business hours)
+        APPT_DATE=$(date -u -v+${DAYS_OFFSET}d "+%Y-%m-%dT${HOUR_OFFSET}:00:00.000Z" 2>/dev/null || date -u -d "+${DAYS_OFFSET} day" "+%Y-%m-%dT${HOUR_OFFSET}:00:00.000Z")
 
         response=$(curl -s -i -X POST "${BASE_URL}/api/appointments" \
           -H "x-tenant-slug: ${TENANT}" \
@@ -335,7 +339,7 @@ if [ -n "$ACCESS_TOKEN" ]; then
             \"professionalId\": \"${PROF_ID}\",
             \"clientId\": \"${CLIENT_ID_APPT}\",
             \"serviceId\": \"${SERVICE_ID_APPT}\",
-            \"date\": \"${TOMORROW}\"
+            \"date\": \"${APPT_DATE}\"
           }")
         status=$(get_status "$response")
         print_test "TC035: Criar appointment COM auth" "201" "$status"

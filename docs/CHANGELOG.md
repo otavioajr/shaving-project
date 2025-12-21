@@ -10,7 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- API agora serializa Prisma Decimal como `number` (e `Date` como ISO string) nas respostas `/api` para manter o contrato com os schemas.
+- **Correção de serialização Decimal nos Services** (2025-12-20)
+  - **Problema:** Endpoints com campos `Decimal` (professionals, services, appointments, transactions) retornavam erro 500 porque Fastify valida o response schema ANTES do hook `preSerialization`
+  - **Solução:** Movido a conversão `Decimal → number` para o **service layer** (antes de retornar ao controller)
+  - **Arquivos modificados:**
+    - `src/lib/serializer.ts` - Novos helpers type-safe: `serializeProfessional()`, `serializeService()`, `serializeAppointmentWithRelations()`, `serializeTransactionWithRelations()`
+    - `src/services/professionalService.ts` - Usa `serializeProfessional()`
+    - `src/services/serviceService.ts` - Usa `serializeService()`
+    - `src/services/appointmentService.ts` - Usa `serializeAppointmentWithRelations()` (serializa também nested relations)
+    - `src/services/transactionService.ts` - Usa `serializeTransactionWithRelations()` (serializa também nested relations)
+  - **Validação:** E2E tests 34/34 ✅, Vitest 68/68 ✅, Lint 0 errors ✅
 - ESLint do backend agora passa sem warnings/erros (remoção de `any` explícito, ajustes de controllers/services e tipagem de testes).
 
 ### Docs

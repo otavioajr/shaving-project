@@ -2,7 +2,8 @@ import { appointmentRepository, type PaginationParams, type ListFilters } from '
 import { serviceRepository } from '../repositories/serviceRepository.js'
 import { professionalRepository } from '../repositories/professionalRepository.js'
 import { clientRepository } from '../repositories/clientRepository.js'
-import type { Appointment, AppointmentStatus, Prisma } from '@prisma/client'
+import type { AppointmentStatus, Prisma } from '@prisma/client'
+import { serializeAppointmentWithRelations } from '../lib/serializer.js'
 
 export interface CreateAppointmentInput {
   professionalId: string
@@ -27,15 +28,20 @@ export interface UpdateStatusInput {
 }
 
 export class AppointmentService {
-  async getAppointment(id: string, barbershopId: string): Promise<Appointment | null> {
-    return appointmentRepository.findById(id, barbershopId)
+  async getAppointment(id: string, barbershopId: string) {
+    const appointment = await appointmentRepository.findById(id, barbershopId)
+    return appointment ? serializeAppointmentWithRelations(appointment) : null
   }
 
   async listAppointments(barbershopId: string, params: PaginationParams, filters?: ListFilters) {
-    return appointmentRepository.list(barbershopId, params, filters)
+    const result = await appointmentRepository.list(barbershopId, params, filters)
+    return {
+      data: result.data.map(serializeAppointmentWithRelations),
+      pagination: result.pagination,
+    }
   }
 
-  async createAppointment(input: CreateAppointmentInput): Promise<Appointment> {
+  async createAppointment(input: CreateAppointmentInput) {
     // Verify all referenced entities exist
     const [professional, client, service] = await Promise.all([
       professionalRepository.findById(input.professionalId, input.barbershopId),
@@ -60,7 +66,7 @@ export class AppointmentService {
     }
 
     // Create appointment with price snapshot
-    return appointmentRepository.create({
+    const appointment = await appointmentRepository.create({
       date: new Date(input.date),
       notes: input.notes || null,
       price: Number(service.price),
@@ -71,9 +77,10 @@ export class AppointmentService {
       service: { connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.serviceId } } },
       createdBy: { connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.createdById } } },
     })
+    return serializeAppointmentWithRelations(appointment)
   }
 
-  async updateAppointment(id: string, barbershopId: string, input: UpdateAppointmentInput): Promise<Appointment> {
+  async updateAppointment(id: string, barbershopId: string, input: UpdateAppointmentInput) {
     const appointment = await appointmentRepository.findById(id, barbershopId)
     if (!appointment) throw new Error('Appointment not found')
 
@@ -121,10 +128,11 @@ export class AppointmentService {
     }
     if (input.notes) updateData.notes = input.notes
 
-    return appointmentRepository.update(id, barbershopId, updateData)
+    const updated = await appointmentRepository.update(id, barbershopId, updateData)
+    return serializeAppointmentWithRelations(updated)
   }
 
-  async updateStatus(id: string, barbershopId: string, input: UpdateStatusInput): Promise<Appointment> {
+  async updateStatus(id: string, barbershopId: string, input: UpdateStatusInput) {
     const appointment = await appointmentRepository.findById(id, barbershopId)
     if (!appointment) throw new Error('Appointment not found')
 
@@ -139,7 +147,8 @@ export class AppointmentService {
       }
     }
 
-    return appointmentRepository.update(id, barbershopId, updateData)
+    const updated = await appointmentRepository.update(id, barbershopId, updateData)
+    return serializeAppointmentWithRelations(updated)
   }
 
   async deleteAppointment(id: string, barbershopId: string): Promise<void> {

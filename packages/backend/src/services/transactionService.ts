@@ -1,6 +1,7 @@
 import { transactionRepository, type PaginationParams, type ListFilters } from '../repositories/transactionRepository.js'
 import { professionalRepository } from '../repositories/professionalRepository.js'
-import type { Transaction, TransactionType, PaymentMethod, Prisma } from '@prisma/client'
+import type { TransactionType, PaymentMethod, Prisma } from '@prisma/client'
+import { serializeTransactionWithRelations } from '../lib/serializer.js'
 
 export interface CreateTransactionInput {
   amount: number
@@ -23,22 +24,27 @@ export interface UpdateTransactionInput {
 }
 
 export class TransactionService {
-  async getTransaction(id: string, barbershopId: string): Promise<Transaction | null> {
-    return transactionRepository.findById(id, barbershopId)
+  async getTransaction(id: string, barbershopId: string) {
+    const transaction = await transactionRepository.findById(id, barbershopId)
+    return transaction ? serializeTransactionWithRelations(transaction) : null
   }
 
   async listTransactions(barbershopId: string, params: PaginationParams, filters?: ListFilters) {
-    return transactionRepository.list(barbershopId, params, filters)
+    const result = await transactionRepository.list(barbershopId, params, filters)
+    return {
+      data: result.data.map(serializeTransactionWithRelations),
+      pagination: result.pagination,
+    }
   }
 
-  async createTransaction(input: CreateTransactionInput): Promise<Transaction> {
+  async createTransaction(input: CreateTransactionInput) {
     // Verify professional exists
     const professional = await professionalRepository.findById(input.createdById, input.barbershopId)
     if (!professional) {
       throw new Error('Professional not found')
     }
 
-    return transactionRepository.create({
+    const transaction = await transactionRepository.create({
       amount: input.amount,
       type: input.type,
       category: input.category,
@@ -48,9 +54,10 @@ export class TransactionService {
       barbershop: { connect: { id: input.barbershopId } },
       createdBy: { connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.createdById } } },
     })
+    return serializeTransactionWithRelations(transaction)
   }
 
-  async updateTransaction(id: string, barbershopId: string, input: UpdateTransactionInput): Promise<Transaction> {
+  async updateTransaction(id: string, barbershopId: string, input: UpdateTransactionInput) {
     const transaction = await transactionRepository.findById(id, barbershopId)
     if (!transaction) {
       throw new Error('Transaction not found')
@@ -64,7 +71,8 @@ export class TransactionService {
     if (input.date !== undefined) updateData.date = new Date(input.date)
     if (input.paymentMethod !== undefined) updateData.paymentMethod = input.paymentMethod
 
-    return transactionRepository.update(id, barbershopId, updateData)
+    const updated = await transactionRepository.update(id, barbershopId, updateData)
+    return serializeTransactionWithRelations(updated)
   }
 
   async deleteTransaction(id: string, barbershopId: string): Promise<void> {

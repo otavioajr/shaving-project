@@ -1,5 +1,6 @@
 import { serviceRepository, type PaginationParams } from '../repositories/serviceRepository.js'
-import type { Service, Prisma } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
+import { serializeService } from '../lib/serializer.js'
 
 export interface CreateServiceInput {
   name: string
@@ -15,16 +16,21 @@ export interface UpdateServiceInput {
 }
 
 export class ServiceService {
-  async getService(id: string, barbershopId: string): Promise<Service | null> {
-    return serviceRepository.findById(id, barbershopId)
+  async getService(id: string, barbershopId: string) {
+    const service = await serviceRepository.findById(id, barbershopId)
+    return service ? serializeService(service) : null
   }
 
   async listServices(barbershopId: string, params: PaginationParams) {
-    return serviceRepository.list(barbershopId, params)
+    const result = await serviceRepository.list(barbershopId, params)
+    return {
+      data: result.data.map(serializeService),
+      pagination: result.pagination,
+    }
   }
 
-  async createService(input: CreateServiceInput): Promise<Service> {
-    return serviceRepository.create({
+  async createService(input: CreateServiceInput) {
+    const service = await serviceRepository.create({
       name: input.name,
       price: input.price,
       duration: input.duration,
@@ -32,9 +38,10 @@ export class ServiceService {
         connect: { id: input.barbershopId },
       },
     })
+    return serializeService(service)
   }
 
-  async updateService(id: string, barbershopId: string, input: UpdateServiceInput): Promise<Service> {
+  async updateService(id: string, barbershopId: string, input: UpdateServiceInput) {
     const service = await serviceRepository.findById(id, barbershopId)
     if (!service) {
       throw new Error('Service not found')
@@ -46,7 +53,8 @@ export class ServiceService {
       ...(input.duration !== undefined && { duration: input.duration }),
     }
 
-    return serviceRepository.update(id, barbershopId, updateData)
+    const updated = await serviceRepository.update(id, barbershopId, updateData)
+    return serializeService(updated)
   }
 
   async deleteService(id: string, barbershopId: string): Promise<void> {

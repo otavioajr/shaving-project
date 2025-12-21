@@ -320,6 +320,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 - 2025-12-19: Hook global de pre-serialization para converter Prisma Decimal em `number` e `Date` em ISO string nas respostas `/api`.
 - 2025-12-20: ESLint do backend passou sem warnings/erros após ajustes de tipagem e limpeza de `any` explícito.
+- 2025-12-20: **Correção Decimal→number movida para service layer** (preSerialization hook não era chamado antes da validação de schema do Fastify). Helpers type-safe em `serializer.ts`, aplicados em todos os services com campos Decimal.
 
 ---
 
