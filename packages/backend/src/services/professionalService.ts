@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
 import { professionalRepository, type PaginationParams } from '../repositories/professionalRepository.js'
-import type { Professional, Role } from '@prisma/client'
+import type { Role, Prisma } from '@prisma/client'
+import { serializeProfessional } from '../lib/serializer.js'
 
 export interface CreateProfessionalInput {
   name: string
@@ -20,15 +21,20 @@ export interface UpdateProfessionalInput {
 }
 
 export class ProfessionalService {
-  async getProfessional(id: string, barbershopId: string): Promise<Professional | null> {
-    return professionalRepository.findById(id, barbershopId)
+  async getProfessional(id: string, barbershopId: string) {
+    const professional = await professionalRepository.findById(id, barbershopId)
+    return professional ? serializeProfessional(professional) : null
   }
 
   async listProfessionals(barbershopId: string, params: PaginationParams) {
-    return professionalRepository.list(barbershopId, params)
+    const result = await professionalRepository.list(barbershopId, params)
+    return {
+      data: result.data.map(serializeProfessional),
+      pagination: result.pagination,
+    }
   }
 
-  async createProfessional(input: CreateProfessionalInput): Promise<Professional> {
+  async createProfessional(input: CreateProfessionalInput) {
     // Check if email already exists for this barbershop
     const existing = await professionalRepository.findByEmail(input.email, input.barbershopId)
     if (existing) {
@@ -39,7 +45,7 @@ export class ProfessionalService {
     const passwordHash = await bcrypt.hash(input.password, 10)
 
     // Create professional
-    return professionalRepository.create({
+    const professional = await professionalRepository.create({
       name: input.name,
       email: input.email,
       passwordHash,
@@ -49,9 +55,10 @@ export class ProfessionalService {
         connect: { id: input.barbershopId },
       },
     })
+    return serializeProfessional(professional)
   }
 
-  async updateProfessional(id: string, barbershopId: string, input: UpdateProfessionalInput): Promise<Professional> {
+  async updateProfessional(id: string, barbershopId: string, input: UpdateProfessionalInput) {
     // Check if professional exists
     const professional = await professionalRepository.findById(id, barbershopId)
     if (!professional) {
@@ -67,7 +74,7 @@ export class ProfessionalService {
     }
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: Prisma.ProfessionalUpdateInput = {
       ...(input.name && { name: input.name }),
       ...(input.email && { email: input.email }),
       ...(input.commissionRate !== undefined && { commissionRate: input.commissionRate }),
@@ -79,7 +86,8 @@ export class ProfessionalService {
       updateData.passwordHash = await bcrypt.hash(input.password, 10)
     }
 
-    return professionalRepository.update(id, barbershopId, updateData)
+    const updated = await professionalRepository.update(id, barbershopId, updateData)
+    return serializeProfessional(updated)
   }
 
   async deleteProfessional(id: string, barbershopId: string): Promise<void> {

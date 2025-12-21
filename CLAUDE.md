@@ -1,128 +1,49 @@
-# CLAUDE.md
+# Repository Guidelines
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Project Overview
-
-Multi-Tenant Barbershop SaaS Platform backend built for zero-cost deployment on Vercel Serverless using Supabase (PostgreSQL) and Upstash Redis.
-
-## Tech Stack
-
-- **Runtime:** Node.js (LTS) + TypeScript
-- **Framework:** Fastify with Vercel Serverless adapter
-- **Database:** PostgreSQL via Supabase with Prisma ORM
-- **Cache/Rate Limiting:** Upstash Redis (HTTP/REST)
-- **Testing:** Vitest + Supertest
-- **Key Libraries:** `zod`, `@fastify/jwt`, `@upstash/ratelimit`, `date-fns`, `web-push`
 - **No final de cada implementação, colocar um passo a passo do que eu (criador do sistema) preciso fazer para confirmar que está tudo funcionando**
 
-## Architecture
+## Análises do projeto sempre que for inicializar uma nova implementação e finalizar
+- Sempre análisar os arquivos `docs/CHANGELOG.md` e `docs/DEVELOPMENT.md` antes de qualquer implementação para vermos que passo estamos.
+- Sempre que finalizar toda implementação nova, atualizar `docs/CHANGELOG.md` e `docs/DEVELOPMENT.md` no estado que estamos.
 
-### Serverless Entry Point
+## Checklist obrigatório (toda implementação)
+- Rodar `pnpm lint` (lint precisa sair **0 errors/0 warnings**).
+- Rodar `pnpm test` (suite Vitest passando).
+- Se houver mudanças de build/runtime, rodar também `pnpm build`.
 
-- **Monolithic Function Pattern:** All routes centralized in `/api/index.ts` (catch-all) to reduce cold starts
-- Must use Fastify adapter for Vercel Serverless
+## Project Structure & Module Organization
+- Monorepo via pnpm; backend in `packages/backend`.
+- Entrypoints: `api/index.ts` for Vercel, `src/server.ts` for local using `src/app.ts`.
+- `src/` folders: controllers, services, repositories, middleware (tenant/auth/rate limit), lib (Prisma/Redis), schemas/types/utils; tests live beside code.
+- Database schema and seeds in `prisma/`; plans and progress in `docs/`.
 
-### Multi-Tenant Architecture
+## Build, Test, and Development Commands
+- `pnpm install` to bootstrap; `pnpm dev` runs Fastify with tsx watch.
+- `pnpm build` compiles to `dist`; `pnpm start` runs the built server.
+- `pnpm lint` / `pnpm lint:fix` run ESLint; keep code warning-free before PRs.
+- `pnpm test`, `pnpm test:watch`, `pnpm test:coverage` (80% threshold) run Vitest.
+- DB: `pnpm db:generate`, `pnpm db:migrate` (uses `DIRECT_URL`), `pnpm db:push`, `pnpm db:seed`, `pnpm db:studio`.
 
-- **Tenant Identification:** Global middleware reads `x-tenant-slug` header
-  - Validates tenant in database/cache
-  - Injects `req.tenantId` into request context
-  - Returns 404 if header is missing or invalid
-- **All database entities** must be scoped by `barbershopId` (tenant isolation)
+## Coding Style & Naming Conventions
+- TypeScript + ESM, 2-space indent, prefer named exports and single-responsibility files.
+- Always use Prisma singleton in `src/lib/prisma.ts` and Redis helper in `src/lib/redis.ts`.
+- ESLint: no unused vars (`_` to ignore), `any` discouraged, console only for warn/error.
+- Multi-tenant safety: every query filters by `barbershopId`; protected routes require `x-tenant-slug`.
+- When adding endpoints, align Swagger/Zod schemas and reuse shared validators.
 
-### Database Connection Management
+## Testing Guidelines
+- Vitest + Supertest; tests as `*.test.ts`/`*.spec.ts` with setup in `src/__tests__/setup.ts`.
+- Target >=80% coverage; unit-test services/repos, integration-test controllers/middleware (tenant/auth/rate limit).
+- Mock external providers (Redis/JWT); for DB tests, isolate tenants and reset fixtures.
+- Add pagination, tenant header, and health/docs assertions for new routes.
 
-**CRITICAL:** Must implement Prisma Singleton pattern in `src/lib/prisma.ts`:
-```typescript
-global.prisma
-```
-This prevents connection exhaustion in serverless environment.
+## Commit & Pull Request Guidelines
+- Commits: short, imperative, English (e.g., “Add tenant middleware”); one logical change each.
+- PRs: summary, linked issue/milestone, commands run (lint/tests), API/env notes, and screenshots/logs when relevant.
+- Document new env vars and update `packages/backend/.env.example` accordingly.
 
-**Production:** Configure to use Supabase Connection Pooler (Port 6543)
-
-### Authentication & Security
-
-- **JWT Authentication:**
-  - Access Token: 15 min lifetime
-  - Refresh Token: 7 days, stored in Redis or HttpOnly Cookie
-- **OTP System:** 6-digit codes stored in Upstash Redis (TTL: 5 min) - NEVER in PostgreSQL
-- **Rate Limiting:** Middleware using Upstash Redis, limit by IP and tenant
-
-### API Design
-
-- **Pagination Required:** All listing endpoints MUST accept `page` and `limit` parameters (Vercel has 10s timeout limit)
-- **Tenant Header:** All requests must include `x-tenant-slug` header
-
-## Data Model
-
-### Enums
-
-- `AppointmentStatus`: `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`, `NO_SHOW`
-- `PaymentMethod`: `CASH`, `CREDIT_CARD`, `DEBIT_CARD`, `PIX`
-
-### Core Entities
-
-All entities include: `barbershopId`, `createdAt`, `updatedAt`
-
-- **Barbershop:** tenant root (id, name, slug-unique, isActive)
-- **Professional:** users (name, email, passwordHash, commissionRate-Decimal, role: ADMIN/BARBER)
-- **Client:** customers (name, phone, pushSubscription)
-- **Service:** offerings (name, price, duration)
-- **Appointment:** bookings with status, price snapshot, commissionValue snapshot, foreign keys to professional/service/client/createdBy
-- **Transaction:** financial records (amount, type: INCOME/EXPENSE, category, date, createdBy)
-
-## Business Rules
-
-### Scheduling
-
-- Validate time conflicts considering: `barbershopId`, `professionalId`, and status
-- Ignore `CANCELLED` appointments when checking conflicts
-
-### Finance
-
-- Commission calculation triggered ONLY when appointment status → `COMPLETED`
-- Persist calculated commission value (snapshot pattern)
-
-### Notifications
-
-- Cron endpoint: `/api/cron/notify` protected by `CRON_SECRET` header
-- Configure `vercel.json` to invoke every 1 minute
-- Uses Web Push API for client notifications
-
-## Environment Variables
-
-- `DATABASE_URL`: Supabase pooler connection (Port 6543) for runtime queries
-- `DIRECT_URL`: Direct connection for Prisma migrations
-- `CRON_SECRET`: Secret to protect cron endpoints
-- Refer to `.env.example` for complete list
-
-## Project Structure
-
-```
-/api/index.ts              # Vercel serverless entrypoint (catch-all)
-/src/
-  /controllers/            # Request handlers
-  /services/               # Business logic
-  /repositories/           # Data access layer
-  /lib/
-    prisma.ts              # Prisma singleton instance
-  /middleware/             # Tenant validation, rate limit, auth
-```
-
-## Development Commands
-
-When the project is set up, typical commands will be:
-- `npm run dev` - Local development
-- `npm test` - Run Vitest test suite
-- `npm run lint` - Code linting
-- `npx prisma migrate dev` - Run database migrations (uses DIRECT_URL)
-- `npx prisma generate` - Generate Prisma Client
-
-## Critical Implementation Notes
-
-1. **Always use Prisma Singleton** - Direct instantiation will exhaust connections
-2. **Never store OTP in PostgreSQL** - Use Redis with TTL
-3. **All queries must filter by barbershopId** - Multi-tenant isolation is security-critical
-4. **Snapshot financial data** - Store price/commission at transaction time
-5. **Require pagination parameters** - Prevent Vercel timeouts on large datasets
+## Security & Configuration Tips
+- Copy `packages/backend/.env.example` to `.env`; fill `DATABASE_URL`, `DIRECT_URL`, Redis, JWT, `CRON_SECRET` (use Supabase pooler port 6543 in prod).
+- OTP codes stay in Redis with TTL; never store in PostgreSQL.
+- Enforce pagination (`page`/`limit`) to avoid Vercel timeouts.
+- Protect cron endpoints with `CRON_SECRET`; Swagger can stay public but avoid sensitive payloads.

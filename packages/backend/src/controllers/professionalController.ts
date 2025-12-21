@@ -32,7 +32,7 @@ export class ProfessionalController {
   async list(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { page, limit } = listQuerySchema.parse(request.query)
-      const barbershopId = (request as any).tenantId
+      const barbershopId = request.tenantId
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -52,7 +52,7 @@ export class ProfessionalController {
   async getById(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { id } = idParamSchema.parse(request.params)
-      const barbershopId = (request as any).tenantId
+      const barbershopId = request.tenantId
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -65,7 +65,8 @@ export class ProfessionalController {
       }
 
       // Remove password hash from response
-      const { passwordHash, ...professionalData } = professional
+      const { passwordHash: _passwordHash, ...professionalData } = professional
+      void _passwordHash
 
       return reply.status(200).send(professionalData)
     } catch (error) {
@@ -79,8 +80,8 @@ export class ProfessionalController {
   async create(request: FastifyRequest, reply: FastifyReply) {
     try {
       const data = createProfessionalSchema.parse(request.body)
-      const barbershopId = (request as any).tenantId
-      const user = (request as any).user
+      const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -101,7 +102,8 @@ export class ProfessionalController {
       })
 
       // Remove password hash from response
-      const { passwordHash, ...professionalData } = professional
+      const { passwordHash: _passwordHash, ...professionalData } = professional
+      void _passwordHash
 
       return reply.status(201).send(professionalData)
     } catch (error) {
@@ -119,8 +121,8 @@ export class ProfessionalController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const data = updateProfessionalSchema.parse(request.body)
-      const barbershopId = (request as any).tenantId
-      const user = (request as any).user
+      const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -138,7 +140,8 @@ export class ProfessionalController {
       const professional = await professionalService.updateProfessional(id, barbershopId, data)
 
       // Remove password hash from response
-      const { passwordHash, ...professionalData } = professional
+      const { passwordHash: _passwordHash, ...professionalData } = professional
+      void _passwordHash
 
       return reply.status(200).send(professionalData)
     } catch (error) {
@@ -158,8 +161,8 @@ export class ProfessionalController {
   async delete(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { id } = idParamSchema.parse(request.params)
-      const barbershopId = (request as any).tenantId
-      const user = (request as any).user
+      const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })

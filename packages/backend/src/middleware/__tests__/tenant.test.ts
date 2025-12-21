@@ -19,6 +19,8 @@ vi.mock('../../lib/redis', () => ({
 import { prisma } from '../../lib/prisma'
 import { getCachedTenant, cacheTenant } from '../../lib/redis'
 
+type BarbershopRecord = Awaited<ReturnType<typeof prisma.barbershop.findUnique>>
+
 describe('tenantMiddleware', () => {
   let mockRequest: Partial<FastifyRequest>
   let mockReply: Partial<FastifyReply>
@@ -193,7 +195,7 @@ describe('tenantMiddleware', () => {
       vi.mocked(prisma.barbershop.findUnique).mockResolvedValue({
         id: 'barbershop-1',
         isActive: false,
-      } as any)
+      } as BarbershopRecord)
 
       mockRequest = {
         url: '/api/professionals',
@@ -240,7 +242,7 @@ describe('tenantMiddleware', () => {
       vi.mocked(prisma.barbershop.findUnique).mockResolvedValue({
         id: 'barbershop-2',
         isActive: true,
-      } as any)
+      } as BarbershopRecord)
 
       mockRequest = {
         url: '/api/professionals',

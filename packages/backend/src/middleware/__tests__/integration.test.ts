@@ -3,6 +3,9 @@ import { buildApp } from '../../app.js'
 import { prisma } from '../../lib/prisma.js'
 import { ipRatelimit, tenantRatelimit, getCachedTenant, cacheTenant } from '../../lib/redis.js'
 
+type RateLimitResult = Awaited<ReturnType<typeof ipRatelimit.limit>>
+type BarbershopRecord = Awaited<ReturnType<typeof prisma.barbershop.findUnique>>
+
 // Mock dependencies
 vi.mock('../../lib/prisma.js', () => ({
   prisma: {
@@ -41,13 +44,15 @@ describe('Middleware Integration Tests', () => {
       limit: 100,
       remaining: 99,
       reset: Date.now() + 60000,
-    } as any)
+      pending: Promise.resolve(),
+    } as RateLimitResult)
     vi.mocked(tenantRatelimit.limit).mockResolvedValue({
       success: true,
       limit: 1000,
       remaining: 999,
       reset: Date.now() + 60000,
-    } as any)
+      pending: Promise.resolve(),
+    } as RateLimitResult)
     app = await buildApp({ logger: false })
   })
 
@@ -126,7 +131,7 @@ describe('Middleware Integration Tests', () => {
       vi.mocked(prisma.barbershop.findUnique).mockResolvedValue({
         id: 'tenant-id',
         isActive: false,
-      } as any)
+      } as BarbershopRecord)
 
       const response = await app.inject({
         method: 'GET',
@@ -168,7 +173,7 @@ describe('Middleware Integration Tests', () => {
       vi.mocked(prisma.barbershop.findUnique).mockResolvedValue({
         id: 'tenant-id',
         isActive: true,
-      } as any)
+      } as BarbershopRecord)
       vi.mocked(cacheTenant).mockResolvedValue()
 
       app.get('/api/test-tenant', async (request, _reply) => {
@@ -209,14 +214,16 @@ describe('Middleware Integration Tests', () => {
         limit: 100,
         remaining: 99,
         reset: Date.now() + 60000,
-      } as any)
+        pending: Promise.resolve(),
+      } as RateLimitResult)
 
       vi.mocked(tenantRatelimit.limit).mockResolvedValue({
         success: true,
         limit: 1000,
         remaining: 999,
         reset: Date.now() + 60000,
-      } as any)
+        pending: Promise.resolve(),
+      } as RateLimitResult)
 
       app.get('/api/test', async (_request, _reply) => {
         return { message: 'ok' }
@@ -241,7 +248,8 @@ describe('Middleware Integration Tests', () => {
         limit: 100,
         remaining: 0,
         reset: Date.now() + 60000,
-      } as any)
+        pending: Promise.resolve(),
+      } as RateLimitResult)
 
       const response = await app.inject({
         method: 'GET',
@@ -263,14 +271,16 @@ describe('Middleware Integration Tests', () => {
         limit: 100,
         remaining: 99,
         reset: Date.now() + 60000,
-      } as any)
+        pending: Promise.resolve(),
+      } as RateLimitResult)
 
       vi.mocked(tenantRatelimit.limit).mockResolvedValue({
         success: false,
         limit: 1000,
         remaining: 0,
         reset: Date.now() + 60000,
-      } as any)
+        pending: Promise.resolve(),
+      } as RateLimitResult)
 
       const response = await app.inject({
         method: 'GET',

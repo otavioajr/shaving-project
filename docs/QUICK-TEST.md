@@ -67,6 +67,10 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
 - Headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` (rate limit ativado)
 
 ## Testes automatizados
+- Rodar lint (obrigatório em toda implementação):
+  ```bash
+  pnpm lint
+  ```
 - Rodar suite atual (Vitest com mocks, não precisa de DB/Redis reais):
   ```bash
   pnpm test
@@ -75,6 +79,10 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
   ```bash
   pnpm test:coverage
   ```
+
+## PR / Merge Checklist
+
+Veja `docs/PR-CHECKLIST.md`.
 
 ## TestSprite (E2E)
 Para rodar os testes E2E gerados pelo TestSprite contra o backend local:

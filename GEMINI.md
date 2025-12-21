@@ -1,87 +1,49 @@
-# Shaving Project Context
+# Repository Guidelines
 
-## Project Overview
+- **No final de cada implementação, colocar um passo a passo do que eu (criador do sistema) preciso fazer para confirmar que está tudo funcionando**
 
-**Shaving Project** is a Multi-Tenant Barbershop Management SaaS Platform designed for zero-cost deployment on Vercel Serverless.
+## Análises do projeto sempre que for inicializar uma nova implementação e finalizar
+- Sempre análisar os arquivos `docs/CHANGELOG.md` e `docs/DEVELOPMENT.md` antes de qualquer implementação para vermos que passo estamos.
+- Sempre que finalizar toda implementação nova, atualizar `docs/CHANGELOG.md` e `docs/DEVELOPMENT.md` no estado que estamos.
 
-**Key Technologies:**
-- **Runtime:** Node.js 22 (LTS) + TypeScript
-- **Framework:** Fastify (with `@fastify/aws-lambda` / Vercel adapter)
-- **Database:** PostgreSQL (Supabase) with Prisma ORM
-- **Caching/Rate Limiting:** Upstash Redis (HTTP/REST)
-- **Package Manager:** pnpm
-- **Architecture:** Monorepo (currently single backend package)
+## Checklist obrigatório (toda implementação)
+- Rodar `pnpm lint` (lint precisa sair **0 errors/0 warnings**).
+- Rodar `pnpm test` (suite Vitest passando).
+- Se houver mudanças de build/runtime, rodar também `pnpm build`.
 
-## Directory Structure
+## Project Structure & Module Organization
+- Monorepo via pnpm; backend in `packages/backend`.
+- Entrypoints: `api/index.ts` for Vercel, `src/server.ts` for local using `src/app.ts`.
+- `src/` folders: controllers, services, repositories, middleware (tenant/auth/rate limit), lib (Prisma/Redis), schemas/types/utils; tests live beside code.
+- Database schema and seeds in `prisma/`; plans and progress in `docs/`.
 
-```
-/
-├── packages/
-│   └── backend/           # Core API logic
-│       ├── api/           # Vercel entrypoint
-│       ├── prisma/        # Database schema, migrations, seed
-│       └── src/           # Source code
-│           ├── app.ts     # Fastify app factory
-│           ├── server.ts  # Local dev server
-│           ├── lib/       # Shared clients (Prisma, Redis)
-│           ├── middleware/# Auth, Tenant, Rate Limit
-│           └── ...        # Controllers, Services, Repositories
-├── docs/                  # Project documentation & plans
-│   ├── DEVELOPMENT.md     # Current progress & roadmap
-│   └── plans/             # Detailed specs for each milestone
-├── package.json           # Root workspace config
-└── pnpm-workspace.yaml    # Workspace definition
-```
+## Build, Test, and Development Commands
+- `pnpm install` to bootstrap; `pnpm dev` runs Fastify with tsx watch.
+- `pnpm build` compiles to `dist`; `pnpm start` runs the built server.
+- `pnpm lint` / `pnpm lint:fix` run ESLint; keep code warning-free before PRs.
+- `pnpm test`, `pnpm test:watch`, `pnpm test:coverage` (80% threshold) run Vitest.
+- DB: `pnpm db:generate`, `pnpm db:migrate` (uses `DIRECT_URL`), `pnpm db:push`, `pnpm db:seed`, `pnpm db:studio`.
 
-## Development Workflow
+## Coding Style & Naming Conventions
+- TypeScript + ESM, 2-space indent, prefer named exports and single-responsibility files.
+- Always use Prisma singleton in `src/lib/prisma.ts` and Redis helper in `src/lib/redis.ts`.
+- ESLint: no unused vars (`_` to ignore), `any` discouraged, console only for warn/error.
+- Multi-tenant safety: every query filters by `barbershopId`; protected routes require `x-tenant-slug`.
+- When adding endpoints, align Swagger/Zod schemas and reuse shared validators.
 
-### Prerequisites
-- Node.js 22+
-- pnpm 9+
-- `.env` file configured in `packages/backend/` (see `.env.example`)
+## Testing Guidelines
+- Vitest + Supertest; tests as `*.test.ts`/`*.spec.ts` with setup in `src/__tests__/setup.ts`.
+- Target >=80% coverage; unit-test services/repos, integration-test controllers/middleware (tenant/auth/rate limit).
+- Mock external providers (Redis/JWT); for DB tests, isolate tenants and reset fixtures.
+- Add pagination, tenant header, and health/docs assertions for new routes.
 
-### Common Commands (Run from Root)
+## Commit & Pull Request Guidelines
+- Commits: short, imperative, English (e.g., “Add tenant middleware”); one logical change each.
+- PRs: summary, linked issue/milestone, commands run (lint/tests), API/env notes, and screenshots/logs when relevant.
+- Document new env vars and update `packages/backend/.env.example` accordingly.
 
-| Action | Command | Description |
-| :--- | :--- | :--- |
-| **Start Dev** | `pnpm dev` | Starts the Fastify server with hot-reload (Port 3000) |
-| **Build** | `pnpm build` | Compiles TypeScript |
-| **Test** | `pnpm test` | Runs Vitest unit/integration tests |
-| **Lint** | `pnpm lint` | Runs ESLint |
-| **DB Migrate**| `pnpm db:migrate`| Applies Prisma migrations |
-| **DB Seed** | `pnpm db:seed` | Populates DB with test data (Barbershop, Admin, Client) |
-| **DB Studio** | `pnpm db:studio` | Opens Prisma Studio GUI |
-
-### API Access
-
-- **Base URL:** `http://localhost:3000`
-- **Swagger UI:** `http://localhost:3000/docs` (Public)
-- **Health Check:** `http://localhost:3000/health` (Public)
-
-**Multi-Tenancy:**
-Most API endpoints require the `x-tenant-slug` header to identify the barbershop.
-- Example: `x-tenant-slug: barbearia-teste`
-
-## Key Architectural Patterns
-
-1.  **Tenant Isolation:**
-    *   **Strict Rule:** ALL database queries must filter by `barbershopId`.
-    *   **RLS:** Row Level Security is enabled in Postgres as a defense-in-depth measure.
-    *   **Middleware:** `tenant.ts` validates the slug and injects `tenantId` into the request context.
-
-2.  **Serverless Constraints:**
-    *   **Prisma:** Uses a singleton pattern (`src/lib/prisma.ts`) with `globalThis` to prevent connection exhaustion during hot-reloads.
-    *   **State:** The application is stateless. All session data (OTP, etc.) is stored in Redis.
-
-3.  **Layered Architecture:**
-    *   **Routes:** Define endpoints and validation schemas.
-    *   **Controllers:** Handle HTTP request/response logic.
-    *   **Services:** Contain business logic.
-    *   **Repositories:** Handle direct database interactions.
-
-## Current Status & Roadmap
-
-Refer to `docs/DEVELOPMENT.md` for the single source of truth on progress.
-
-- **Completed:** Scaffolding, Database Schema, Core Infrastructure, Fastify Middleware (Tenant/RateLimit).
-- **Current Focus:** Milestone 3 - Authentication (JWT + OTP).
+## Security & Configuration Tips
+- Copy `packages/backend/.env.example` to `.env`; fill `DATABASE_URL`, `DIRECT_URL`, Redis, JWT, `CRON_SECRET` (use Supabase pooler port 6543 in prod).
+- OTP codes stay in Redis with TTL; never store in PostgreSQL.
+- Enforce pagination (`page`/`limit`) to avoid Vercel timeouts.
+- Protect cron endpoints with `CRON_SECRET`; Swagger can stay public but avoid sensitive payloads.

@@ -102,18 +102,22 @@ The script is idempotent and safe to run multiple times.
 # Start development server
 pnpm dev
 
+# Lint (obrigatório em toda implementação)
+pnpm lint
+
 # Run tests
 pnpm test
 
 # Run tests with coverage
 pnpm test:coverage
 
-# Lint code
-pnpm lint
-
 # Open Prisma Studio
 pnpm db:studio
 ```
+
+## PR / Merge Checklist
+
+Veja `docs/PR-CHECKLIST.md`.
 
 ## API Documentation
 

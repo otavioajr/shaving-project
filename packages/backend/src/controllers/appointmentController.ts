@@ -40,7 +40,7 @@ export class AppointmentController {
   async list(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { page, limit, ...filters } = listQuerySchema.parse(request.query)
-      const barbershopId = (request as any).tenantId
+      const barbershopId = request.tenantId
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -59,7 +59,7 @@ export class AppointmentController {
   async getById(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { id } = idParamSchema.parse(request.params)
-      const barbershopId = (request as any).tenantId
+      const barbershopId = request.tenantId
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -83,8 +83,8 @@ export class AppointmentController {
   async create(request: FastifyRequest, reply: FastifyReply) {
     try {
       const data = createAppointmentSchema.parse(request.body)
-      const barbershopId = (request as any).tenantId
-      const userId = (request as any).user?.id // from JWT
+      const barbershopId = request.tenantId
+      const userId = request.user?.id // from JWT
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -120,8 +120,8 @@ export class AppointmentController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const data = updateAppointmentSchema.parse(request.body)
-      const barbershopId = (request as any).tenantId
-      const user = (request as any).user
+      const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -152,8 +152,8 @@ export class AppointmentController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const data = updateStatusSchema.parse(request.body)
-      const barbershopId = (request as any).tenantId
-      const user = (request as any).user
+      const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -180,8 +180,8 @@ export class AppointmentController {
   async delete(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { id } = idParamSchema.parse(request.params)
-      const barbershopId = (request as any).tenantId
-      const user = (request as any).user
+      const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })

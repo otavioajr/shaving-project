@@ -72,7 +72,9 @@ export class AuthService {
     await redis.setex(key, 300, otp)
 
     // TODO: Send email with OTP (implement email service)
-    console.log(`OTP for ${email}: ${otp}`)
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`OTP for ${email}: ${otp}`)
+    }
   }
 
   async verifyOTP(email: string, barbershopId: string, otp: string): Promise<boolean> {

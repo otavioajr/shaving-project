@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import bcrypt from 'bcryptjs'
 import type { FastifyInstance } from 'fastify'
+import type { AuthenticatedUser } from '../../types/index.js'
 
 const redisMock = {
   setex: vi.fn().mockResolvedValue('OK'),
@@ -194,8 +195,13 @@ describe('Auth Controller', () => {
   })
 
   it('should refresh token when refresh token is valid and stored', async () => {
-    const payload = { id: 'prof-1', email: 'admin@example.com', barbershopId: 'tenant-id', role: 'ADMIN' }
-    const refreshToken = app.jwt.sign(payload as any, { expiresIn: '7d' })
+    const payload: AuthenticatedUser = {
+      id: 'prof-1',
+      email: 'admin@example.com',
+      barbershopId: 'tenant-id',
+      role: 'ADMIN',
+    }
+    const refreshToken = app.jwt.sign(payload, { expiresIn: '7d' })
     redisMock.get.mockResolvedValueOnce(refreshToken)
 
     const response = await app.inject({
@@ -210,8 +216,13 @@ describe('Auth Controller', () => {
   })
 
   it('should reject refresh when token is not stored', async () => {
-    const payload = { id: 'prof-1', email: 'admin@example.com', barbershopId: 'tenant-id', role: 'ADMIN' }
-    const refreshToken = app.jwt.sign(payload as any, { expiresIn: '7d' })
+    const payload: AuthenticatedUser = {
+      id: 'prof-1',
+      email: 'admin@example.com',
+      barbershopId: 'tenant-id',
+      role: 'ADMIN',
+    }
+    const refreshToken = app.jwt.sign(payload, { expiresIn: '7d' })
     redisMock.get.mockResolvedValueOnce(null)
 
     const response = await app.inject({
@@ -225,8 +236,13 @@ describe('Auth Controller', () => {
   })
 
   it('should logout and revoke refresh token', async () => {
-    const payload = { id: 'prof-1', email: 'admin@example.com', barbershopId: 'tenant-id', role: 'ADMIN' }
-    const accessToken = app.jwt.sign(payload as any, { expiresIn: '15m' })
+    const payload: AuthenticatedUser = {
+      id: 'prof-1',
+      email: 'admin@example.com',
+      barbershopId: 'tenant-id',
+      role: 'ADMIN',
+    }
+    const accessToken = app.jwt.sign(payload, { expiresIn: '15m' })
 
     const response = await app.inject({
       method: 'POST',

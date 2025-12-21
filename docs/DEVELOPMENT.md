@@ -306,6 +306,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 ### Checklist
 
 - [x] `pnpm test` passing (Vitest: 68/68 ✅)
+- [x] `pnpm lint` passing (0 warnings/errors)
 - [ ] Test coverage >= 80% (current: ~58% lines/stmts on `pnpm test:coverage`)
 - [x] Complete Swagger documentation
 - [x] README with setup instructions
@@ -313,10 +314,13 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - [ ] Vercel deployment
 - [ ] Production health check
 - [x] TestSprite E2E integration (10/10 passing, report available)
+- [ ] PR/Merge checklist followed (`docs/PR-CHECKLIST.md`)
 
 ### Maintenance Notes
 
 - 2025-12-19: Hook global de pre-serialization para converter Prisma Decimal em `number` e `Date` em ISO string nas respostas `/api`.
+- 2025-12-20: ESLint do backend passou sem warnings/erros após ajustes de tipagem e limpeza de `any` explícito.
+- 2025-12-20: **Correção Decimal→number movida para service layer** (preSerialization hook não era chamado antes da validação de schema do Fastify). Helpers type-safe em `serializer.ts`, aplicados em todos os services com campos Decimal.
 
 ---
 
@@ -344,6 +348,13 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ## Notes
 
+### E2E Script (Local)
+
+- Script: `scripts/e2e-test.sh`
+- Default behavior: exige testes autenticados (falha se `ACCESS_TOKEN` não for obtido)
+- Para rodar somente endpoints públicos: `PUBLIC_ONLY=1 ./scripts/e2e-test.sh`
+- Para desabilitar a exigência de auth explicitamente: `REQUIRE_AUTH_TESTS=0 ./scripts/e2e-test.sh`
+
 ### Critical Implementation Points
 
 1. **Prisma Singleton:** Always use `globalThis` pattern to prevent connection exhaustion in serverless
@@ -360,4 +371,4 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ---
 
-*Last updated: 2025-12-19*
+*Last updated: 2025-12-20*

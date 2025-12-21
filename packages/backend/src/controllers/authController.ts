@@ -1,4 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
+import type { AuthenticatedUser } from '../types/index.js'
 import { authService } from '../services/authService.js'
 import {
   loginSchema,
@@ -16,7 +17,7 @@ export class AuthController {
   async login(request: FastifyRequest, reply: FastifyReply) {
     try {
       const data = loginSchema.parse(request.body) as LoginInput
-      const barbershopId = (request as any).tenantId
+      const barbershopId = request.tenantId
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -31,13 +32,21 @@ export class AuthController {
       }
 
       // Generate JWT tokens
-      const accessToken = request.server.jwt.sign(
-        { id: professional.id, email: professional.email, barbershopId, role: professional.role } as any,
-        { expiresIn: '15m' }
-      )
+      const accessTokenPayload: AuthenticatedUser = {
+        id: professional.id,
+        email: professional.email,
+        barbershopId,
+        role: professional.role,
+      }
+      const accessToken = request.server.jwt.sign(accessTokenPayload, { expiresIn: '15m' })
 
-      const refreshTokenPayload = { id: professional.id, email: professional.email, barbershopId, role: professional.role }
-      const refreshToken = request.server.jwt.sign(refreshTokenPayload as any, { expiresIn: '7d' })
+      const refreshTokenPayload: AuthenticatedUser = {
+        id: professional.id,
+        email: professional.email,
+        barbershopId,
+        role: professional.role,
+      }
+      const refreshToken = request.server.jwt.sign(refreshTokenPayload, { expiresIn: '7d' })
 
       // Store refresh token in Redis
       await authService.saveRefreshToken(professional.id, barbershopId, refreshToken)
@@ -69,21 +78,17 @@ export class AuthController {
   async refresh(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { refreshToken } = refreshSchema.parse(request.body) as RefreshInput
-      const barbershopId = (request as any).tenantId
+      const barbershopId = request.tenantId
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
       }
 
       // Verify refresh token
-      let payload: any
+      let payload: AuthenticatedUser
       try {
-        payload = request.server.jwt.verify(refreshToken)
-      } catch (error) {
-        return reply.status(401).send({ error: 'Invalid refresh token' })
-      }
-
-      if (!payload) {
+        payload = request.server.jwt.verify<AuthenticatedUser>(refreshToken)
+      } catch {
         return reply.status(401).send({ error: 'Invalid refresh token' })
       }
 
@@ -98,10 +103,13 @@ export class AuthController {
       }
 
       // Generate new access token
-      const newAccessToken = request.server.jwt.sign(
-        { id: payload.id, email: payload.email, barbershopId, role: payload.role } as any,
-        { expiresIn: '15m' }
-      )
+      const newAccessTokenPayload: AuthenticatedUser = {
+        id: payload.id,
+        email: payload.email,
+        barbershopId,
+        role: payload.role,
+      }
+      const newAccessToken = request.server.jwt.sign(newAccessTokenPayload, { expiresIn: '15m' })
 
       return reply.status(200).send({ accessToken: newAccessToken })
     } catch (error) {
@@ -113,30 +121,26 @@ export class AuthController {
   }
 
   async logout(request: FastifyRequest, reply: FastifyReply) {
-    try {
-      const barbershopId = (request as any).tenantId
-      const userId = (request as any).user?.id
+    const barbershopId = request.tenantId
+    const userId = request.user?.id
 
-      if (!barbershopId || !userId) {
-        return reply.status(401).send({ error: 'Not authenticated' })
-      }
-
-      // Remove refresh token from Redis
-      await authService.deleteRefreshToken(userId, barbershopId)
-
-      // Clear cookie
-      reply.clearCookie('refreshToken')
-
-      return reply.status(200).send({ message: 'Logged out successfully' })
-    } catch (error) {
-      throw error
+    if (!barbershopId || !userId) {
+      return reply.status(401).send({ error: 'Not authenticated' })
     }
+
+    // Remove refresh token from Redis
+    await authService.deleteRefreshToken(userId, barbershopId)
+
+    // Clear cookie
+    reply.clearCookie('refreshToken')
+
+    return reply.status(200).send({ message: 'Logged out successfully' })
   }
 
   async requestOTP(request: FastifyRequest, reply: FastifyReply) {
     try {
       const data = otpRequestSchema.parse(request.body) as OtpRequestInput
-      const barbershopId = (request as any).tenantId
+      const barbershopId = request.tenantId
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -159,7 +163,7 @@ export class AuthController {
   async verifyOTP(request: FastifyRequest, reply: FastifyReply) {
     try {
       const data = otpVerifySchema.parse(request.body) as OtpVerifyInput
-      const barbershopId = (request as any).tenantId
+      const barbershopId = request.tenantId
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -176,10 +180,15 @@ export class AuthController {
         return reply.status(401).send({ error: 'Invalid OTP' })
       }
 
-      const payload = { id: professional.id, email: professional.email, barbershopId, role: professional.role }
+      const payload: AuthenticatedUser = {
+        id: professional.id,
+        email: professional.email,
+        barbershopId,
+        role: professional.role,
+      }
 
-      const accessToken = request.server.jwt.sign(payload as any, { expiresIn: '15m' })
-      const refreshToken = request.server.jwt.sign(payload as any, { expiresIn: '7d' })
+      const accessToken = request.server.jwt.sign(payload, { expiresIn: '15m' })
+      const refreshToken = request.server.jwt.sign(payload, { expiresIn: '7d' })
 
       await authService.saveRefreshToken(professional.id, barbershopId, refreshToken)
 

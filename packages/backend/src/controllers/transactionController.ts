@@ -37,7 +37,7 @@ export class TransactionController {
   async list(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { page, limit, ...filters } = listQuerySchema.parse(request.query)
-      const barbershopId = (request as any).tenantId
+      const barbershopId = request.tenantId
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -56,7 +56,7 @@ export class TransactionController {
   async getById(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { id } = idParamSchema.parse(request.params)
-      const barbershopId = (request as any).tenantId
+      const barbershopId = request.tenantId
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -80,8 +80,8 @@ export class TransactionController {
   async create(request: FastifyRequest, reply: FastifyReply) {
     try {
       const data = createTransactionSchema.parse(request.body)
-      const barbershopId = (request as any).tenantId
-      const user = (request as any).user
+      const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -117,8 +117,8 @@ export class TransactionController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const data = updateTransactionSchema.parse(request.body)
-      const barbershopId = (request as any).tenantId
-      const user = (request as any).user
+      const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
@@ -148,8 +148,8 @@ export class TransactionController {
   async delete(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { id } = idParamSchema.parse(request.params)
-      const barbershopId = (request as any).tenantId
-      const user = (request as any).user
+      const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
