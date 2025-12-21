@@ -1,13 +1,26 @@
 import type { FastifyInstance } from 'fastify'
 import { clientController } from '../controllers/clientController.js'
+import { requireAuth } from '../middleware/auth.js'
+
+const errorResponseSchema = {
+  type: 'object',
+  properties: {
+    error: { type: 'string' },
+    message: { type: 'string' },
+    details: { type: 'array' },
+  },
+  additionalProperties: true,
+} as const
 
 export async function clientRoutes(app: FastifyInstance) {
   app.get(
     '/clients',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Clients'],
         summary: 'List all clients',
+        security: [{ bearerAuth: [] }],
         querystring: {
           type: 'object',
           properties: {
@@ -46,6 +59,8 @@ export async function clientRoutes(app: FastifyInstance) {
               },
             },
           },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -55,9 +70,11 @@ export async function clientRoutes(app: FastifyInstance) {
   app.get(
     '/clients/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Clients'],
         summary: 'Get client by ID',
+        security: [{ bearerAuth: [] }],
         params: {
           type: 'object',
           required: ['id'],
@@ -78,6 +95,8 @@ export async function clientRoutes(app: FastifyInstance) {
             },
           },
           404: { type: 'object', properties: { error: { type: 'string' } } },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -87,9 +106,11 @@ export async function clientRoutes(app: FastifyInstance) {
   app.post(
     '/clients',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Clients'],
         summary: 'Create new client',
+        security: [{ bearerAuth: [] }],
         body: {
           type: 'object',
           required: ['name', 'phone'],
@@ -114,6 +135,8 @@ export async function clientRoutes(app: FastifyInstance) {
             },
           },
           409: { type: 'object', properties: { error: { type: 'string' } } },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -123,9 +146,11 @@ export async function clientRoutes(app: FastifyInstance) {
   app.put(
     '/clients/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Clients'],
         summary: 'Update client',
+        security: [{ bearerAuth: [] }],
         params: {
           type: 'object',
           required: ['id'],
@@ -154,6 +179,8 @@ export async function clientRoutes(app: FastifyInstance) {
             },
           },
           404: { type: 'object', properties: { error: { type: 'string' } } },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -163,9 +190,11 @@ export async function clientRoutes(app: FastifyInstance) {
   app.delete(
     '/clients/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Clients'],
         summary: 'Delete client',
+        security: [{ bearerAuth: [] }],
         params: {
           type: 'object',
           required: ['id'],
@@ -174,6 +203,8 @@ export async function clientRoutes(app: FastifyInstance) {
         response: {
           204: { type: 'null' },
           404: { type: 'object', properties: { error: { type: 'string' } } },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },

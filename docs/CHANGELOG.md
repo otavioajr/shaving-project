@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- RBAC aplicado no CRUD de Professionals/Services (ADMIN vs BARBER), com self-update restrito a name/email/password.
+- Autenticação obrigatória também nos endpoints GET de professionals/clients/services.
+- Soft delete (`isActive=false`) para professionals/clients/services com filtros de listagem apenas ativos.
+- Testes de controllers para CRUD de professionals/clients/services.
+
 ### Fixed
 - **Correção de serialização Decimal nos Services** (2025-12-20)
   - **Problema:** Endpoints com campos `Decimal` (professionals, services, appointments, transactions) retornavam erro 500 porque Fastify valida o response schema ANTES do hook `preSerialization`
@@ -30,7 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adicionado checklist de PR/merge (“Definition of Done”) em `docs/PR-CHECKLIST.md`.
 
 ### Next Steps
-- Milestone 4: aplicar RBAC (roles) e testes do CRUD
 - Milestone 5: validar transições de status e testes de appointments
 - Milestone 6: adicionar endpoints de summary/commission report e testes
 - Milestone 8: proteger update de barbershop com auth/RBAC

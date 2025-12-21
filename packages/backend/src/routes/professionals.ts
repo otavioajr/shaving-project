@@ -1,15 +1,28 @@
 import type { FastifyInstance } from 'fastify'
 import { professionalController } from '../controllers/professionalController.js'
+import { requireAuth } from '../middleware/auth.js'
+
+const errorResponseSchema = {
+  type: 'object',
+  properties: {
+    error: { type: 'string' },
+    message: { type: 'string' },
+    details: { type: 'array' },
+  },
+  additionalProperties: true,
+} as const
 
 export async function professionalRoutes(app: FastifyInstance) {
   // List all professionals with pagination
   app.get(
     '/professionals',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Professionals'],
         summary: 'List all professionals',
         description: 'Get a paginated list of professionals for the current tenant',
+        security: [{ bearerAuth: [] }],
         querystring: {
           type: 'object',
           properties: {
@@ -48,6 +61,8 @@ export async function professionalRoutes(app: FastifyInstance) {
               },
             },
           },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -58,10 +73,12 @@ export async function professionalRoutes(app: FastifyInstance) {
   app.get(
     '/professionals/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Professionals'],
         summary: 'Get professional by ID',
         description: 'Retrieve a specific professional by their ID',
+        security: [{ bearerAuth: [] }],
         params: {
           type: 'object',
           required: ['id'],
@@ -89,6 +106,8 @@ export async function professionalRoutes(app: FastifyInstance) {
               error: { type: 'string' },
             },
           },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -99,10 +118,12 @@ export async function professionalRoutes(app: FastifyInstance) {
   app.post(
     '/professionals',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Professionals'],
         summary: 'Create new professional',
         description: 'Register a new professional for the current tenant',
+        security: [{ bearerAuth: [] }],
         body: {
           type: 'object',
           required: ['name', 'email', 'password', 'commissionRate', 'role'],
@@ -134,6 +155,8 @@ export async function professionalRoutes(app: FastifyInstance) {
               error: { type: 'string' },
             },
           },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -144,10 +167,12 @@ export async function professionalRoutes(app: FastifyInstance) {
   app.put(
     '/professionals/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Professionals'],
         summary: 'Update professional',
         description: 'Update an existing professional',
+        security: [{ bearerAuth: [] }],
         params: {
           type: 'object',
           required: ['id'],
@@ -185,6 +210,8 @@ export async function professionalRoutes(app: FastifyInstance) {
               error: { type: 'string' },
             },
           },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -195,10 +222,12 @@ export async function professionalRoutes(app: FastifyInstance) {
   app.delete(
     '/professionals/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Professionals'],
         summary: 'Delete professional',
         description: 'Remove a professional from the system',
+        security: [{ bearerAuth: [] }],
         params: {
           type: 'object',
           required: ['id'],
@@ -217,6 +246,8 @@ export async function professionalRoutes(app: FastifyInstance) {
               error: { type: 'string' },
             },
           },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },

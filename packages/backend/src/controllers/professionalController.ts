@@ -33,14 +33,25 @@ export class ProfessionalController {
     try {
       const { page, limit } = listQuerySchema.parse(request.query)
       const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
       }
 
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
+      }
+
       const result = await professionalService.listProfessionals(barbershopId, { page, limit })
 
-      return reply.status(200).send(result)
+      const data = result.data.map(({ passwordHash: _passwordHash, ...professional }) => professional)
+
+      return reply.status(200).send({ ...result, data })
     } catch (error) {
       if (error instanceof z.ZodError) {
         return reply.status(400).send({ error: 'Validation failed', details: error.errors })
@@ -53,9 +64,18 @@ export class ProfessionalController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const professional = await professionalService.getProfessional(id, barbershopId)
@@ -94,6 +114,10 @@ export class ProfessionalController {
 
       if (user.barbershopId !== barbershopId) {
         return reply.status(403).send({ error: 'Tenant mismatch' })
+      }
+
+      if (user.role !== 'ADMIN') {
+        return reply.status(403).send({ error: 'Admin role required' })
       }
 
       const professional = await professionalService.createProfessional({
@@ -137,6 +161,29 @@ export class ProfessionalController {
         return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
+      if (user.role === 'BARBER') {
+        if (user.id !== id) {
+          return reply.status(403).send({ error: 'Cannot update another professional' })
+        }
+
+        if (data.role !== undefined || data.commissionRate !== undefined) {
+          return reply.status(403).send({ error: 'Insufficient permissions to update role or commission' })
+        }
+
+        const allowedData = {
+          ...(data.name !== undefined && { name: data.name }),
+          ...(data.email !== undefined && { email: data.email }),
+          ...(data.password !== undefined && { password: data.password }),
+        }
+
+        const professional = await professionalService.updateProfessional(id, barbershopId, allowedData)
+
+        const { passwordHash: _passwordHash, ...professionalData } = professional
+        void _passwordHash
+
+        return reply.status(200).send(professionalData)
+      }
+
       const professional = await professionalService.updateProfessional(id, barbershopId, data)
 
       // Remove password hash from response
@@ -175,6 +222,10 @@ export class ProfessionalController {
 
       if (user.barbershopId !== barbershopId) {
         return reply.status(403).send({ error: 'Tenant mismatch' })
+      }
+
+      if (user.role !== 'ADMIN') {
+        return reply.status(403).send({ error: 'Admin role required' })
       }
 
       await professionalService.deleteProfessional(id, barbershopId)

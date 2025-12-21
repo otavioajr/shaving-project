@@ -28,9 +28,18 @@ export class ServiceController {
     try {
       const { page, limit } = listQuerySchema.parse(request.query)
       const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const result = await serviceService.listServices(barbershopId, { page, limit })
@@ -47,9 +56,18 @@ export class ServiceController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const service = await serviceService.getService(id, barbershopId)
@@ -82,6 +100,14 @@ export class ServiceController {
         return reply.status(401).send({ error: 'Authentication required' })
       }
 
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
+      }
+
+      if (user.role !== 'ADMIN') {
+        return reply.status(403).send({ error: 'Admin role required' })
+      }
+
       const service = await serviceService.createService({
         ...data,
         barbershopId,
@@ -112,6 +138,14 @@ export class ServiceController {
         return reply.status(401).send({ error: 'Authentication required' })
       }
 
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
+      }
+
+      if (user.role !== 'ADMIN') {
+        return reply.status(403).send({ error: 'Admin role required' })
+      }
+
       const service = await serviceService.updateService(id, barbershopId, data)
       return reply.status(200).send(service)
     } catch (error) {
@@ -138,6 +172,14 @@ export class ServiceController {
       // Require authentication for deleting services
       if (!user?.id) {
         return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
+      }
+
+      if (user.role !== 'ADMIN') {
+        return reply.status(403).send({ error: 'Admin role required' })
       }
 
       await serviceService.deleteService(id, barbershopId)

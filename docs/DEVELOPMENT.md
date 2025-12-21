@@ -34,7 +34,7 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 | 1 | **COMPLETE** ✅ | Database Schema & Core Infrastructure |
 | 2 | **COMPLETE** ✅ | Fastify App & Core Middleware |
 | 3 | **COMPLETE** ✅ | Authentication (JWT + OTP) |
-| 4 | In Progress | CRUD (Professionals, Clients, Services) |
+| 4 | **COMPLETE** ✅ | CRUD (Professionals, Clients, Services) |
 | 5 | In Progress | Appointment Management |
 | 6 | In Progress | Financial Management |
 | 7 | In Progress | Notifications (Web Push + Cron) |
@@ -198,7 +198,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ## Milestone 4: CRUD (Professionals, Clients, Services)
 
-**Status:** IN PROGRESS
+**Status:** COMPLETE ✅
 
 ### Checklist
 
@@ -219,10 +219,11 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
   - `src/routes/services.ts`
 - [x] Pagination implementation
   - All list endpoints return `{ data: [], pagination: { page, limit, total, totalPages } }`
-- [x] Auth required for create/update/delete operations
-- [ ] Role-based access control (RBAC) by `role` (ADMIN vs BARBER)
+- [x] Auth required for all operations (including GET)
+- [x] Role-based access control (RBAC) by `role` (ADMIN vs BARBER)
+- [x] Soft delete with `isActive` and filtering of inactive records
 - [x] Swagger documentation (schemas in routes)
-- [ ] Unit and integration tests for CRUD endpoints
+- [x] Unit and integration tests for CRUD endpoints
 
 ---
 

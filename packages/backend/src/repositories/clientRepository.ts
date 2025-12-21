@@ -22,6 +22,7 @@ export class ClientRepository {
       where: {
         id,
         barbershopId,
+        isActive: true,
       },
     })
   }
@@ -41,13 +42,13 @@ export class ClientRepository {
 
     const [data, total] = await Promise.all([
       prisma.client.findMany({
-        where: { barbershopId },
+        where: { barbershopId, isActive: true },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
       prisma.client.count({
-        where: { barbershopId },
+        where: { barbershopId, isActive: true },
       }),
     ])
 
@@ -67,7 +68,7 @@ export class ClientRepository {
   }
 
   async update(id: string, barbershopId: string, data: Prisma.ClientUpdateInput): Promise<Client> {
-    const existing = await prisma.client.findFirst({ where: { id, barbershopId } })
+    const existing = await prisma.client.findFirst({ where: { id, barbershopId, isActive: true } })
     if (!existing) {
       throw new Error('Client not found')
     }
@@ -78,12 +79,13 @@ export class ClientRepository {
   }
 
   async delete(id: string, barbershopId: string): Promise<Client> {
-    const existing = await prisma.client.findFirst({ where: { id, barbershopId } })
+    const existing = await prisma.client.findFirst({ where: { id, barbershopId, isActive: true } })
     if (!existing) {
       throw new Error('Client not found')
     }
-    return prisma.client.delete({
+    return prisma.client.update({
       where: { id },
+      data: { isActive: false },
     })
   }
 }

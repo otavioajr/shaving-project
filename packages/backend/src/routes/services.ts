@@ -1,13 +1,26 @@
 import type { FastifyInstance } from 'fastify'
 import { serviceController } from '../controllers/serviceController.js'
+import { requireAuth } from '../middleware/auth.js'
+
+const errorResponseSchema = {
+  type: 'object',
+  properties: {
+    error: { type: 'string' },
+    message: { type: 'string' },
+    details: { type: 'array' },
+  },
+  additionalProperties: true,
+} as const
 
 export async function serviceRoutes(app: FastifyInstance) {
   app.get(
     '/services',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Services'],
         summary: 'List all services',
+        security: [{ bearerAuth: [] }],
         querystring: {
           type: 'object',
           properties: {
@@ -46,6 +59,8 @@ export async function serviceRoutes(app: FastifyInstance) {
               },
             },
           },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -55,9 +70,11 @@ export async function serviceRoutes(app: FastifyInstance) {
   app.get(
     '/services/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Services'],
         summary: 'Get service by ID',
+        security: [{ bearerAuth: [] }],
         params: {
           type: 'object',
           required: ['id'],
@@ -78,6 +95,8 @@ export async function serviceRoutes(app: FastifyInstance) {
             },
           },
           404: { type: 'object', properties: { error: { type: 'string' } } },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -87,9 +106,11 @@ export async function serviceRoutes(app: FastifyInstance) {
   app.post(
     '/services',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Services'],
         summary: 'Create new service',
+        security: [{ bearerAuth: [] }],
         body: {
           type: 'object',
           required: ['name', 'price', 'duration'],
@@ -113,6 +134,8 @@ export async function serviceRoutes(app: FastifyInstance) {
               updatedAt: { type: 'string', format: 'date-time' },
             },
           },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -122,9 +145,11 @@ export async function serviceRoutes(app: FastifyInstance) {
   app.put(
     '/services/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Services'],
         summary: 'Update service',
+        security: [{ bearerAuth: [] }],
         params: {
           type: 'object',
           required: ['id'],
@@ -153,6 +178,8 @@ export async function serviceRoutes(app: FastifyInstance) {
             },
           },
           404: { type: 'object', properties: { error: { type: 'string' } } },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -162,9 +189,11 @@ export async function serviceRoutes(app: FastifyInstance) {
   app.delete(
     '/services/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Services'],
         summary: 'Delete service',
+        security: [{ bearerAuth: [] }],
         params: {
           type: 'object',
           required: ['id'],
@@ -173,6 +202,8 @@ export async function serviceRoutes(app: FastifyInstance) {
         response: {
           204: { type: 'null' },
           404: { type: 'object', properties: { error: { type: 'string' } } },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
