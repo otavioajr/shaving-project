@@ -20,6 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New scripts: `pnpm format`, `pnpm format:check`
   - Files: `.prettierrc`, `.prettierignore`, `.editorconfig`, `.husky/pre-commit`
 
+- **Milestone 6: Financial Reports - COMPLETE** (2025-12-23)
+  - **New Endpoints:**
+    - `GET /api/reports/summary` - Aggregated financial summary (income, expenses, net, appointments)
+    - `GET /api/reports/commissions` - Commission breakdown by professional
+  - **Logic:**
+    - Aggregation of transactions by type/category
+    - Calculation of appointment revenue and commissions
+    - Date range validation (max 365 days, from <= to)
+  - **Tests:** Added `src/controllers/__tests__/reports.test.ts` covering auth, validation, and aggregations
+
 - **Milestone 5: Appointment Management - COMPLETE** (2025-12-23)
   - **JWT Authentication Required:** Added `requireAuth` middleware to ALL appointment routes (GET, POST, PUT, PATCH, DELETE)
   - **Swagger Security Schemas:** Added `security: [{ bearerAuth: [] }]` and 401/403 response schemas to all appointment endpoints
@@ -50,6 +60,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Testes de controllers para CRUD de professionals/clients/services.
 
 ### Fixed
+
+- **Tenant scoping in commission report professionals lookup** (2025-12-23)
+  - Added `barbershopId` filter when fetching professionals for commission aggregation
 
 - **Appointment Update Final-State Response** (2025-12-23)
   - Map attempts to update COMPLETED/CANCELLED/NO_SHOW appointments to 400 in `appointmentController.update`

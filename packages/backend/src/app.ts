@@ -12,6 +12,7 @@ import { clientRoutes } from './routes/clients.js'
 import { serviceRoutes } from './routes/services.js'
 import { appointmentRoutes } from './routes/appointments.js'
 import { transactionRoutes } from './routes/transactions.js'
+import { reportRoutes } from './routes/reports.js'
 import { authRoutes } from './routes/auth.js'
 import { barbershopRoutes } from './routes/barbershops.js'
 import { serializeResponse } from './lib/serializer.js'
@@ -157,6 +158,7 @@ export async function buildApp(options: AppOptions = {}): Promise<FastifyInstanc
   await app.register(serviceRoutes, { prefix: '/api' })
   await app.register(appointmentRoutes, { prefix: '/api' })
   await app.register(transactionRoutes, { prefix: '/api' })
+  await app.register(reportRoutes, { prefix: '/api' })
   await app.register(authRoutes, { prefix: '/api' })
   await app.register(barbershopRoutes, { prefix: '/api' })
 
