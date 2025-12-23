@@ -3,6 +3,7 @@
 ## Prerequisites
 
 Before executing this plan, read:
+
 1. **[principal-plan.md](principal-plan.md)** - Project overview
 2. **[DEVELOPMENT.md](../DEVELOPMENT.md)** - Current milestone status
 3. **[CHANGELOG.md](../CHANGELOG.md)** - Recent changes
@@ -24,12 +25,12 @@ Fix TestSprite-generated tests to match actual API schemas and authentication pa
 
 TestSprite generated tests based on assumptions that don't match our actual API implementation:
 
-| Category | Tests Affected | Root Cause |
-|----------|----------------|------------|
-| Schema Mismatch | TC005, TC006 | Wrong request payload fields |
-| Error Code Mismatch | TC007 | Expects 401/403, API returns 404 |
-| OTP Dependency | TC004, TC008, TC009, TC010 | Tests try to retrieve OTP from Redis |
-| False Positive | TC008 | Skips critical tests when OTP unavailable |
+| Category            | Tests Affected             | Root Cause                                |
+| ------------------- | -------------------------- | ----------------------------------------- |
+| Schema Mismatch     | TC005, TC006               | Wrong request payload fields              |
+| Error Code Mismatch | TC007                      | Expects 401/403, API returns 404          |
+| OTP Dependency      | TC004, TC008, TC009, TC010 | Tests try to retrieve OTP from Redis      |
+| False Positive      | TC008                      | Skips critical tests when OTP unavailable |
 
 ---
 
@@ -40,6 +41,7 @@ TestSprite generated tests based on assumptions that don't match our actual API 
 **File:** `testsprite_tests/TC005_crud_operations_for_professionals_with_tenant_isolation.py`
 
 **Problem (lines 134-140):**
+
 ```python
 # Current (WRONG)
 professional_data = {
@@ -52,6 +54,7 @@ professional_data = {
 ```
 
 **Fix:**
+
 ```python
 # Corrected
 professional_data = {
@@ -64,6 +67,7 @@ professional_data = {
 ```
 
 **Additional Fix (line 165):**
+
 ```python
 # Current (WRONG)
 assert isinstance(professionals_list, list)
@@ -82,6 +86,7 @@ professionals_list = professionals_response["data"]
 **File:** `testsprite_tests/TC006_crud_operations_for_clients_with_tenant_isolation.py`
 
 **Problem (lines 111-116):**
+
 ```python
 # Current (WRONG)
 client_payload = {
@@ -93,6 +98,7 @@ client_payload = {
 ```
 
 **Fix:**
+
 ```python
 # Corrected
 client_payload = {
@@ -102,6 +108,7 @@ client_payload = {
 ```
 
 **Additional Fix (line 133):**
+
 ```python
 # Remove this assertion - email doesn't exist on clients
 # assert client_get_data["email"] == client_payload["email"]
@@ -116,6 +123,7 @@ assert client_get_data["phone"] == client_payload["phone"]
 **File:** `testsprite_tests/TC007_crud_operations_for_services_with_authentication.py`
 
 **Problem (line 125):**
+
 ```python
 # Current (WRONG)
 assert r_wrong_create.status_code in {401, 403}
@@ -124,6 +132,7 @@ assert r_wrong_create.status_code in {401, 403}
 ```
 
 **Fix:**
+
 ```python
 # Corrected - include 404 for tenant not found
 assert r_wrong_create.status_code in {401, 403, 404}
@@ -138,6 +147,7 @@ assert r_wrong_create.status_code in {401, 403, 404}
 **Problem:** Test contains early exit when OTP retrieval fails, causing false pass.
 
 **Fix:**
+
 1. Remove OTP dependency
 2. Use password-based authentication
 3. Actually test appointment creation and conflict detection
@@ -159,11 +169,13 @@ def get_auth_token():
 **File:** `testsprite_tests/TC009_transaction_listing_with_filtering_and_pagination.py`
 
 **Problems:**
+
 1. OTP dependency for auth
 2. Wrong query parameters (`dateFrom/dateTo` vs `startDate/endDate`)
 3. Wrong response structure (`meta` vs `pagination`)
 
 **Fixes:**
+
 ```python
 # 1. Use password auth
 access_token = login(ADMIN_EMAIL, ADMIN_PASSWORD)
@@ -191,6 +203,7 @@ assert "pagination" in response  # Not "meta"
 **Problem:** Assumes local Redis REST at `http://localhost:6379`
 
 **Fix:**
+
 ```python
 # Remove Redis dependency entirely
 # Use password-based authentication
@@ -207,6 +220,7 @@ def ensure_auth():
 ## API Schema Reference
 
 ### Professional Entity
+
 ```typescript
 // POST /api/professionals - Required fields
 {
@@ -230,6 +244,7 @@ def ensure_auth():
 ```
 
 ### Client Entity
+
 ```typescript
 // POST /api/clients - Required fields
 {
@@ -241,6 +256,7 @@ def ensure_auth():
 ```
 
 ### Tenant Middleware Behavior
+
 ```
 Invalid/missing x-tenant-slug header → 404 (NOT 401/403)
 Invalid token → 401
@@ -261,6 +277,7 @@ After applying fixes:
 - [ ] TC010: Barbershop uses password auth (no Redis)
 
 **Run tests:**
+
 ```bash
 cd testsprite_tests
 python TC005_crud_operations_for_professionals_with_tenant_isolation.py
@@ -271,18 +288,18 @@ python TC005_crud_operations_for_professionals_with_tenant_isolation.py
 
 ## Expected Outcome
 
-| Test | Before | After |
-|------|--------|-------|
-| TC001 | ✅ Pass | ✅ Pass |
-| TC002 | ✅ Pass | ✅ Pass |
-| TC003 | ✅ Pass | ✅ Pass |
-| TC004 | ❌ Fail | ⚠️ Skip (OTP-specific) |
-| TC005 | ❌ Fail | ✅ Pass |
-| TC006 | ❌ Fail | ✅ Pass |
-| TC007 | ❌ Fail | ✅ Pass |
-| TC008 | ⚠️ False Pass | ✅ Real Pass |
-| TC009 | ❌ Fail | ✅ Pass |
-| TC010 | ❌ Fail | ✅ Pass |
+| Test  | Before        | After                  |
+| ----- | ------------- | ---------------------- |
+| TC001 | ✅ Pass       | ✅ Pass                |
+| TC002 | ✅ Pass       | ✅ Pass                |
+| TC003 | ✅ Pass       | ✅ Pass                |
+| TC004 | ❌ Fail       | ⚠️ Skip (OTP-specific) |
+| TC005 | ❌ Fail       | ✅ Pass                |
+| TC006 | ❌ Fail       | ✅ Pass                |
+| TC007 | ❌ Fail       | ✅ Pass                |
+| TC008 | ⚠️ False Pass | ✅ Real Pass           |
+| TC009 | ❌ Fail       | ✅ Pass                |
+| TC010 | ❌ Fail       | ✅ Pass                |
 
 **Result:** 9/10 passing (TC004 skipped as it specifically tests OTP E2E)
 

@@ -1,0 +1,1692 @@
+{
+  "meta": {
+    "project": "Multi-Tenant Barbershop SaaS Platform Backend",
+    "date": "2025-12-22",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "The Multi-Tenant Barbershop SaaS Platform Backend is a scalable, cloud-native backend service designed to support multiple barbershops (tenants) with isolated data and roles through a robust API. It provides authentication, management of professionals, clients, services, appointments, transactions, and barbershop configurations. The backend is built with modern technologies including Fastify, Prisma ORM, PostgreSQL, Upstash Redis, and supports JWT-based authentication with OTP mechanisms for security.",
+  "core_goals": [
+    "Provide a multi-tenant architecture ensuring data isolation and secure tenant validation.",
+    "Implement comprehensive JWT-based authentication with OTP for password recovery and role-based access control (RBAC).",
+    "Deliver CRUD functionality for core entities: professionals, clients, services, appointments, and financial transactions with pagination and filters.",
+    "Prevent appointment booking conflicts and automate commission calculations on completed appointments.",
+    "Enable secure, scalable, and documented RESTful APIs with Swagger/OpenAPI for easy integration and maintenance.",
+    "Support financial management and reporting for barbershop operations.",
+    "Facilitate notification system via web push and cron jobs for appointment reminders.",
+    "Allow barbershop tenant management with self-registration and administrative controls.",
+    "Ensure high code quality through automated testing, documentation, and deployment pipelines."
+  ],
+  "key_features": [
+    "Public Endpoints including health check and Swagger UI documentation.",
+    "JWT-based Authentication with email/password login, refresh tokens, logout, OTP request/verify for password recovery.",
+    "Role-based Access Control for administration and barbershop professionals.",
+    "Tenant isolation enforced by validating the 'x-tenant-slug' header on all protected endpoints.",
+    "Professionals CRUD with pagination, creation restricted to ADMIN role, including soft delete.",
+    "Clients CRUD with full lifecycle management and tenant isolation.",
+    "Services CRUD restricted to ADMINs, allowing creation, updating, and soft deletion.",
+    "Appointment Management with conflict detection to avoid scheduling overlaps and commission calculations on completion.",
+    "Financial Transactions CRUD supporting income, expense categorization, filtering by date and category.",
+    "Barbershop Tenant Management API for retrieving and updating tenant details.",
+    "Middleware for tenant validation, JWT authentication, and rate limiting to protect against abuse.",
+    "Web Push Notifications and scheduled cron jobs for appointment reminders.",
+    "Comprehensive Swagger/OpenAPI 3.0 documentation for all endpoints."
+  ],
+  "user_flow_summary": [
+    "User accesses public API documentation via /docs without authentication.",
+    "User logs in with email and password, providing tenant slug header, and receives JWT tokens for session management.",
+    "Upon login, users with ADMIN or BARBER roles access CRUD endpoints for professionals, clients, and services based on permissions.",
+    "Users book appointments ensuring no time conflicts, with the system calculating commissions when appointments complete.",
+    "Admins manage tenants by updating barbershop info while ensuring active tenant context.",
+    "Financial officers add and review transactions, filtering income and expenses over selected periods.",
+    "System triggers web push notifications through configured subscriptions and cron jobs alerting upcoming appointments to clients.",
+    "Users refresh tokens as needed to maintain session and securely log out to invalidate tokens.",
+    "Testing and deployment pipelines run automatically to validate new changes and ensure a stable production environment."
+  ],
+  "validation_criteria": [
+    "All APIs require 'x-tenant-slug' header except public endpoints; missing or invalid tenant results in 404 error.",
+    "JWT authentication enforces token validity with 15-minute access and 7-day refresh lifetimes; refresh token rotation and logout invalidate tokens properly.",
+    "OTP codes are stored securely in Redis with TTL of 5 minutes, never persisted in PostgreSQL.",
+    "CRUD operations for all core entities support pagination and tenant data isolation to prevent cross-tenant data leaks.",
+    "Role-based authorization restricts endpoints appropriately: e.g., only ADMINs can create or delete professionals and services.",
+    "Appointment endpoint prevents scheduling conflicts by checking overlapping appointments excluding cancelled ones.",
+    "Commission calculations must trigger only when appointment status is marked COMPLETED and must be stored as a snapshot.",
+    "Financial transactions maintain decimal precision and support filtering by date, type, and category with correct aggregations for reports.",
+    "Rate limiting applies per IP and tenant to mitigate abuse, returning HTTP 429 when limits are exceeded.",
+    "Web push notifications are sent securely, respecting stored push subscriptions and triggered by protected cron endpoints.",
+    "Automated tests achieve at least 80% coverage with continuous integration validating all code pushes.",
+    "Swagger documentation is complete and accessible at /docs for all API endpoints.",
+    "Deployment on Vercel serverless environment succeeds with environment variables properly configured as per documentation."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "TypeScript",
+      "Node.js 22",
+      "Fastify 5",
+      "PostgreSQL",
+      "Prisma ORM",
+      "Upstash Redis",
+      "JWT Authentication",
+      "Zod Validation",
+      "Bcrypt",
+      "Vitest",
+      "Swagger/OpenAPI 3.0"
+    ],
+    "features": [
+      {
+        "name": "Public Endpoints",
+        "description": "Public endpoints that do not require authentication or tenant header",
+        "files": ["src/app.ts"],
+        "api_doc": {
+          "paths": {
+            "/": {
+              "get": {
+                "summary": "Root endpoint with API info",
+                "tags": ["Public"],
+                "responses": {
+                  "200": {
+                    "description": "API metadata",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "docs": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/health": {
+              "get": {
+                "summary": "Health check endpoint",
+                "tags": ["Health"],
+                "responses": {
+                  "200": {
+                    "description": "Health status",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": ["ok"]
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "environment": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/docs": {
+              "get": {
+                "summary": "Swagger UI documentation",
+                "tags": ["Public"],
+                "responses": {
+                  "200": {
+                    "description": "Swagger UI HTML page"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Authentication",
+        "description": "JWT-based authentication with access/refresh tokens and OTP for password recovery. All auth endpoints require x-tenant-slug header except test endpoints.",
+        "files": [
+          "src/routes/auth.ts",
+          "src/controllers/authController.ts",
+          "src/services/authService.ts",
+          "src/middleware/auth.ts"
+        ],
+        "api_doc": {
+          "paths": {
+            "/api/auth/login": {
+              "post": {
+                "summary": "Login with email and password",
+                "tags": ["Auth"],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "required": ["email", "password"],
+                        "properties": {
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "password": {
+                            "type": "string",
+                            "minLength": 6
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Login successful",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "accessToken": {
+                              "type": "string"
+                            },
+                            "refreshToken": {
+                              "type": "string"
+                            },
+                            "professional": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "email": {
+                                  "type": "string"
+                                },
+                                "role": {
+                                  "type": "string",
+                                  "enum": ["ADMIN", "BARBER"]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "401": {
+                    "description": "Invalid credentials"
+                  },
+                  "404": {
+                    "description": "Missing or invalid tenant slug"
+                  }
+                }
+              }
+            },
+            "/api/auth/refresh": {
+              "post": {
+                "summary": "Refresh access token",
+                "tags": ["Auth"],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "required": ["refreshToken"],
+                        "properties": {
+                          "refreshToken": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "New access token",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "accessToken": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "401": {
+                    "description": "Invalid or expired refresh token"
+                  },
+                  "404": {
+                    "description": "Missing or invalid tenant slug"
+                  }
+                }
+              }
+            },
+            "/api/auth/logout": {
+              "post": {
+                "summary": "Logout and invalidate tokens",
+                "tags": ["Auth"],
+                "responses": {
+                  "200": {
+                    "description": "Logout successful",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "message": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Missing or invalid tenant slug"
+                  }
+                }
+              }
+            },
+            "/api/auth/request-otp": {
+              "post": {
+                "summary": "Request OTP code for password recovery",
+                "tags": ["Auth"],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "required": ["email"],
+                        "properties": {
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OTP sent",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "message": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "404": {
+                    "description": "Missing or invalid tenant slug"
+                  }
+                }
+              }
+            },
+            "/api/auth/verify-otp": {
+              "post": {
+                "summary": "Verify OTP and issue tokens",
+                "tags": ["Auth"],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "required": ["email", "otp"],
+                        "properties": {
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "otp": {
+                            "type": "string",
+                            "minLength": 6,
+                            "maxLength": 6
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OTP verified, tokens issued",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "accessToken": {
+                              "type": "string"
+                            },
+                            "refreshToken": {
+                              "type": "string"
+                            },
+                            "professional": {
+                              "type": "object"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "401": {
+                    "description": "Invalid or expired OTP"
+                  },
+                  "404": {
+                    "description": "Missing or invalid tenant slug"
+                  }
+                }
+              }
+            },
+            "/api/auth/test/otp/{identifier}": {
+              "get": {
+                "summary": "[TEST ONLY] Retrieve OTP for E2E tests",
+                "tags": ["Auth - Test Only"],
+                "description": "Only available when ENABLE_TEST_OTP_ENDPOINT=true and NODE_ENV is not production",
+                "parameters": [
+                  {
+                    "name": "identifier",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    },
+                    "description": "Email used to request OTP"
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OTP retrieved",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "otp": {
+                              "type": "string"
+                            },
+                            "expiresIn": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "400": {
+                    "description": "Tenant context required"
+                  },
+                  "404": {
+                    "description": "OTP not found or expired"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Professionals CRUD",
+        "description": "CRUD operations for professionals (barbers and admins) with RBAC. Requires authentication and tenant header.",
+        "files": [
+          "src/routes/professionals.ts",
+          "src/controllers/professionalController.ts",
+          "src/services/professionalService.ts",
+          "src/repositories/professionalRepository.ts"
+        ],
+        "api_doc": {
+          "paths": {
+            "/api/professionals": {
+              "get": {
+                "summary": "List all professionals with pagination",
+                "tags": ["Professionals"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 1
+                    }
+                  },
+                  {
+                    "name": "limit",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 20
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Paginated list of professionals",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "data": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "email": {
+                                    "type": "string"
+                                  },
+                                  "role": {
+                                    "type": "string",
+                                    "enum": ["ADMIN", "BARBER"]
+                                  },
+                                  "commissionRate": {
+                                    "type": "number"
+                                  },
+                                  "barbershopId": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "pagination": {
+                              "type": "object",
+                              "properties": {
+                                "page": {
+                                  "type": "number"
+                                },
+                                "limit": {
+                                  "type": "number"
+                                },
+                                "total": {
+                                  "type": "number"
+                                },
+                                "totalPages": {
+                                  "type": "number"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "403": {
+                    "description": "Forbidden"
+                  },
+                  "404": {
+                    "description": "Missing or invalid tenant slug"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Create new professional (ADMIN only)",
+                "tags": ["Professionals"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "required": ["name", "email", "password", "commissionRate", "role"],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "password": {
+                            "type": "string",
+                            "minLength": 6
+                          },
+                          "commissionRate": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 100
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": ["ADMIN", "BARBER"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Professional created"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "403": {
+                    "description": "Forbidden - ADMIN only"
+                  },
+                  "409": {
+                    "description": "Email already exists"
+                  }
+                }
+              }
+            },
+            "/api/professionals/{id}": {
+              "get": {
+                "summary": "Get professional by ID",
+                "tags": ["Professionals"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Professional data"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Professional not found"
+                  }
+                }
+              },
+              "put": {
+                "summary": "Update professional (ADMIN or self with restrictions)",
+                "tags": ["Professionals"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "commissionRate": {
+                            "type": "number"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": ["ADMIN", "BARBER"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Professional updated"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "403": {
+                    "description": "Forbidden"
+                  },
+                  "404": {
+                    "description": "Professional not found"
+                  }
+                }
+              },
+              "delete": {
+                "summary": "Delete professional (ADMIN only)",
+                "tags": ["Professionals"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Professional deleted"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "403": {
+                    "description": "Forbidden - ADMIN only"
+                  },
+                  "404": {
+                    "description": "Professional not found"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Clients CRUD",
+        "description": "CRUD operations for clients. Requires authentication and tenant header.",
+        "files": [
+          "src/routes/clients.ts",
+          "src/controllers/clientController.ts",
+          "src/services/clientService.ts",
+          "src/repositories/clientRepository.ts"
+        ],
+        "api_doc": {
+          "paths": {
+            "/api/clients": {
+              "get": {
+                "summary": "List all clients with pagination",
+                "tags": ["Clients"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 1
+                    }
+                  },
+                  {
+                    "name": "limit",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 20
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Paginated list of clients"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Missing or invalid tenant slug"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Create new client",
+                "tags": ["Clients"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "required": ["name", "phone"],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "phone": {
+                            "type": "string",
+                            "minLength": 10
+                          },
+                          "pushSubscription": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Client created"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "409": {
+                    "description": "Phone already exists"
+                  }
+                }
+              }
+            },
+            "/api/clients/{id}": {
+              "get": {
+                "summary": "Get client by ID",
+                "tags": ["Clients"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Client data"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Client not found"
+                  }
+                }
+              },
+              "put": {
+                "summary": "Update client",
+                "tags": ["Clients"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Client updated"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Client not found"
+                  }
+                }
+              },
+              "delete": {
+                "summary": "Delete client (soft delete)",
+                "tags": ["Clients"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Client deleted"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Client not found"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Services CRUD",
+        "description": "CRUD operations for barbershop services. Requires authentication and tenant header.",
+        "files": [
+          "src/routes/services.ts",
+          "src/controllers/serviceController.ts",
+          "src/services/serviceService.ts",
+          "src/repositories/serviceRepository.ts"
+        ],
+        "api_doc": {
+          "paths": {
+            "/api/services": {
+              "get": {
+                "summary": "List all services with pagination",
+                "tags": ["Services"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 1
+                    }
+                  },
+                  {
+                    "name": "limit",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 20
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Paginated list of services"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Missing or invalid tenant slug"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Create new service (ADMIN only)",
+                "tags": ["Services"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "required": ["name", "price", "duration"],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "price": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "duration": {
+                            "type": "number",
+                            "minimum": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Service created"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "403": {
+                    "description": "Forbidden - ADMIN only"
+                  }
+                }
+              }
+            },
+            "/api/services/{id}": {
+              "get": {
+                "summary": "Get service by ID",
+                "tags": ["Services"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Service data"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Service not found"
+                  }
+                }
+              },
+              "put": {
+                "summary": "Update service (ADMIN only)",
+                "tags": ["Services"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Service updated"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "403": {
+                    "description": "Forbidden - ADMIN only"
+                  },
+                  "404": {
+                    "description": "Service not found"
+                  }
+                }
+              },
+              "delete": {
+                "summary": "Delete service (ADMIN only, soft delete)",
+                "tags": ["Services"],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Service deleted"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "403": {
+                    "description": "Forbidden - ADMIN only"
+                  },
+                  "404": {
+                    "description": "Service not found"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Appointments",
+        "description": "Appointment management with conflict detection and commission calculation. Requires authentication and tenant header.",
+        "files": [
+          "src/routes/appointments.ts",
+          "src/controllers/appointmentController.ts",
+          "src/services/appointmentService.ts",
+          "src/repositories/appointmentRepository.ts"
+        ],
+        "api_doc": {
+          "paths": {
+            "/api/appointments": {
+              "get": {
+                "summary": "List all appointments with filtering and pagination",
+                "tags": ["Appointments"],
+                "parameters": [
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 1
+                    }
+                  },
+                  {
+                    "name": "limit",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 20
+                    }
+                  },
+                  {
+                    "name": "status",
+                    "in": "query",
+                    "schema": {
+                      "type": "string",
+                      "enum": ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"]
+                    }
+                  },
+                  {
+                    "name": "professionalId",
+                    "in": "query",
+                    "schema": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "name": "clientId",
+                    "in": "query",
+                    "schema": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "name": "startDate",
+                    "in": "query",
+                    "schema": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  {
+                    "name": "endDate",
+                    "in": "query",
+                    "schema": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Paginated list of appointments"
+                  },
+                  "404": {
+                    "description": "Missing or invalid tenant slug"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Create new appointment with conflict validation",
+                "tags": ["Appointments"],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "required": ["professionalId", "clientId", "serviceId", "date"],
+                        "properties": {
+                          "professionalId": {
+                            "type": "string"
+                          },
+                          "clientId": {
+                            "type": "string"
+                          },
+                          "serviceId": {
+                            "type": "string"
+                          },
+                          "date": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "notes": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Appointment created"
+                  },
+                  "400": {
+                    "description": "Invalid request"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Professional, client, or service not found"
+                  },
+                  "409": {
+                    "description": "Time slot conflict"
+                  }
+                }
+              }
+            },
+            "/api/appointments/{id}": {
+              "get": {
+                "summary": "Get appointment by ID",
+                "tags": ["Appointments"],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Appointment data"
+                  },
+                  "404": {
+                    "description": "Appointment not found"
+                  }
+                }
+              },
+              "put": {
+                "summary": "Update appointment",
+                "tags": ["Appointments"],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Appointment updated"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Appointment not found"
+                  },
+                  "409": {
+                    "description": "Time slot conflict"
+                  }
+                }
+              },
+              "delete": {
+                "summary": "Delete appointment",
+                "tags": ["Appointments"],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Appointment deleted"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Appointment not found"
+                  }
+                }
+              }
+            },
+            "/api/appointments/{id}/status": {
+              "patch": {
+                "summary": "Update appointment status",
+                "tags": ["Appointments"],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Status updated"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "404": {
+                    "description": "Appointment not found"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Transactions",
+        "description": "Financial transaction management (income/expense). Requires authentication and tenant header.",
+        "files": [
+          "src/routes/transactions.ts",
+          "src/controllers/transactionController.ts",
+          "src/services/transactionService.ts",
+          "src/repositories/transactionRepository.ts"
+        ],
+        "api_doc": {
+          "paths": {
+            "/api/transactions": {
+              "get": {
+                "summary": "List all transactions with filtering and pagination",
+                "tags": ["Transactions"],
+                "parameters": [
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 1
+                    }
+                  },
+                  {
+                    "name": "limit",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 20
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "in": "query",
+                    "schema": {
+                      "type": "string",
+                      "enum": ["INCOME", "EXPENSE"]
+                    }
+                  },
+                  {
+                    "name": "category",
+                    "in": "query",
+                    "schema": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "name": "startDate",
+                    "in": "query",
+                    "schema": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  {
+                    "name": "endDate",
+                    "in": "query",
+                    "schema": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Paginated list of transactions"
+                  },
+                  "404": {
+                    "description": "Missing or invalid tenant slug"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Create new transaction",
+                "tags": ["Transactions"],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "required": ["amount", "type", "category", "date"],
+                        "properties": {
+                          "amount": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": ["INCOME", "EXPENSE"]
+                          },
+                          "category": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "date": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "paymentMethod": {
+                            "type": "string",
+                            "enum": ["CASH", "CREDIT_CARD", "DEBIT_CARD", "PIX"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Transaction created"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "403": {
+                    "description": "Forbidden"
+                  }
+                }
+              }
+            },
+            "/api/transactions/{id}": {
+              "get": {
+                "summary": "Get transaction by ID",
+                "tags": ["Transactions"],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Transaction data"
+                  },
+                  "404": {
+                    "description": "Transaction not found"
+                  }
+                }
+              },
+              "put": {
+                "summary": "Update transaction",
+                "tags": ["Transactions"],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Transaction updated"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "403": {
+                    "description": "Forbidden"
+                  },
+                  "404": {
+                    "description": "Transaction not found"
+                  }
+                }
+              },
+              "delete": {
+                "summary": "Delete transaction",
+                "tags": ["Transactions"],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Transaction deleted"
+                  },
+                  "401": {
+                    "description": "Unauthorized"
+                  },
+                  "403": {
+                    "description": "Forbidden"
+                  },
+                  "404": {
+                    "description": "Transaction not found"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Barbershop",
+        "description": "Barbershop/tenant management. Requires tenant header.",
+        "files": [
+          "src/routes/barbershops.ts",
+          "src/controllers/barbershopController.ts",
+          "src/services/barbershopService.ts",
+          "src/repositories/barbershopRepository.ts"
+        ],
+        "api_doc": {
+          "paths": {
+            "/api/barbershop": {
+              "get": {
+                "summary": "Get current barbershop data",
+                "tags": ["Barbershops"],
+                "responses": {
+                  "200": {
+                    "description": "Barbershop data",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "slug": {
+                              "type": "string"
+                            },
+                            "isActive": {
+                              "type": "boolean"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "404": {
+                    "description": "Barbershop not found or invalid tenant slug"
+                  }
+                }
+              },
+              "put": {
+                "summary": "Update barbershop data",
+                "tags": ["Barbershops"],
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "isActive": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Barbershop updated"
+                  },
+                  "404": {
+                    "description": "Barbershop not found or invalid tenant slug"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Middleware",
+        "description": "Core middleware for tenant validation, authentication, and rate limiting",
+        "files": [
+          "src/middleware/tenant.ts",
+          "src/middleware/auth.ts",
+          "src/middleware/rateLimit.ts"
+        ],
+        "api_doc": {}
+      }
+    ]
+  }
+}

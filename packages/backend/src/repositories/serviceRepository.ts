@@ -58,7 +58,11 @@ export class ServiceRepository {
     return prisma.service.create({ data })
   }
 
-  async update(id: string, barbershopId: string, data: Prisma.ServiceUpdateInput): Promise<Service> {
+  async update(
+    id: string,
+    barbershopId: string,
+    data: Prisma.ServiceUpdateInput
+  ): Promise<Service> {
     const existing = await prisma.service.findFirst({ where: { id, barbershopId, isActive: true } })
     if (!existing) {
       throw new Error('Service not found')

@@ -33,7 +33,11 @@ const transactionSchema = {
     category: { type: 'string' },
     description: { type: 'string', nullable: true },
     date: { type: 'string', format: 'date-time' },
-    paymentMethod: { type: 'string', enum: ['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX'], nullable: true },
+    paymentMethod: {
+      type: 'string',
+      enum: ['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX'],
+      nullable: true,
+    },
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
   },
@@ -104,7 +108,13 @@ export async function transactionRoutes(app: FastifyInstance) {
             paymentMethod: { type: 'string', enum: ['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX'] },
           },
         },
-        response: { 201: transactionSchema, 400: errorResponseSchema, 401: errorResponseSchema, 403: errorResponseSchema, 404: errorResponseSchema },
+        response: {
+          201: transactionSchema,
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+          404: errorResponseSchema,
+        },
       },
     },
     transactionController.create.bind(transactionController)
@@ -128,7 +138,13 @@ export async function transactionRoutes(app: FastifyInstance) {
             paymentMethod: { type: 'string', enum: ['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX'] },
           },
         },
-        response: { 200: transactionSchema, 400: errorResponseSchema, 401: errorResponseSchema, 403: errorResponseSchema, 404: errorResponseSchema },
+        response: {
+          200: transactionSchema,
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+          404: errorResponseSchema,
+        },
       },
     },
     transactionController.update.bind(transactionController)
@@ -141,7 +157,13 @@ export async function transactionRoutes(app: FastifyInstance) {
         tags: ['Transactions'],
         summary: 'Delete transaction',
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
-        response: { 204: { type: 'null' }, 400: errorResponseSchema, 401: errorResponseSchema, 403: errorResponseSchema, 404: errorResponseSchema },
+        response: {
+          204: { type: 'null' },
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+          404: errorResponseSchema,
+        },
       },
     },
     transactionController.delete.bind(transactionController)

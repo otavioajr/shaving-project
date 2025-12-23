@@ -46,7 +46,11 @@ export class AppointmentController {
         return reply.status(401).send({ error: 'Tenant not identified' })
       }
 
-      const result = await appointmentService.listAppointments(barbershopId, { page, limit }, filters)
+      const result = await appointmentService.listAppointments(
+        barbershopId,
+        { page, limit },
+        filters
+      )
       return reply.status(200).send(result)
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -108,7 +112,10 @@ export class AppointmentController {
       if (error instanceof Error && error.message.includes('not found')) {
         return reply.status(404).send({ error: error.message })
       }
-      if (error instanceof Error && (error.message.includes('conflicting') || error.message.includes('conflict'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('conflicting') || error.message.includes('conflict'))
+      ) {
         return reply.status(409).send({ error: error.message })
       }
       console.error('Unhandled appointment creation error:', error)

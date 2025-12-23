@@ -3,16 +3,16 @@ import bcryptjs from 'bcryptjs'
 
 /**
  * Seed script for development database
- * 
+ *
  * Creates minimal test data:
  * - 1 barbershop (barbearia-teste)
  * - 1 admin professional (admin@barbearia-teste.com)
  * - 1 barber professional (barber@barbearia-teste.com)
  * - 1 test client
  * - 3 services (haircut, beard trim, combo)
- * 
+ *
  * Idempotent: Safe to run multiple times
- * 
+ *
  * Note: We create a fresh PrismaClient instance with a different connection
  * to avoid prepared statement conflicts with the singleton when running multiple times.
  */
@@ -21,7 +21,7 @@ async function main() {
   // Use DIRECT_URL for seed script to bypass connection pooler
   // This avoids "prepared statement already exists" errors
   const directUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
-  
+
   const prisma = new PrismaClient({
     datasources: {
       db: {
@@ -181,14 +181,3 @@ main().catch((error) => {
   console.error(error)
   process.exit(1)
 })
-
-
-
-
-
-
-
-
-
-
-

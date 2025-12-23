@@ -19,6 +19,7 @@ Configurar Fastify com plugins essenciais, implementar middleware de validação
 ## Arquivos a Criar/Modificar
 
 ### Arquivos Existentes (já criados no Milestone 0)
+
 - `/packages/backend/src/app.ts` - Fastify factory já existe
 - `/packages/backend/api/index.ts` - Vercel entrypoint já existe
 
@@ -53,6 +54,7 @@ Configurar Fastify com plugins essenciais, implementar middleware de validação
 **Localização:** `src/middleware/tenant.ts`
 
 **Funcionalidade:**
+
 - Ler header `x-tenant-slug` da requisição
 - Buscar barbershop no banco por `slug`
 - Cachear resultado no Redis (TTL 5 minutos)
@@ -63,6 +65,7 @@ Configurar Fastify com plugins essenciais, implementar middleware de validação
   - Tenant inativo (`isActive = false`)
 
 **Exceções (rotas públicas):**
+
 - `/health` - Health check
 - `/docs` - Swagger UI
 - `/` - Root endpoint
@@ -72,6 +75,7 @@ Configurar Fastify com plugins essenciais, implementar middleware de validação
 **Localização:** `src/middleware/rateLimit.ts`
 
 **Funcionalidade:**
+
 - Usar `@upstash/ratelimit` com Redis
 - Duas camadas:
   1. Por IP: 100 requisições por 60 segundos
@@ -87,6 +91,7 @@ Configurar Fastify com plugins essenciais, implementar middleware de validação
 **Contexto:** Atualmente todas as tabelas estão sem RLS. Como usamos Fastify API (não PostgREST), o isolamento é feito no middleware. Porém, RLS adiciona camada extra de segurança "defense-in-depth" caso haja acesso direto ao banco ou bugs no código.
 
 **Tabelas que precisam de RLS:**
+
 - `barbershops`
 - `professionals`
 - `clients`
@@ -95,6 +100,7 @@ Configurar Fastify com plugins essenciais, implementar middleware de validação
 - `transactions`
 
 **Implementação:**
+
 ```sql
 -- Exemplo para tabela professionals
 ALTER TABLE professionals ENABLE ROW LEVEL SECURITY;
@@ -106,6 +112,7 @@ CREATE POLICY "Isolamento por tenant"
 ```
 
 **Estratégia:**
+
 - Criar migration `add_rls_policies.sql`
 - Habilitar RLS em todas as tabelas (exceto `_prisma_migrations`)
 - Criar políticas que validem `barbershopId`
@@ -118,11 +125,13 @@ CREATE POLICY "Isolamento por tenant"
 **Contexto:** As composite foreign keys adicionadas no Milestone 1 precisam de índices para otimizar queries.
 
 **Índices Faltando:**
+
 1. `appointments(barbershopId, createdById)` - Para queries de appointments criados por professional
 2. `appointments(barbershopId, serviceId)` - Para queries de appointments por serviço
 3. `transactions(barbershopId, createdById)` - Para queries de transações por professional
 
 **Implementação:**
+
 ```sql
 -- Migration: add_composite_fk_indexes.sql
 CREATE INDEX "appointments_barbershopId_createdById_idx"
@@ -136,6 +145,7 @@ CREATE INDEX "transactions_barbershopId_createdById_idx"
 ```
 
 **Impacto:**
+
 - Melhora performance de queries que filtram por creator/service
 - Reduz full table scans
 - Especialmente importante com growth de dados
@@ -145,10 +155,12 @@ CREATE INDEX "transactions_barbershopId_createdById_idx"
 ### Endpoints
 
 **GET /health** (público, sem tenant)
+
 - Retornar `{ status: "ok" }`
 - Status code 200
 
 **GET /docs** (público, sem tenant)
+
 - Servir Swagger UI
 - Status code 200
 
@@ -157,6 +169,7 @@ CREATE INDEX "transactions_barbershopId_createdById_idx"
 ## Dependências
 
 Todas as dependências já estão instaladas:
+
 - `fastify`
 - `@fastify/jwt`
 - `@fastify/swagger`
@@ -170,6 +183,7 @@ Todas as dependências já estão instaladas:
 ## Checklist de Testes
 
 ### Middleware
+
 - [ ] `/health` retorna `{ status: "ok" }` (200)
 - [ ] `/docs` serve Swagger UI (200)
 - [ ] Requisição sem header `x-tenant-slug` retorna 404
@@ -183,6 +197,7 @@ Todas as dependências já estão instaladas:
 - [ ] Testes de integração para middleware passam
 
 ### Database Security & Performance
+
 - [ ] RLS habilitado em todas as tabelas (exceto `_prisma_migrations`)
 - [ ] Políticas RLS criadas para isolamento por `barbershopId`
 - [ ] `current_setting('app.current_tenant')` configurado no middleware
@@ -217,4 +232,5 @@ Todas as dependências já estão instaladas:
 ## Próximos Passos
 
 Após completar este milestone, o próximo será:
+
 - **MILESTONE 3:** Authentication (JWT + OTP)

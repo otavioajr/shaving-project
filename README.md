@@ -88,6 +88,7 @@ pnpm db:seed
 ```
 
 This creates:
+
 - **Barbershop:** `barbearia-teste` (slug for tenant header)
 - **Admin User:** `admin@barbearia-teste.com` / `senha123`
 - **Barber User:** `barber@barbearia-teste.com` / `senha123`
@@ -114,6 +115,14 @@ pnpm test:coverage
 # Open Prisma Studio
 pnpm db:studio
 ```
+
+## TestSprite (MCP)
+
+Para rodar a suíte de testes gerada pelo **TestSprite (MCP)** contra o backend local:
+
+- Garanta o backend rodando em `http://localhost:3000` (`pnpm dev`)
+- Execute os testes Python em `testsprite_tests/` (passo a passo em `docs/QUICK-TEST.md`)
+- Veja o report consolidado em `testsprite_tests/testsprite-mcp-test-report.md`
 
 ## PR / Merge Checklist
 
@@ -151,10 +160,12 @@ The middleware validates the tenant slug, caches lookups in Redis (5-minute TTL)
 ### Rate Limiting
 
 The API implements two-layer rate limiting:
+
 - **IP-based:** 100 requests per 60 seconds
 - **Tenant-based:** 1000 requests per 60 seconds
 
 Rate limit headers are included in all responses:
+
 - `X-RateLimit-Limit` - Maximum requests allowed
 - `X-RateLimit-Remaining` - Remaining requests in window
 - `X-RateLimit-Reset` - Reset time (ISO 8601)

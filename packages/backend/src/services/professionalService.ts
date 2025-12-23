@@ -1,5 +1,8 @@
 import bcrypt from 'bcryptjs'
-import { professionalRepository, type PaginationParams } from '../repositories/professionalRepository.js'
+import {
+  professionalRepository,
+  type PaginationParams,
+} from '../repositories/professionalRepository.js'
 import type { Role, Prisma } from '@prisma/client'
 import { serializeProfessional } from '../lib/serializer.js'
 

@@ -27,6 +27,7 @@
 **Objective:** Set up monorepo structure, dependencies, and tooling.
 
 **Deliverables:**
+
 ```
 /packages/backend/
   /api/index.ts              # Vercel entrypoint
@@ -53,6 +54,7 @@
 ```
 
 **Dependencies:**
+
 - `fastify`, `@fastify/jwt`, `@fastify/swagger`, `@fastify/swagger-ui`, `@fastify/cors`, `@fastify/cookie`
 - `@prisma/client`, `prisma`
 - `@upstash/redis`, `@upstash/ratelimit`
@@ -60,6 +62,7 @@
 - `vitest`, `supertest`, `typescript`, `tsx`
 
 **Tests:**
+
 - [x] `pnpm install` succeeds
 - [x] `pnpm build` succeeds
 - [x] `pnpm lint` passes
@@ -72,6 +75,7 @@
 **Objective:** Create Prisma schema, apply migrations, set up core libs.
 
 **Prisma Schema (Entities):**
+
 - `Barbershop` (tenant root): id, name, slug (unique), isActive
 - `Professional`: id, name, email, passwordHash, commissionRate, role (ADMIN/BARBER)
 - `Client`: id, name, phone, pushSubscription
@@ -82,11 +86,13 @@
 **Enums:** `Role`, `AppointmentStatus`, `PaymentMethod`, `TransactionType`
 
 **Files to Create:**
+
 - `/packages/backend/prisma/schema.prisma`
 - `/packages/backend/src/lib/prisma.ts` (Singleton)
 - `/packages/backend/src/lib/redis.ts`
 
 **Tests:**
+
 - [ ] `prisma validate` passes
 - [ ] Migration applies via Supabase MCP
 - [ ] All 6 tables created
@@ -99,16 +105,19 @@
 **Objective:** Set up Fastify, Swagger, tenant validation, rate limiting.
 
 **Components:**
+
 - `src/app.ts` - Fastify factory with plugins (cors, jwt, swagger)
 - `api/index.ts` - Vercel serverless handler
 - `src/middleware/tenant.ts` - Validate `x-tenant-slug`, inject `req.tenantId`
 - `src/middleware/rateLimit.ts` - Upstash rate limiting (IP + tenant)
 
 **Endpoints:**
+
 - `GET /health` - Health check (public)
 - `GET /docs` - Swagger UI
 
 **Tests:**
+
 - [ ] `/health` returns `{ status: 'ok' }`
 - [ ] `/docs` serves Swagger UI
 - [ ] Missing tenant header returns 404
@@ -123,11 +132,13 @@
 **Objective:** Implement JWT auth with Redis-based OTP.
 
 **Components:**
+
 - `src/services/auth.service.ts` - OTP, tokens, password hashing
 - `src/controllers/auth.controller.ts` - Auth endpoints
 - `src/middleware/auth.ts` - JWT verification, role-based access
 
 **Endpoints:**
+
 - `POST /auth/login` - Email/password login
 - `POST /auth/request-otp` - Request OTP (stored in Redis, TTL 5min)
 - `POST /auth/verify-otp` - Verify OTP, issue tokens
@@ -135,11 +146,13 @@
 - `POST /auth/logout` - Invalidate refresh token
 
 **Token Config:**
+
 - Access Token: 15 minutes
 - Refresh Token: 7 days (stored in Redis)
 - OTP: 6-digit, Redis TTL 5 minutes
 
 **Tests:**
+
 - [ ] OTP stored in Redis (NOT PostgreSQL)
 - [ ] OTP verification works
 - [ ] Access token expires in 15min
@@ -158,6 +171,7 @@
 **Endpoints (all paginated with `page`, `limit`):**
 
 **Professionals:**
+
 - `GET /professionals` - List
 - `GET /professionals/:id` - Get
 - `POST /professionals` - Create (ADMIN)
@@ -165,6 +179,7 @@
 - `DELETE /professionals/:id` - Soft delete (ADMIN)
 
 **Clients:**
+
 - `GET /clients` - List
 - `GET /clients/:id` - Get
 - `POST /clients` - Create
@@ -172,6 +187,7 @@
 - `DELETE /clients/:id` - Soft delete
 
 **Services:**
+
 - `GET /services` - List
 - `GET /services/:id` - Get
 - `POST /services` - Create (ADMIN)
@@ -179,6 +195,7 @@
 - `DELETE /services/:id` - Soft delete (ADMIN)
 
 **Tests:**
+
 - [ ] All CRUD operations work
 - [ ] Pagination works (page, limit, totalPages)
 - [ ] Tenant isolation enforced
@@ -192,6 +209,7 @@
 **Objective:** Implement appointments with conflict validation and commission calculation.
 
 **Endpoints:**
+
 - `GET /appointments` - List (filter by date, status, professional)
 - `GET /appointments/:id` - Get
 - `POST /appointments` - Create (with conflict check)
@@ -199,12 +217,14 @@
 - `DELETE /appointments/:id` - Cancel
 
 **Business Rules:**
+
 - Conflict validation: Check `barbershopId`, `professionalId`, `date` overlap
 - Ignore `CANCELLED` appointments in conflict check
 - Commission calculated ONLY when status -> `COMPLETED`
 - Price and commission are snapshots (persisted at creation/completion)
 
 **Tests:**
+
 - [ ] Create appointment works
 - [ ] Conflict detection prevents double-booking
 - [ ] Status transitions work
@@ -218,6 +238,7 @@
 **Objective:** Implement transactions and financial reports.
 
 **Endpoints:**
+
 - `GET /transactions` - List (filter by date, type, category)
 - `GET /transactions/:id` - Get
 - `POST /transactions` - Create
@@ -227,6 +248,7 @@
 - `GET /reports/commissions` - Commission report by professional
 
 **Tests:**
+
 - [ ] CRUD for transactions works
 - [ ] Summary calculation correct
 - [ ] Commission report aggregates correctly
@@ -239,10 +261,12 @@
 **Objective:** Implement push notifications with Vercel Cron.
 
 **Components:**
+
 - `src/services/notification.service.ts` - Web Push
 - `api/cron/notify.ts` - Cron endpoint
 
 **Cron Config (vercel.json):**
+
 ```json
 {
   "crons": [{ "path": "/api/cron/notify", "schedule": "* * * * *" }]
@@ -250,6 +274,7 @@
 ```
 
 **Tests:**
+
 - [ ] Push subscription saved
 - [ ] Push notification sent
 - [ ] Cron protected by CRON_SECRET
@@ -262,19 +287,23 @@
 **Objective:** Implement tenant creation/management with dual onboarding.
 
 **Admin Setup Strategy:**
+
 1. **Seed Script:** CLI command (`pnpm seed`) for initial/controlled setup
 2. **Self-Registration:** Public endpoint for SaaS growth
 
 **Endpoints:**
+
 - `POST /barbershops` - Self-registration (create barbershop + initial ADMIN)
 - `GET /barbershops/:slug` - Public tenant info
 - `PUT /barbershops` - Update current tenant (ADMIN)
 
 **Seed Script:** `/packages/backend/prisma/seed.ts`
+
 - Creates initial barbershop with ADMIN user
 - Configurable via environment variables
 
 **Tests:**
+
 - [ ] Self-registration creates barbershop + ADMIN
 - [ ] Seed script creates initial data
 - [ ] Unique slug validation works
@@ -287,6 +316,7 @@
 **Objective:** Complete test coverage, documentation, CI/CD.
 
 **Deliverables:**
+
 - Test coverage >= 80%
 - Complete Swagger documentation
 - Updated README with setup instructions
@@ -295,6 +325,7 @@
 - Production deployment on Vercel
 
 **Tests:**
+
 - [ ] All tests pass
 - [ ] Coverage >= 80%
 - [ ] CI pipeline passes
@@ -304,13 +335,13 @@
 
 ## Critical Files
 
-| File | Purpose |
-|------|---------|
-| `/packages/backend/src/lib/prisma.ts` | Prisma singleton (CRITICAL for serverless) |
-| `/packages/backend/prisma/schema.prisma` | Complete data model |
-| `/packages/backend/src/middleware/tenant.ts` | Multi-tenant isolation |
-| `/packages/backend/src/app.ts` | Fastify app factory |
-| `/packages/backend/api/index.ts` | Vercel entrypoint |
+| File                                         | Purpose                                    |
+| -------------------------------------------- | ------------------------------------------ |
+| `/packages/backend/src/lib/prisma.ts`        | Prisma singleton (CRITICAL for serverless) |
+| `/packages/backend/prisma/schema.prisma`     | Complete data model                        |
+| `/packages/backend/src/middleware/tenant.ts` | Multi-tenant isolation                     |
+| `/packages/backend/src/app.ts`               | Fastify app factory                        |
+| `/packages/backend/api/index.ts`             | Vercel entrypoint                          |
 
 ---
 
@@ -350,4 +381,3 @@ NODE_ENV="development"
 3. **Tenant Isolation:** ALL queries MUST filter by `barbershopId`
 4. **Pagination:** ALL listing routes MUST require `page` and `limit`
 5. **Snapshots:** Store price/commission at transaction time
-

@@ -63,12 +63,13 @@ export class AppointmentRepository {
       ...(filters?.status && { status: filters.status }),
       ...(filters?.professionalId && { professionalId: filters.professionalId }),
       ...(filters?.clientId && { clientId: filters.clientId }),
-      ...(filters?.startDate && filters?.endDate && {
-        date: {
-          gte: new Date(filters.startDate),
-          lte: new Date(filters.endDate),
-        },
-      }),
+      ...(filters?.startDate &&
+        filters?.endDate && {
+          date: {
+            gte: new Date(filters.startDate),
+            lte: new Date(filters.endDate),
+          },
+        }),
     }
 
     const [data, total] = await Promise.all([
@@ -132,7 +133,11 @@ export class AppointmentRepository {
     })
   }
 
-  async update(id: string, barbershopId: string, data: Prisma.AppointmentUpdateInput): Promise<Appointment> {
+  async update(
+    id: string,
+    barbershopId: string,
+    data: Prisma.AppointmentUpdateInput
+  ): Promise<Appointment> {
     const existing = await prisma.appointment.findFirst({ where: { id, barbershopId } })
     if (!existing) {
       throw new Error('Appointment not found')

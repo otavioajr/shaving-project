@@ -11,11 +11,15 @@ const redisMock = {
 }
 
 const ipRatelimitMock = {
-  limit: vi.fn().mockResolvedValue({ success: true, limit: 100, remaining: 99, reset: Date.now() + 60000 }),
+  limit: vi
+    .fn()
+    .mockResolvedValue({ success: true, limit: 100, remaining: 99, reset: Date.now() + 60000 }),
 }
 
 const tenantRatelimitMock = {
-  limit: vi.fn().mockResolvedValue({ success: true, limit: 1000, remaining: 999, reset: Date.now() + 60000 }),
+  limit: vi
+    .fn()
+    .mockResolvedValue({ success: true, limit: 1000, remaining: 999, reset: Date.now() + 60000 }),
 }
 
 const getCachedTenant = vi.fn().mockResolvedValue('tenant-id')
@@ -70,8 +74,18 @@ describe('Professional Controller', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     getCachedTenant.mockResolvedValue('tenant-id')
-    ipRatelimitMock.limit.mockResolvedValue({ success: true, limit: 100, remaining: 99, reset: Date.now() + 60000 })
-    tenantRatelimitMock.limit.mockResolvedValue({ success: true, limit: 1000, remaining: 999, reset: Date.now() + 60000 })
+    ipRatelimitMock.limit.mockResolvedValue({
+      success: true,
+      limit: 100,
+      remaining: 99,
+      reset: Date.now() + 60000,
+    })
+    tenantRatelimitMock.limit.mockResolvedValue({
+      success: true,
+      limit: 1000,
+      remaining: 999,
+      reset: Date.now() + 60000,
+    })
     app = await buildTestApp()
     makeToken = (role, overrides = {}) =>
       app.jwt.sign({

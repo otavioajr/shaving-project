@@ -49,7 +49,9 @@ export class ProfessionalController {
 
       const result = await professionalService.listProfessionals(barbershopId, { page, limit })
 
-      const data = result.data.map(({ passwordHash: _passwordHash, ...professional }) => professional)
+      const data = result.data.map(
+        ({ passwordHash: _passwordHash, ...professional }) => professional
+      )
 
       return reply.status(200).send({ ...result, data })
     } catch (error) {
@@ -167,7 +169,9 @@ export class ProfessionalController {
         }
 
         if (data.role !== undefined || data.commissionRate !== undefined) {
-          return reply.status(403).send({ error: 'Insufficient permissions to update role or commission' })
+          return reply
+            .status(403)
+            .send({ error: 'Insufficient permissions to update role or commission' })
         }
 
         const allowedData = {
@@ -176,7 +180,11 @@ export class ProfessionalController {
           ...(data.password !== undefined && { password: data.password }),
         }
 
-        const professional = await professionalService.updateProfessional(id, barbershopId, allowedData)
+        const professional = await professionalService.updateProfessional(
+          id,
+          barbershopId,
+          allowedData
+        )
 
         const { passwordHash: _passwordHash, ...professionalData } = professional
         void _passwordHash

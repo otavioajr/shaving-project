@@ -43,7 +43,11 @@ export class TransactionController {
         return reply.status(401).send({ error: 'Tenant not identified' })
       }
 
-      const result = await transactionService.listTransactions(barbershopId, { page, limit }, filters)
+      const result = await transactionService.listTransactions(
+        barbershopId,
+        { page, limit },
+        filters
+      )
       return reply.status(200).send(result)
     } catch (error) {
       if (error instanceof z.ZodError) {

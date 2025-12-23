@@ -1,4 +1,8 @@
-import { appointmentRepository, type PaginationParams, type ListFilters } from '../repositories/appointmentRepository.js'
+import {
+  appointmentRepository,
+  type PaginationParams,
+  type ListFilters,
+} from '../repositories/appointmentRepository.js'
 import { serviceRepository } from '../repositories/serviceRepository.js'
 import { professionalRepository } from '../repositories/professionalRepository.js'
 import { clientRepository } from '../repositories/clientRepository.js'
@@ -72,10 +76,20 @@ export class AppointmentService {
       price: Number(service.price),
       status: 'PENDING',
       barbershop: { connect: { id: input.barbershopId } },
-      professional: { connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.professionalId } } },
-      client: { connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.clientId } } },
-      service: { connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.serviceId } } },
-      createdBy: { connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.createdById } } },
+      professional: {
+        connect: {
+          barbershopId_id: { barbershopId: input.barbershopId, id: input.professionalId },
+        },
+      },
+      client: {
+        connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.clientId } },
+      },
+      service: {
+        connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.serviceId } },
+      },
+      createdBy: {
+        connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.createdById } },
+      },
     })
     return serializeAppointmentWithRelations(appointment)
   }
@@ -112,7 +126,9 @@ export class AppointmentService {
     if (input.professionalId) {
       const professional = await professionalRepository.findById(input.professionalId, barbershopId)
       if (!professional) throw new Error('Professional not found')
-      updateData.professional = { connect: { barbershopId_id: { barbershopId, id: input.professionalId } } }
+      updateData.professional = {
+        connect: { barbershopId_id: { barbershopId, id: input.professionalId } },
+      }
     }
     if (input.clientId) {
       const client = await clientRepository.findById(input.clientId, barbershopId)
@@ -140,9 +156,13 @@ export class AppointmentService {
 
     // Calculate commission when appointment is completed
     if (input.status === 'COMPLETED' && !appointment.commissionValue) {
-      const professional = await professionalRepository.findById(appointment.professionalId, barbershopId)
+      const professional = await professionalRepository.findById(
+        appointment.professionalId,
+        barbershopId
+      )
       if (professional) {
-        const commissionValue = Number(appointment.price) * (Number(professional.commissionRate) / 100)
+        const commissionValue =
+          Number(appointment.price) * (Number(professional.commissionRate) / 100)
         updateData.commissionValue = commissionValue
       }
     }

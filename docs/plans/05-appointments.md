@@ -19,12 +19,14 @@ Implementar sistema completo de agendamentos com validação de conflitos, trans
 ## Arquivos a Criar
 
 ### Repository
+
 1. **`/packages/backend/src/repositories/appointment.repository.ts`**
    - CRUD básico
    - Busca com filtros (date, status, professional)
    - Validação de conflitos
 
 ### Service
+
 2. **`/packages/backend/src/services/appointment.service.ts`**
    - Lógica de negócio
    - Validação de conflitos
@@ -32,11 +34,13 @@ Implementar sistema completo de agendamentos com validação de conflitos, trans
    - Transições de status
 
 ### Controller
+
 3. **`/packages/backend/src/controllers/appointment.controller.ts`**
    - Endpoints REST
    - Validação de requests
 
 ### Schema
+
 4. **`/packages/backend/src/schemas/appointment.schema.ts`**
    - Validação Zod
 
@@ -45,18 +49,21 @@ Implementar sistema completo de agendamentos com validação de conflitos, trans
 ## Endpoints
 
 ### GET /appointments
+
 - Query params: `page`, `limit`, `date?`, `status?`, `professionalId?`
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Lista paginada de appointments com filtros
 
 ### GET /appointments/:id
+
 - Params: `id`
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Appointment específico
 
 ### POST /appointments
+
 - Body: `{ professionalId, clientId, serviceId, date }`
 - Auth: Requerida
 - Role: Qualquer
@@ -64,6 +71,7 @@ Implementar sistema completo de agendamentos com validação de conflitos, trans
 - **Valida:** Conflitos de horário
 
 ### PUT /appointments/:id
+
 - Params: `id`
 - Body: `{ date?, status?, professionalId?, clientId?, serviceId? }`
 - Auth: Requerida
@@ -72,6 +80,7 @@ Implementar sistema completo de agendamentos com validação de conflitos, trans
 - **Valida:** Conflitos ao reagendar
 
 ### DELETE /appointments/:id
+
 - Params: `id`
 - Auth: Requerida
 - Role: Qualquer
@@ -85,23 +94,27 @@ Implementar sistema completo de agendamentos com validação de conflitos, trans
 ### Validação de Conflitos
 
 **Critérios para conflito:**
+
 - Mesmo `barbershopId`
 - Mesmo `professionalId`
 - `date` sobrepõe horário existente
 - Status NÃO é `CANCELLED`
 
 **Cálculo de sobreposição:**
+
 - Appointment A: `dateA` até `dateA + durationA`
 - Appointment B: `dateB` até `dateB + durationB`
 - Conflito se: `dateA < dateB + durationB` E `dateB < dateA + durationA`
 
 **Ignorar:**
+
 - Appointments com status `CANCELLED`
 - O próprio appointment (em updates)
 
 ### Transições de Status
 
 **Status válidos:**
+
 - `PENDING` → `CONFIRMED`, `CANCELLED`
 - `CONFIRMED` → `COMPLETED`, `CANCELLED`, `NO_SHOW`
 - `COMPLETED` → (final, não pode mudar)
@@ -113,15 +126,18 @@ Implementar sistema completo de agendamentos com validação de conflitos, trans
 **Trigger:** Apenas quando status muda para `COMPLETED`
 
 **Fórmula:**
+
 ```
 commissionValue = price * (commissionRate / 100)
 ```
 
 **Snapshot:** Armazenar `price` e `commissionValue` no appointment
+
 - `price`: Snapshot do preço do service no momento da criação/compleção
 - `commissionValue`: Calculado quando status -> `COMPLETED`
 
 **Fonte de dados:**
+
 - `price`: Do `Service` atual (ou snapshot se já existir)
 - `commissionRate`: Do `Professional` atual
 
@@ -142,6 +158,7 @@ async checkConflict(
 ```
 
 **Lógica:**
+
 1. Calcular `endDate = date + duration`
 2. Buscar appointments onde:
    - `barbershopId` = X
@@ -161,6 +178,7 @@ async completeAppointment(
 ```
 
 **Lógica:**
+
 1. Buscar appointment
 2. Buscar service atual (para preço)
 3. Buscar professional atual (para commissionRate)
@@ -181,6 +199,7 @@ async createAppointment(
 ```
 
 **Lógica:**
+
 1. Buscar service para obter `price` e `duration`
 2. Validar conflitos
 3. Criar appointment com:
@@ -194,17 +213,21 @@ async createAppointment(
 ## Filtros
 
 ### Por Data
+
 - `date`: Filtrar por data específica (YYYY-MM-DD)
 - Retorna appointments do dia
 
 ### Por Status
+
 - `status`: Filtrar por status específico
 - Valores: `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`, `NO_SHOW`
 
 ### Por Professional
+
 - `professionalId`: Filtrar appointments de um professional específico
 
 ### Combinação
+
 - Todos os filtros podem ser combinados
 - Paginação sempre aplicada
 
@@ -213,6 +236,7 @@ async createAppointment(
 ## Dependências
 
 Todas as dependências já estão instaladas:
+
 - `@prisma/client`
 - `zod`
 - `date-fns` (para manipulação de datas)
@@ -259,4 +283,5 @@ Todas as dependências já estão instaladas:
 ## Próximos Passos
 
 Após completar este milestone, o próximo será:
+
 - **MILESTONE 6:** Financial Management

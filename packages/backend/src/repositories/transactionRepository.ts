@@ -55,12 +55,13 @@ export class TransactionRepository {
       barbershopId,
       ...(filters?.type && { type: filters.type }),
       ...(filters?.category && { category: filters.category }),
-      ...(filters?.startDate && filters?.endDate && {
-        date: {
-          gte: new Date(filters.startDate),
-          lte: new Date(filters.endDate),
-        },
-      }),
+      ...(filters?.startDate &&
+        filters?.endDate && {
+          date: {
+            gte: new Date(filters.startDate),
+            lte: new Date(filters.endDate),
+          },
+        }),
     }
 
     const [data, total] = await Promise.all([
@@ -84,7 +85,11 @@ export class TransactionRepository {
     })
   }
 
-  async update(id: string, barbershopId: string, data: Prisma.TransactionUpdateInput): Promise<Transaction> {
+  async update(
+    id: string,
+    barbershopId: string,
+    data: Prisma.TransactionUpdateInput
+  ): Promise<Transaction> {
     const existing = await prisma.transaction.findFirst({ where: { id, barbershopId } })
     if (!existing) {
       throw new Error('Transaction not found')

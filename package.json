@@ -11,11 +11,23 @@
     "test:coverage": "pnpm --filter @shaving/backend test:coverage",
     "lint": "pnpm --filter @shaving/backend lint",
     "lint:fix": "pnpm --filter @shaving/backend lint:fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky",
     "db:migrate": "pnpm --filter @shaving/backend db:migrate",
     "db:generate": "pnpm --filter @shaving/backend db:generate",
     "db:push": "pnpm --filter @shaving/backend db:push",
     "db:seed": "pnpm --filter @shaving/backend db:seed",
     "db:studio": "pnpm --filter @shaving/backend db:studio"
+  },
+  "lint-staged": {
+    "packages/backend/**/*.ts": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   },
   "keywords": [
     "barbershop",
@@ -31,5 +43,11 @@
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   },
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "pnpm@9.15.0",
+  "devDependencies": {
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4"
+  }
 }

@@ -23,6 +23,7 @@ Completar cobertura de testes (>= 80%), finalizar documentação Swagger, atuali
 **Meta:** >= 80% de cobertura
 
 **Áreas a Cobrir:**
+
 - [ ] Services (auth, professional, client, service, appointment, transaction, notification, barbershop)
 - [ ] Repositories (todos)
 - [ ] Controllers (todos)
@@ -30,11 +31,13 @@ Completar cobertura de testes (>= 80%), finalizar documentação Swagger, atuali
 - [ ] Utils (se houver)
 
 **Tipos de Testes:**
+
 - Unit tests (services, repositories)
 - Integration tests (controllers, endpoints)
 - E2E tests (fluxos completos)
 
 **Comandos:**
+
 ```bash
 pnpm test              # Executar testes
 pnpm test:coverage      # Ver cobertura
@@ -44,6 +47,7 @@ pnpm test:watch        # Modo watch
 ### 2. Documentação Swagger
 
 **Completar:**
+
 - [ ] Todos os endpoints documentados
 - [ ] Schemas de request/response completos
 - [ ] Exemplos para cada endpoint
@@ -52,6 +56,7 @@ pnpm test:watch        # Modo watch
 - [ ] Códigos de resposta documentados (200, 400, 401, 403, 404, 429, 500)
 
 **Verificar:**
+
 - [ ] Swagger UI acessível em `/docs`
 - [ ] Todos os endpoints aparecem
 - [ ] Exemplos funcionam
@@ -83,6 +88,7 @@ pnpm test:watch        # Modo watch
    - Executar servidor local
 
 4. **Comandos Disponíveis**
+
    ```bash
    pnpm install          # Instalar dependências
    pnpm dev              # Servidor local
@@ -133,10 +139,12 @@ pnpm test:watch        # Modo watch
    - Verificar se compila sem erros
 
 **Trigger:**
+
 - Push para `main`
 - Pull requests para `main`
 
 **Configuração:**
+
 ```yaml
 name: CI
 
@@ -211,6 +219,7 @@ jobs:
 ### 6. DEVELOPMENT.md Final
 
 **Atualizar:**
+
 - [ ] Marcar todos os milestones como COMPLETE
 - [ ] Adicionar data de conclusão
 - [ ] Adicionar links para documentação
@@ -221,17 +230,20 @@ jobs:
 ## Checklist de Testes
 
 ### Cobertura
+
 - [ ] Cobertura >= 80% em todos os arquivos
 - [ ] Relatório de cobertura gerado
 - [ ] Testes críticos cobertos (auth, tenant isolation, etc.)
 
 ### Documentação
+
 - [ ] Swagger completo
 - [ ] README atualizado
 - [ ] DEVELOPMENT.md atualizado
 - [ ] CHANGELOG.md atualizado
 
 ### CI/CD
+
 - [ ] GitHub Actions configurado
 - [ ] Lint passa no CI
 - [ ] Testes passam no CI
@@ -239,6 +251,7 @@ jobs:
 - [ ] Badge de status no README (opcional)
 
 ### Deploy
+
 - [ ] Deploy no Vercel bem-sucedido
 - [ ] Variáveis de ambiente configuradas
 - [ ] Health check funciona em produção
@@ -266,6 +279,7 @@ jobs:
 ## Próximos Passos
 
 Após completar este milestone:
+
 - ✅ Projeto completo e em produção
 - ✅ Documentação completa
 - ✅ Testes com boa cobertura
