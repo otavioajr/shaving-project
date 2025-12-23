@@ -1,4 +1,5 @@
 import webpush from 'web-push'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import type { Client, Appointment, Professional, Service } from '@prisma/client'
 import {
@@ -133,7 +134,7 @@ export class NotificationService {
 
     const payload: NotificationPayload = {
       title: 'Lembrete de Agendamento',
-      body: `Voce tem um agendamento em 15 minutos com ${appointment.professional.name} - ${appointment.service.name}`,
+      body: `Você tem um agendamento em 15 minutos com ${appointment.professional.name} - ${appointment.service.name}`,
       data: {
         appointmentId: appointment.id,
         type: 'appointment_reminder',
@@ -149,7 +150,7 @@ export class NotificationService {
   async removeInvalidSubscription(clientId: string): Promise<void> {
     await prisma.client.update({
       where: { id: clientId },
-      data: { pushSubscription: null },
+      data: { pushSubscription: Prisma.DbNull },
     })
   }
 
@@ -170,7 +171,7 @@ export class NotificationService {
           lt: in16Minutes,
         },
         client: {
-          pushSubscription: { not: null },
+          pushSubscription: { not: Prisma.DbNull },
           isActive: true,
         },
       },
@@ -183,16 +184,81 @@ export class NotificationService {
   }
 
   /**
+   * Execute tasks with limited concurrency
+   * @param items Array of items to process
+   * @param limit Maximum concurrent tasks
+   * @param worker Function that processes each item
+   * @returns Array of results in the same order as items
+   */
+  private async runWithConcurrency<T, R>(
+    items: T[],
+    limit: number,
+    worker: (item: T, index: number) => Promise<R>
+  ): Promise<R[]> {
+    const results: R[] = new Array(items.length)
+    const executing: Promise<void>[] = []
+
+    for (let i = 0; i < items.length; i++) {
+      const promise = (async () => {
+        try {
+          results[i] = await worker(items[i], i)
+        } catch (error) {
+          // Convert unexpected errors to a result-like object
+          // This ensures we don't abort the batch
+          results[i] = {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          } as R
+        }
+      })()
+
+      executing.push(promise)
+
+      if (executing.length >= limit) {
+        await Promise.race(executing)
+        executing.splice(
+          executing.findIndex((p) => p === promise),
+          1
+        )
+      }
+    }
+
+    await Promise.all(executing)
+    return results
+  }
+
+  /**
    * Process all upcoming appointment reminders
+   * Uses limited concurrency (5) to send reminders in parallel
    * Returns statistics for cron response
    */
   async processReminders(): Promise<{ sent: number; errors: number }> {
     const appointments = await this.findUpcomingAppointments()
+
+    if (appointments.length === 0) {
+      return { sent: 0, errors: 0 }
+    }
+
+    // Send reminders with concurrency limit of 5
+    const results = await this.runWithConcurrency(appointments, 5, async (appointment) => {
+      try {
+        return await this.sendAppointmentReminder(appointment.client, appointment)
+      } catch (error) {
+        // Convert unexpected errors to SendResult
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        } as SendResult
+      }
+    })
+
     let sent = 0
     let errors = 0
 
-    for (const appointment of appointments) {
-      const result = await this.sendAppointmentReminder(appointment.client, appointment)
+    // Process results and remove invalid subscriptions
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i]
+      const appointment = appointments[i]
 
       if (result.success) {
         sent++
