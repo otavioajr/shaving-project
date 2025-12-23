@@ -41,9 +41,18 @@ export class AppointmentController {
     try {
       const { page, limit, ...filters } = listQuerySchema.parse(request.query)
       const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const result = await appointmentService.listAppointments(
@@ -64,9 +73,18 @@ export class AppointmentController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const appointment = await appointmentService.getAppointment(id, barbershopId)
@@ -88,20 +106,24 @@ export class AppointmentController {
     try {
       const data = createAppointmentSchema.parse(request.body)
       const barbershopId = request.tenantId
-      const userId = request.user?.id // from JWT
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
       }
 
-      if (!userId) {
-        return reply.status(401).send({ error: 'User not authenticated' })
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const appointment = await appointmentService.createAppointment({
         ...data,
         barbershopId,
-        createdById: userId,
+        createdById: user.id,
       })
 
       return reply.status(201).send(appointment)
@@ -134,9 +156,12 @@ export class AppointmentController {
         return reply.status(401).send({ error: 'Tenant not identified' })
       }
 
-      // Require authentication for updating appointments
       if (!user?.id) {
         return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const appointment = await appointmentService.updateAppointment(id, barbershopId, data)
@@ -150,6 +175,13 @@ export class AppointmentController {
       }
       if (error instanceof Error && error.message.includes('conflicting')) {
         return reply.status(409).send({ error: error.message })
+      }
+      if (
+        error instanceof Error &&
+        (error.message.includes('final state') ||
+          error.message.includes('Invalid status transition'))
+      ) {
+        return reply.status(400).send({ error: error.message })
       }
       throw error
     }
@@ -166,9 +198,12 @@ export class AppointmentController {
         return reply.status(401).send({ error: 'Tenant not identified' })
       }
 
-      // Require authentication for updating appointment status
       if (!user?.id) {
         return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const appointment = await appointmentService.updateStatus(id, barbershopId, data)
@@ -179,6 +214,9 @@ export class AppointmentController {
       }
       if (error instanceof Error && error.message.includes('not found')) {
         return reply.status(404).send({ error: error.message })
+      }
+      if (error instanceof Error && error.message.includes('Invalid status transition')) {
+        return reply.status(400).send({ error: error.message })
       }
       throw error
     }
@@ -194,9 +232,12 @@ export class AppointmentController {
         return reply.status(401).send({ error: 'Tenant not identified' })
       }
 
-      // Require authentication for deleting appointments
       if (!user?.id) {
         return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       await appointmentService.deleteAppointment(id, barbershopId)
@@ -207,6 +248,9 @@ export class AppointmentController {
       }
       if (error instanceof Error && error.message.includes('not found')) {
         return reply.status(404).send({ error: error.message })
+      }
+      if (error instanceof Error && error.message.includes('Invalid status transition')) {
+        return reply.status(400).send({ error: error.message })
       }
       throw error
     }

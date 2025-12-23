@@ -159,8 +159,10 @@ export class AppointmentRepository {
     if (!existing) {
       throw new Error('Appointment not found')
     }
-    return prisma.appointment.delete({
+    // DELETE now means cancellation - update status to CANCELLED instead of deleting
+    return prisma.appointment.update({
       where: { id },
+      data: { status: 'CANCELLED' },
       include: {
         professional: { select: professionalPublicSelect },
         createdBy: { select: professionalPublicSelect },

@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { appointmentController } from '../controllers/appointmentController.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const errorResponseSchema = {
   type: 'object',
@@ -55,9 +56,11 @@ export async function appointmentRoutes(app: FastifyInstance) {
   app.get(
     '/appointments',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Appointments'],
         summary: 'List all appointments',
+        security: [{ bearerAuth: [] }],
         querystring: {
           type: 'object',
           properties: {
@@ -77,6 +80,8 @@ export async function appointmentRoutes(app: FastifyInstance) {
           200: {
             ...appointmentListSchema,
           },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
         },
       },
     },
@@ -86,11 +91,18 @@ export async function appointmentRoutes(app: FastifyInstance) {
   app.get(
     '/appointments/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Appointments'],
         summary: 'Get appointment by ID',
+        security: [{ bearerAuth: [] }],
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
-        response: { 200: appointmentSchema, 404: errorResponseSchema },
+        response: {
+          200: appointmentSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+          404: errorResponseSchema,
+        },
       },
     },
     appointmentController.getById.bind(appointmentController)
@@ -99,9 +111,11 @@ export async function appointmentRoutes(app: FastifyInstance) {
   app.post(
     '/appointments',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Appointments'],
         summary: 'Create new appointment',
+        security: [{ bearerAuth: [] }],
         body: {
           type: 'object',
           required: ['professionalId', 'clientId', 'serviceId', 'date'],
@@ -117,6 +131,7 @@ export async function appointmentRoutes(app: FastifyInstance) {
           201: appointmentSchema,
           400: errorResponseSchema,
           401: errorResponseSchema,
+          403: errorResponseSchema,
           404: errorResponseSchema,
           409: errorResponseSchema,
         },
@@ -128,9 +143,11 @@ export async function appointmentRoutes(app: FastifyInstance) {
   app.put(
     '/appointments/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Appointments'],
         summary: 'Update appointment',
+        security: [{ bearerAuth: [] }],
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
         body: {
           type: 'object',
@@ -146,6 +163,7 @@ export async function appointmentRoutes(app: FastifyInstance) {
           200: appointmentSchema,
           400: errorResponseSchema,
           401: errorResponseSchema,
+          403: errorResponseSchema,
           404: errorResponseSchema,
           409: errorResponseSchema,
         },
@@ -157,9 +175,11 @@ export async function appointmentRoutes(app: FastifyInstance) {
   app.patch(
     '/appointments/:id/status',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Appointments'],
         summary: 'Update appointment status',
+        security: [{ bearerAuth: [] }],
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
         body: {
           type: 'object',
@@ -175,6 +195,7 @@ export async function appointmentRoutes(app: FastifyInstance) {
           200: appointmentSchema,
           400: errorResponseSchema,
           401: errorResponseSchema,
+          403: errorResponseSchema,
           404: errorResponseSchema,
         },
       },
@@ -185,14 +206,17 @@ export async function appointmentRoutes(app: FastifyInstance) {
   app.delete(
     '/appointments/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Appointments'],
         summary: 'Delete appointment',
+        security: [{ bearerAuth: [] }],
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
         response: {
           204: { type: 'null' },
           400: errorResponseSchema,
           401: errorResponseSchema,
+          403: errorResponseSchema,
           404: errorResponseSchema,
         },
       },

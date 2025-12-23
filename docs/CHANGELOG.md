@@ -20,12 +20,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New scripts: `pnpm format`, `pnpm format:check`
   - Files: `.prettierrc`, `.prettierignore`, `.editorconfig`, `.husky/pre-commit`
 
+- **Milestone 5: Appointment Management - COMPLETE** (2025-12-23)
+  - **JWT Authentication Required:** Added `requireAuth` middleware to ALL appointment routes (GET, POST, PUT, PATCH, DELETE)
+  - **Swagger Security Schemas:** Added `security: [{ bearerAuth: [] }]` and 401/403 response schemas to all appointment endpoints
+  - **Tenant Mismatch Validation:** Added `user.barbershopId !== tenantId` check in all appointment controller methods (returns 403 Tenant mismatch)
+  - **Status Transition State Machine:** Implemented validation for appointment status transitions
+    - PENDING → CONFIRMED | CANCELLED
+    - CONFIRMED → COMPLETED | CANCELLED | NO_SHOW
+    - COMPLETED/CANCELLED/NO_SHOW are final states (no further transitions allowed)
+    - Invalid transitions return 400 with descriptive error message
+  - **Soft Delete via Cancellation:** DELETE endpoint now cancels appointments (sets status=CANCELLED) instead of physically deleting
+    - Preserves audit history
+    - Respects state machine (only PENDING/CONFIRMED can be cancelled)
+    - Returns 400 when attempting to delete final state appointments
+  - **Commission Calculation:** Fixed to calculate ONLY when transitioning TO COMPLETED (not if already completed)
+  - **Comprehensive Tests:** Added `src/controllers/__tests__/appointments.test.ts` covering:
+    - Authentication requirements (401 when no JWT)
+    - Tenant mismatch scenarios (403)
+    - Date range filtering in list endpoint
+    - Appointment creation with/without conflicts
+    - CANCELLED appointments excluded from conflict checks
+    - Valid and invalid status transitions
+    - Commission calculation on COMPLETED transition
+    - Cancellation via DELETE (soft delete)
+
 - RBAC aplicado no CRUD de Professionals/Services (ADMIN vs BARBER), com self-update restrito a name/email/password.
 - Autenticação obrigatória também nos endpoints GET de professionals/clients/services.
 - Soft delete (`isActive=false`) para professionals/clients/services com filtros de listagem apenas ativos.
 - Testes de controllers para CRUD de professionals/clients/services.
 
 ### Fixed
+
+- **Appointment Update Final-State Response** (2025-12-23)
+  - Map attempts to update COMPLETED/CANCELLED/NO_SHOW appointments to 400 in `appointmentController.update`
+  - Prevents expected business-rule violations from returning 500
 
 - **Proteção de Rotas de Transações (GET)** (2025-12-22)
   - **Problema:** Rotas GET `/api/transactions` e `/api/transactions/:id` não exigiam autenticação JWT, permitindo acesso apenas com `x-tenant-slug`.
@@ -66,7 +94,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Next Steps
 
-- Milestone 5: validar transições de status e testes de appointments
 - Milestone 6: adicionar endpoints de summary/commission report e testes
 - Milestone 8: proteger update de barbershop com auth/RBAC
 - Milestone 9: CI (lint/test), deploy Vercel e elevar cobertura para >= 80%

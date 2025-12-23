@@ -35,7 +35,7 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 | 2         | **COMPLETE** ✅ | Fastify App & Core Middleware           |
 | 3         | **COMPLETE** ✅ | Authentication (JWT + OTP)              |
 | 4         | **COMPLETE** ✅ | CRUD (Professionals, Clients, Services) |
-| 5         | In Progress     | Appointment Management                  |
+| 5         | **COMPLETE** ✅ | Appointment Management                  |
 | 6         | In Progress     | Financial Management                    |
 | 7         | In Progress     | Notifications (Web Push + Cron)         |
 | 8         | In Progress     | Barbershop Management                   |
@@ -262,7 +262,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ## Milestone 5: Appointment Management
 
-**Status:** IN PROGRESS
+**Status:** COMPLETE ✅
 
 ### Checklist
 
@@ -274,13 +274,28 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - [x] Conflict validation logic
   - Prevents double-booking for same professional/time
   - Ignores CANCELLED appointments in conflict check
-- [ ] Status transitions validation (enforce allowed changes)
-  - Planned: PENDING → CONFIRMED → COMPLETED/CANCELLED/NO_SHOW
+- [x] Status transitions validation (state machine)
+  - PENDING → CONFIRMED | CANCELLED
+  - CONFIRMED → COMPLETED | CANCELLED | NO_SHOW
+  - Final states (COMPLETED, CANCELLED, NO_SHOW) cannot transition
+  - Invalid transitions return 400 with descriptive error message
+- [x] Final-state appointment updates return 400 (prevents 500 on invalid updates)
 - [x] Commission calculation on COMPLETED
-  - Snapshot pattern: price and commission stored at creation/completion
+  - Calculated ONLY when transitioning TO COMPLETED
+  - Snapshot pattern: price and commission stored at completion time
 - [x] Filtering (date, status, professional)
-- [x] Auth required for create/update/delete operations
-- [ ] Tests
+- [x] Auth required for ALL operations (including GET)
+  - `requireAuth` middleware on all routes
+  - Tenant mismatch validation (403)
+- [x] Soft delete (DELETE = cancellation via status=CANCELLED)
+- [x] Tests (`src/controllers/__tests__/appointments.test.ts`)
+  - Authentication (401/403)
+  - Tenant mismatch
+  - Date range filtering
+  - Conflict detection and CANCELLED exclusion
+  - Status transitions (valid/invalid)
+  - Commission calculation
+  - Cancellation (soft delete)
 
 ---
 

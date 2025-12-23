@@ -9,6 +9,27 @@ import { clientRepository } from '../repositories/clientRepository.js'
 import type { AppointmentStatus, Prisma } from '@prisma/client'
 import { serializeAppointmentWithRelations } from '../lib/serializer.js'
 
+// State machine for appointment status transitions
+const VALID_TRANSITIONS: Record<AppointmentStatus, AppointmentStatus[]> = {
+  PENDING: ['CONFIRMED', 'CANCELLED'],
+  CONFIRMED: ['COMPLETED', 'CANCELLED', 'NO_SHOW'],
+  COMPLETED: [], // Final state
+  CANCELLED: [], // Final state
+  NO_SHOW: [], // Final state
+}
+
+function assertValidStatusTransition(
+  currentStatus: AppointmentStatus,
+  newStatus: AppointmentStatus
+): void {
+  const allowedTransitions = VALID_TRANSITIONS[currentStatus]
+  if (!allowedTransitions.includes(newStatus)) {
+    throw new Error(
+      `Invalid status transition from ${currentStatus} to ${newStatus}. Allowed transitions: ${allowedTransitions.join(', ') || 'none (final state)'}`
+    )
+  }
+}
+
 export interface CreateAppointmentInput {
   professionalId: string
   clientId: string
@@ -98,6 +119,14 @@ export class AppointmentService {
     const appointment = await appointmentRepository.findById(id, barbershopId)
     if (!appointment) throw new Error('Appointment not found')
 
+    // Prevent updates to appointments in final states
+    const finalStates: AppointmentStatus[] = ['COMPLETED', 'CANCELLED', 'NO_SHOW']
+    if (finalStates.includes(appointment.status)) {
+      throw new Error(
+        `Cannot update appointment in final state ${appointment.status}. Allowed transitions: none (final state)`
+      )
+    }
+
     // If changing date or professional, check for conflicts
     if (input.date || input.professionalId) {
       const professionalId = input.professionalId || appointment.professionalId
@@ -152,10 +181,13 @@ export class AppointmentService {
     const appointment = await appointmentRepository.findById(id, barbershopId)
     if (!appointment) throw new Error('Appointment not found')
 
+    // Validate status transition using state machine
+    assertValidStatusTransition(appointment.status, input.status)
+
     const updateData: Prisma.AppointmentUpdateInput = { status: input.status }
 
-    // Calculate commission when appointment is completed
-    if (input.status === 'COMPLETED' && !appointment.commissionValue) {
+    // Calculate commission ONLY when transitioning TO COMPLETED (not if already completed)
+    if (input.status === 'COMPLETED' && appointment.status !== 'COMPLETED') {
       const professional = await professionalRepository.findById(
         appointment.professionalId,
         barbershopId
@@ -175,6 +207,10 @@ export class AppointmentService {
     const appointment = await appointmentRepository.findById(id, barbershopId)
     if (!appointment) throw new Error('Appointment not found')
 
+    // DELETE now means cancellation - validate transition to CANCELLED
+    assertValidStatusTransition(appointment.status, 'CANCELLED')
+
+    // Cancel the appointment instead of deleting it
     await appointmentRepository.delete(id, barbershopId)
   }
 }
