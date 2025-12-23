@@ -19,6 +19,7 @@ Criar schema Prisma completo, aplicar migrations no Supabase, e configurar as bi
 ## Arquivos a Criar/Modificar
 
 ### Arquivos Existentes (já criados no Milestone 0)
+
 - `/packages/backend/prisma/schema.prisma` - Schema já existe, precisa ser validado
 - `/packages/backend/src/lib/prisma.ts` - Singleton já existe, precisa ser testado
 - `/packages/backend/src/lib/redis.ts` - Client já existe, precisa ser testado
@@ -83,6 +84,7 @@ enum TransactionType {
 ### Modelos
 
 **Barbershop (tenant root):**
+
 - `id` (String, @id, @default(uuid()))
 - `name` (String)
 - `slug` (String, @unique)
@@ -91,6 +93,7 @@ enum TransactionType {
 - `updatedAt` (DateTime, @updatedAt)
 
 **Professional:**
+
 - `id` (String, @id, @default(uuid()))
 - `barbershopId` (String, Foreign Key)
 - `name` (String)
@@ -101,6 +104,7 @@ enum TransactionType {
 - `createdAt`, `updatedAt`
 
 **Client:**
+
 - `id` (String, @id, @default(uuid()))
 - `barbershopId` (String, Foreign Key)
 - `name` (String)
@@ -109,6 +113,7 @@ enum TransactionType {
 - `createdAt`, `updatedAt`
 
 **Service:**
+
 - `id` (String, @id, @default(uuid()))
 - `barbershopId` (String, Foreign Key)
 - `name` (String)
@@ -117,6 +122,7 @@ enum TransactionType {
 - `createdAt`, `updatedAt`
 
 **Appointment:**
+
 - `id` (String, @id, @default(uuid()))
 - `barbershopId` (String, Foreign Key)
 - `professionalId` (String, Foreign Key)
@@ -130,6 +136,7 @@ enum TransactionType {
 - `createdAt`, `updatedAt`
 
 **Transaction:**
+
 - `id` (String, @id, @default(uuid()))
 - `barbershopId` (String, Foreign Key)
 - `amount` (Decimal)
@@ -144,6 +151,7 @@ enum TransactionType {
 ## Dependências
 
 Todas as dependências já estão instaladas no Milestone 0:
+
 - `@prisma/client`
 - `prisma`
 - `@upstash/redis`
@@ -180,4 +188,5 @@ Todas as dependências já estão instaladas no Milestone 0:
 ## Próximos Passos
 
 Após completar este milestone, o próximo será:
+
 - **MILESTONE 2:** Fastify App & Core Middleware

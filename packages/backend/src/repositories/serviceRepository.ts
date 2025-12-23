@@ -22,6 +22,7 @@ export class ServiceRepository {
       where: {
         id,
         barbershopId,
+        isActive: true,
       },
     })
   }
@@ -32,13 +33,13 @@ export class ServiceRepository {
 
     const [data, total] = await Promise.all([
       prisma.service.findMany({
-        where: { barbershopId },
+        where: { barbershopId, isActive: true },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
       prisma.service.count({
-        where: { barbershopId },
+        where: { barbershopId, isActive: true },
       }),
     ])
 
@@ -57,8 +58,12 @@ export class ServiceRepository {
     return prisma.service.create({ data })
   }
 
-  async update(id: string, barbershopId: string, data: Prisma.ServiceUpdateInput): Promise<Service> {
-    const existing = await prisma.service.findFirst({ where: { id, barbershopId } })
+  async update(
+    id: string,
+    barbershopId: string,
+    data: Prisma.ServiceUpdateInput
+  ): Promise<Service> {
+    const existing = await prisma.service.findFirst({ where: { id, barbershopId, isActive: true } })
     if (!existing) {
       throw new Error('Service not found')
     }
@@ -69,12 +74,13 @@ export class ServiceRepository {
   }
 
   async delete(id: string, barbershopId: string): Promise<Service> {
-    const existing = await prisma.service.findFirst({ where: { id, barbershopId } })
+    const existing = await prisma.service.findFirst({ where: { id, barbershopId, isActive: true } })
     if (!existing) {
       throw new Error('Service not found')
     }
-    return prisma.service.delete({
+    return prisma.service.update({
       where: { id },
+      data: { isActive: false },
     })
   }
 }

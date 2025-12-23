@@ -60,7 +60,8 @@ export class ClientService {
       ...(input.phone && { phone: input.phone }),
     }
     if (input.pushSubscription !== undefined) {
-      updateData.pushSubscription = input.pushSubscription === null ? Prisma.DbNull : input.pushSubscription
+      updateData.pushSubscription =
+        input.pushSubscription === null ? Prisma.DbNull : input.pushSubscription
     }
 
     return clientRepository.update(id, barbershopId, updateData)

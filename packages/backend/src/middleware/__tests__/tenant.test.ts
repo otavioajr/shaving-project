@@ -48,10 +48,7 @@ describe('tenantMiddleware', () => {
         headers: {},
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).not.toHaveBeenCalled()
       expect(sendMock).not.toHaveBeenCalled()
@@ -63,10 +60,7 @@ describe('tenantMiddleware', () => {
         headers: {},
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).not.toHaveBeenCalled()
       expect(sendMock).not.toHaveBeenCalled()
@@ -78,10 +72,7 @@ describe('tenantMiddleware', () => {
         headers: {},
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).not.toHaveBeenCalled()
       expect(sendMock).not.toHaveBeenCalled()
@@ -93,10 +84,7 @@ describe('tenantMiddleware', () => {
         headers: {},
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).not.toHaveBeenCalled()
       expect(sendMock).not.toHaveBeenCalled()
@@ -108,10 +96,7 @@ describe('tenantMiddleware', () => {
         headers: {},
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).not.toHaveBeenCalled()
       expect(sendMock).not.toHaveBeenCalled()
@@ -123,10 +108,7 @@ describe('tenantMiddleware', () => {
         headers: {},
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).not.toHaveBeenCalled()
       expect(sendMock).not.toHaveBeenCalled()
@@ -138,10 +120,7 @@ describe('tenantMiddleware', () => {
         headers: {},
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).not.toHaveBeenCalled()
       expect(sendMock).not.toHaveBeenCalled()
@@ -155,10 +134,7 @@ describe('tenantMiddleware', () => {
         headers: {},
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).toHaveBeenCalledWith(404)
       expect(sendMock).toHaveBeenCalledWith({
@@ -178,10 +154,7 @@ describe('tenantMiddleware', () => {
         },
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).toHaveBeenCalledWith(404)
       expect(sendMock).toHaveBeenCalledWith({
@@ -204,10 +177,7 @@ describe('tenantMiddleware', () => {
         },
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).toHaveBeenCalledWith(404)
       expect(sendMock).toHaveBeenCalledWith({
@@ -226,10 +196,7 @@ describe('tenantMiddleware', () => {
         },
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(mockRequest.tenantId).toBe('barbershop-1')
       expect(mockRequest.tenantSlug).toBe('test-shop')
@@ -251,10 +218,7 @@ describe('tenantMiddleware', () => {
         },
       }
 
-      await tenantMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await tenantMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(prisma.barbershop.findUnique).toHaveBeenCalledWith({
         where: { slug: 'new-shop' },

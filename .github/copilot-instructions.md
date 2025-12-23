@@ -18,6 +18,7 @@ src/lib/              → prisma.ts (singleton), redis.ts (OTP, cache, rate limi
 ## Critical Patterns
 
 ### Multi-Tenant Isolation (SECURITY-CRITICAL)
+
 Every database query MUST filter by `barbershopId`. The tenant is resolved via `x-tenant-slug` header → cached in Redis → injected as `request.tenantId`.
 
 ```typescript
@@ -29,13 +30,17 @@ prisma.client.findFirst({ where: { id } })
 ```
 
 ### Prisma Singleton (prevents connection exhaustion)
+
 Always import from `src/lib/prisma.ts` - never instantiate `new PrismaClient()` directly.
 
 ### Pagination Required
+
 All list endpoints must accept `page` and `limit` params (Vercel 10s timeout). See `src/repositories/clientRepository.ts` for standard pattern.
 
 ### OTP/Tokens in Redis Only
+
 Never store OTP codes or refresh tokens in PostgreSQL. Use helpers in `src/lib/redis.ts`:
+
 - `storeOTP()`, `verifyOTP()` - 5 min TTL
 - `storeRefreshToken()`, `verifyRefreshToken()` - 7 day TTL
 
@@ -76,6 +81,7 @@ pnpm db:studio        # Prisma Studio GUI
 ## Environment Variables
 
 Essential vars (see `packages/backend/.env.example`):
+
 - `DATABASE_URL` - Supabase pooler (port 6543)
 - `DIRECT_URL` - Direct connection for migrations
 - `UPSTASH_REDIS_REST_URL/TOKEN` - Redis for cache/rate limit/OTP

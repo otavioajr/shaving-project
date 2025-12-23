@@ -38,12 +38,25 @@ export class TransactionController {
     try {
       const { page, limit, ...filters } = listQuerySchema.parse(request.query)
       const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
       }
 
-      const result = await transactionService.listTransactions(barbershopId, { page, limit }, filters)
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
+      }
+
+      const result = await transactionService.listTransactions(
+        barbershopId,
+        { page, limit },
+        filters
+      )
       return reply.status(200).send(result)
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -57,9 +70,18 @@ export class TransactionController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const transaction = await transactionService.getTransaction(id, barbershopId)

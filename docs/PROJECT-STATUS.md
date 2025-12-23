@@ -8,14 +8,14 @@
 
 ## 🎯 Visão Geral
 
-| Aspecto | Status | Detalhes |
-|---------|--------|----------|
-| **Infraestrutura** | 100% ✅ | DB, Redis, Middleware prontos |
-| **Authentication** | 100% ✅ | JWT + OTP implementados |
-| **CRUD Endpoints** | 100% ✅ | Todos implementados |
-| **Business Logic** | 80% ⚠️ | Comissão ✅, RBAC ❌ |
-| **Testes** | 58% ⚠️ | Unit tests ✅, Integration tests ❌ |
-| **Segurança** | 60% ⚠️ | Auth ✅, RBAC ❌ |
+| Aspecto            | Status  | Detalhes                            |
+| ------------------ | ------- | ----------------------------------- |
+| **Infraestrutura** | 100% ✅ | DB, Redis, Middleware prontos       |
+| **Authentication** | 100% ✅ | JWT + OTP implementados             |
+| **CRUD Endpoints** | 100% ✅ | Todos implementados                 |
+| **Business Logic** | 80% ⚠️  | Comissão ✅, RBAC ❌                |
+| **Testes**         | 58% ⚠️  | Unit tests ✅, Integration tests ❌ |
+| **Segurança**      | 60% ⚠️  | Auth ✅, RBAC ❌                    |
 
 ---
 
@@ -35,6 +35,7 @@ M9: Testing & Deployment          ████████░░░░░░░�
 ```
 
 **Legenda:**
+
 - ✅ = Completo
 - ⚠️ = Parcialmente completo
 - ❌ = Não iniciado
@@ -44,18 +45,21 @@ M9: Testing & Deployment          ████████░░░░░░░�
 ## 🔢 Métricas de Qualidade
 
 ### Testes
+
 - **Unit Tests:** 68/68 ✅ (100%)
 - **Integration Tests:** 10/10 ✅ (TestSprite E2E)
 - **Coverage:** 58% ⚠️ (Meta: 80%)
 - **Lint:** 0 warnings/errors ✅
 
 ### Code Quality
+
 - **TypeScript:** Strict mode ✅
 - **ESLint:** 0 errors/warnings ✅
 - **Type Safety:** 100% ✅
 - **No `any`:** 99% ✅
 
 ### API
+
 - **Total Endpoints:** 33 endpoints
 - **Implementados:** 33 ✅ (100%)
 - **Com Auth:** 17/33 ✅
@@ -66,12 +70,14 @@ M9: Testing & Deployment          ████████░░░░░░░�
 ## 📦 Inventário de Endpoints
 
 ### Public (4 endpoints) ✅
+
 - ✅ `GET /` - API info
 - ✅ `GET /health` - Health check
 - ✅ `GET /docs` - Swagger UI
 - ✅ `GET /docs/json` - OpenAPI spec
 
 ### Auth (6 endpoints) ✅
+
 - ✅ `POST /api/auth/login` - Email/password
 - ✅ `POST /api/auth/refresh` - Refresh token
 - ✅ `POST /api/auth/logout` - Logout
@@ -80,6 +86,7 @@ M9: Testing & Deployment          ████████░░░░░░░�
 - ✅ `GET /api/auth/test/otp/:id` - Test OTP (dev only)
 
 ### Professionals (5 endpoints) ⚠️
+
 - ✅ `GET /api/professionals` - Listar
 - ✅ `GET /api/professionals/:id` - Buscar
 - ⚠️ `POST /api/professionals` - Criar (sem RBAC)
@@ -87,6 +94,7 @@ M9: Testing & Deployment          ████████░░░░░░░�
 - ⚠️ `DELETE /api/professionals/:id` - Deletar (sem RBAC)
 
 ### Clients (5 endpoints) ⚠️
+
 - ✅ `GET /api/clients` - Listar
 - ✅ `GET /api/clients/:id` - Buscar
 - ⚠️ `POST /api/clients` - Criar (sem RBAC)
@@ -94,6 +102,7 @@ M9: Testing & Deployment          ████████░░░░░░░�
 - ⚠️ `DELETE /api/clients/:id` - Deletar (sem RBAC)
 
 ### Services (5 endpoints) ⚠️
+
 - ✅ `GET /api/services` - Listar
 - ✅ `GET /api/services/:id` - Buscar
 - ⚠️ `POST /api/services` - Criar (sem RBAC)
@@ -101,6 +110,7 @@ M9: Testing & Deployment          ████████░░░░░░░�
 - ⚠️ `DELETE /api/services/:id` - Deletar (sem RBAC)
 
 ### Appointments (6 endpoints) ⚠️
+
 - ✅ `GET /api/appointments` - Listar
 - ✅ `GET /api/appointments/:id` - Buscar
 - ⚠️ `POST /api/appointments` - Criar (sem RBAC)
@@ -109,6 +119,7 @@ M9: Testing & Deployment          ████████░░░░░░░�
 - ⚠️ `DELETE /api/appointments/:id` - Deletar (sem RBAC)
 
 ### Transactions (5 endpoints) ⚠️
+
 - ✅ `GET /api/transactions` - Listar
 - ✅ `GET /api/transactions/:id` - Buscar
 - ⚠️ `POST /api/transactions` - Criar (sem RBAC)
@@ -116,10 +127,12 @@ M9: Testing & Deployment          ████████░░░░░░░�
 - ⚠️ `DELETE /api/transactions/:id` - Deletar (sem RBAC)
 
 ### Barbershop (2 endpoints) ⚠️
+
 - ✅ `GET /api/barbershop` - Buscar atual
 - ⚠️ `PUT /api/barbershop` - Atualizar (sem RBAC)
 
 ### Reports (0 endpoints) ❌
+
 - ❌ `GET /api/reports/financial-summary` - Não implementado
 - ❌ `GET /api/reports/commission` - Não implementado
 
@@ -128,40 +141,49 @@ M9: Testing & Deployment          ████████░░░░░░░�
 ## 🏆 O que está EXCELENTE
 
 ### Arquitetura
+
 ✅ **Multi-tenancy robusto**
+
 - Middleware de tenant com cache Redis (5 min TTL)
 - Isolamento completo por `barbershopId`
 - Row Level Security (RLS) habilitado
 
 ✅ **Rate Limiting inteligente**
+
 - IP-based: 100 req/60s
 - Tenant-based: 1000 req/60s
 - Headers informativos (`X-RateLimit-*`)
 
 ✅ **Authentication completo**
+
 - JWT (access: 15min, refresh: 7 dias)
 - OTP via Redis (TTL: 5 min)
 - Password hashing (bcrypt)
 - Test endpoint para E2E (dev only)
 
 ✅ **Database Design**
+
 - Prisma Singleton pattern (serverless-ready)
 - Cascade deletes corretos
 - Indexes otimizados
 - Enums tipados
 
 ### Code Quality
+
 ✅ **TypeScript estrito**
+
 - Strict mode habilitado
 - Type safety 100%
 - Minimal use of `any`
 
 ✅ **Testing**
+
 - 68 unit tests passando
 - 10 E2E tests passando (TestSprite)
 - Test coverage tracking (Vitest)
 
 ✅ **Developer Experience**
+
 - Swagger UI completo
 - Scripts pnpm organizados
 - Seed script idempotente
@@ -174,6 +196,7 @@ M9: Testing & Deployment          ████████░░░░░░░�
 ### 🔴 Crítico (Bloqueia produção)
 
 **1. RBAC não implementado**
+
 ```
 Problema: Qualquer usuário autenticado pode fazer TUDO
 Impacto: ADMIN e BARBER têm as mesmas permissões
@@ -187,6 +210,7 @@ Afeta: M4, M5, M6, M8
 ```
 
 **2. Validação de status faltando**
+
 ```
 Problema: Permite transições inválidas de appointment status
 Exemplo: COMPLETED → PENDING (não faz sentido)
@@ -203,6 +227,7 @@ Afeta: M5
 ### 🟡 Importante (Features incompletas)
 
 **3. Testes de integração faltando**
+
 ```
 Problema: CRUD endpoints não têm integration tests
 Cobertura atual: 58% (meta: 80%)
@@ -219,6 +244,7 @@ Afeta: M4, M5, M6
 ```
 
 **4. Endpoints de relatório ausentes**
+
 ```
 Problema: Não existe forma de gerar relatórios
 Impacto: Cliente não consegue ver métricas importantes
@@ -240,6 +266,7 @@ Afeta: M6
 ### 🟢 Desejável (Melhorias futuras)
 
 **5. Sistema de notificações**
+
 ```
 Problema: Push notifications não implementadas
 Impacto: Clientes não recebem lembretes de appointments
@@ -254,6 +281,7 @@ Afeta: M7
 ```
 
 **6. Swagger authentication**
+
 ```
 Problema: Swagger UI não tem botão "Authorize"
 Impacto: Dificulta teste manual de rotas protegidas
@@ -271,6 +299,7 @@ Afeta: M9
 ## 📋 Roadmap de Correções
 
 ### Sprint 1: Segurança (5-7 dias) 🔴
+
 **Objetivo:** Tornar o sistema seguro para produção
 
 1. **Implementar RBAC** (3 dias)
@@ -290,6 +319,7 @@ Afeta: M9
    - [ ] Testes de validação
 
 ### Sprint 2: Qualidade (5-7 dias) 🟡
+
 **Objetivo:** Elevar cobertura de testes para 80%+
 
 3. **Integration Tests** (5 dias)
@@ -301,6 +331,7 @@ Afeta: M9
    - [ ] Verificar coverage >= 80%
 
 ### Sprint 3: Features (3-5 dias) 🟡
+
 **Objetivo:** Completar funcionalidades de negócio
 
 4. **Reports Endpoints** (3 dias)
@@ -311,6 +342,7 @@ Afeta: M9
    - [ ] Tests
 
 ### Sprint 4: Notificações (5-7 dias) 🟢
+
 **Objetivo:** Sistema completo de notificações
 
 5. **Push Notifications** (5 dias)
@@ -321,6 +353,7 @@ Afeta: M9
    - [ ] Tests
 
 ### Sprint 5: Polish (2-3 dias) 🟢
+
 **Objetivo:** Melhorias finais para produção
 
 6. **Final Touches** (2 dias)
@@ -337,6 +370,7 @@ Afeta: M9
 Para considerar o projeto **PRONTO PARA PRODUÇÃO**, precisamos:
 
 ### ✅ Must Have (Obrigatório)
+
 - [x] Todos os endpoints implementados
 - [ ] **RBAC implementado em TODOS os endpoints protegidos**
 - [ ] **Validação de status transitions**
@@ -349,6 +383,7 @@ Para considerar o projeto **PRONTO PARA PRODUÇÃO**, precisamos:
 - [ ] Deploy successful (Vercel)
 
 ### ⚠️ Should Have (Muito importante)
+
 - [ ] Reports endpoints
 - [ ] CI/CD pipeline
 - [ ] Error monitoring (Sentry?)
@@ -356,6 +391,7 @@ Para considerar o projeto **PRONTO PARA PRODUÇÃO**, precisamos:
 - [ ] Load testing
 
 ### 🟢 Nice to Have (Desejável)
+
 - [ ] Push notifications
 - [ ] Admin dashboard
 - [ ] API versioning
@@ -366,12 +402,14 @@ Para considerar o projeto **PRONTO PARA PRODUÇÃO**, precisamos:
 ## 📞 Contato & Suporte
 
 **Documentação:**
+
 - Plano de Teste E2E: `docs/E2E-TEST-PLAN.md`
 - Guia Rápido: `TESTE-RAPIDO.md`
 - Development Status: `docs/DEVELOPMENT.md`
 - Changelog: `docs/CHANGELOG.md`
 
 **Scripts:**
+
 - Teste E2E: `./scripts/e2e-test.sh`
 - Seed DB: `pnpm db:seed`
 - Tests: `pnpm test`

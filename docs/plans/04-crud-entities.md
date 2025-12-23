@@ -19,21 +19,25 @@ Implementar CRUD completo para Professionals, Clients e Services seguindo o padr
 ## Arquivos a Criar
 
 ### Repositories (Data Access Layer)
+
 1. **`/packages/backend/src/repositories/professional.repository.ts`**
 2. **`/packages/backend/src/repositories/client.repository.ts`**
 3. **`/packages/backend/src/repositories/service.repository.ts`**
 
 ### Services (Business Logic)
+
 4. **`/packages/backend/src/services/professional.service.ts`**
 5. **`/packages/backend/src/services/client.service.ts`**
 6. **`/packages/backend/src/services/service.service.ts`**
 
 ### Controllers (Request Handlers)
+
 7. **`/packages/backend/src/controllers/professional.controller.ts`**
 8. **`/packages/backend/src/controllers/client.controller.ts`**
 9. **`/packages/backend/src/controllers/service.controller.ts`**
 
 ### Schemas (Zod Validation)
+
 10. **`/packages/backend/src/schemas/professional.schema.ts`**
 11. **`/packages/backend/src/schemas/client.schema.ts`**
 12. **`/packages/backend/src/schemas/service.schema.ts`**
@@ -57,12 +61,14 @@ Prisma Client
 ### Repository Pattern
 
 **Responsabilidades:**
+
 - Queries ao banco de dados
 - Filtros por `barbershopId` (tenant isolation)
 - Paginação
 - Operações CRUD básicas
 
 **Exemplo:**
+
 ```typescript
 async findAll(barbershopId: string, page: number, limit: number): Promise<PaginatedResult<Professional>>
 async findById(id: string, barbershopId: string): Promise<Professional | null>
@@ -74,12 +80,14 @@ async delete(id: string, barbershopId: string): Promise<void>
 ### Service Pattern
 
 **Responsabilidades:**
+
 - Validações de negócio
 - Transformações de dados
 - Lógica complexa
 - Chamadas ao repository
 
 **Exemplo:**
+
 ```typescript
 async listProfessionals(barbershopId: string, page: number, limit: number)
 async getProfessional(id: string, barbershopId: string)
@@ -91,6 +99,7 @@ async deleteProfessional(id: string, barbershopId: string, requesterRole: Role)
 ### Controller Pattern
 
 **Responsabilidades:**
+
 - Validação de request (Zod)
 - Extração de parâmetros
 - Chamadas ao service
@@ -104,24 +113,28 @@ async deleteProfessional(id: string, barbershopId: string, requesterRole: Role)
 ### Professionals
 
 **GET /professionals**
+
 - Query params: `page`, `limit`
 - Auth: Requerida
 - Role: Qualquer (BARBER ou ADMIN)
 - Retorna: Lista paginada de professionals do tenant
 
 **GET /professionals/:id**
+
 - Params: `id`
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Professional específico
 
 **POST /professionals**
+
 - Body: `{ name, email, password, commissionRate, role }`
 - Auth: Requerida
 - Role: ADMIN apenas
 - Retorna: Professional criado
 
 **PUT /professionals/:id**
+
 - Params: `id`
 - Body: `{ name?, email?, commissionRate?, role? }`
 - Auth: Requerida
@@ -129,6 +142,7 @@ async deleteProfessional(id: string, barbershopId: string, requesterRole: Role)
 - Retorna: Professional atualizado
 
 **DELETE /professionals/:id**
+
 - Params: `id`
 - Auth: Requerida
 - Role: ADMIN apenas
@@ -137,24 +151,28 @@ async deleteProfessional(id: string, barbershopId: string, requesterRole: Role)
 ### Clients
 
 **GET /clients**
+
 - Query params: `page`, `limit`
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Lista paginada de clients do tenant
 
 **GET /clients/:id**
+
 - Params: `id`
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Client específico
 
 **POST /clients**
+
 - Body: `{ name, phone, pushSubscription? }`
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Client criado
 
 **PUT /clients/:id**
+
 - Params: `id`
 - Body: `{ name?, phone?, pushSubscription? }`
 - Auth: Requerida
@@ -162,6 +180,7 @@ async deleteProfessional(id: string, barbershopId: string, requesterRole: Role)
 - Retorna: Client atualizado
 
 **DELETE /clients/:id**
+
 - Params: `id`
 - Auth: Requerida
 - Role: Qualquer
@@ -170,24 +189,28 @@ async deleteProfessional(id: string, barbershopId: string, requesterRole: Role)
 ### Services
 
 **GET /services**
+
 - Query params: `page`, `limit`
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Lista paginada de services do tenant
 
 **GET /services/:id**
+
 - Params: `id`
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Service específico
 
 **POST /services**
+
 - Body: `{ name, price, duration }`
 - Auth: Requerida
 - Role: ADMIN apenas
 - Retorna: Service criado
 
 **PUT /services/:id**
+
 - Params: `id`
 - Body: `{ name?, price?, duration? }`
 - Auth: Requerida
@@ -195,6 +218,7 @@ async deleteProfessional(id: string, barbershopId: string, requesterRole: Role)
 - Retorna: Service atualizado
 
 **DELETE /services/:id**
+
 - Params: `id`
 - Auth: Requerida
 - Role: ADMIN apenas
@@ -207,10 +231,12 @@ async deleteProfessional(id: string, barbershopId: string, requesterRole: Role)
 **Obrigatória em TODOS os endpoints de listagem**
 
 **Query Parameters:**
+
 - `page`: Número da página (mínimo 1)
 - `limit`: Itens por página (mínimo 1, máximo 100)
 
 **Response Format:**
+
 ```typescript
 {
   data: T[],
@@ -230,6 +256,7 @@ async deleteProfessional(id: string, barbershopId: string, requesterRole: Role)
 ## Dependências
 
 Todas as dependências já estão instaladas:
+
 - `zod` (validação)
 - `@prisma/client` (database)
 - `@fastify/jwt` (autenticação)
@@ -239,6 +266,7 @@ Todas as dependências já estão instaladas:
 ## Checklist de Testes
 
 ### Professionals
+
 - [ ] Listar professionals com paginação funciona
 - [ ] Buscar professional por ID funciona
 - [ ] Criar professional (ADMIN apenas) funciona
@@ -248,6 +276,7 @@ Todas as dependências já estão instaladas:
 - [ ] Validação de role funciona
 
 ### Clients
+
 - [ ] Listar clients com paginação funciona
 - [ ] Buscar client por ID funciona
 - [ ] Criar client funciona
@@ -256,6 +285,7 @@ Todas as dependências já estão instaladas:
 - [ ] Isolamento por tenant funciona
 
 ### Services
+
 - [ ] Listar services com paginação funciona
 - [ ] Buscar service por ID funciona
 - [ ] Criar service (ADMIN apenas) funciona
@@ -265,6 +295,7 @@ Todas as dependências já estão instaladas:
 - [ ] Validação de role funciona
 
 ### Paginação
+
 - [ ] Paginação funciona corretamente
 - [ ] `totalPages` calculado corretamente
 - [ ] `hasNext` e `hasPrevious` corretos
@@ -272,6 +303,7 @@ Todas as dependências já estão instaladas:
 - [ ] Limite máximo de 100 funciona
 
 ### Swagger
+
 - [ ] Documentação Swagger completa para todos endpoints
 - [ ] Schemas de request/response documentados
 - [ ] Exemplos incluídos
@@ -303,4 +335,5 @@ Todas as dependências já estão instaladas:
 ## Próximos Passos
 
 Após completar este milestone, o próximo será:
+
 - **MILESTONE 5:** Appointment Management

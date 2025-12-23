@@ -1,94 +1,219 @@
 {
   "meta": {
-    "project": "Multi-Tenant Barbershop SaaS Platform Backend",
-    "date": "2025-12-10",
+    "project": "Multi-Tenant Barbershop SaaS Backend",
+    "date": "2025-12-22",
     "prepared_by": "Software Development Manager"
   },
-  "product_overview": "This backend service provides a multi-tenant SaaS platform tailored for barbershops, enabling appointment scheduling, professional and client management, service offerings, and financial transactions with robust authentication and tenant isolation, optimized for serverless deployment on Vercel with PostgreSQL and Redis.",
+  "product_overview": "This product is a multi-tenant backend SaaS platform designed for barbershops, providing comprehensive management tools including authentication, professionals, clients, services, appointments, financial transactions, notifications, and barbershop tenant management. It offers tenant isolation, role-based access control, and is deployed serverlessly via Vercel utilizing a modern tech stack.",
   "core_goals": [
-    "Provide secure JWT and OTP-based authentication with refresh token management to guarantee user session safety and recovery.",
-    "Implement comprehensive multi-tenant architecture ensuring data isolation via tenant headers and scoped database entities.",
-    "Support CRUD operations for barbershop professionals, clients, services, appointments, and transactions ensuring maintainable and scalable business logic.",
-    "Enable appointment management with conflict validation, status tracking, and automated commission calculation on completion.",
-    "Deliver financial transaction management with income and expense tracking, categorization, and historical snapshots.",
-    "Support real-time notifications to clients via Web Push API triggered by a protected scheduled cron job.",
-    "Ensure system performance and reliability in a serverless environment with Prisma singleton and rate limiting using Upstash Redis."
+    "Provide a robust multi-tenant architecture supporting multiple barbershops with isolated data and varying access levels.",
+    "Implement secure JWT and OTP based authentication.",
+    "Enable comprehensive CRUD operations for professionals, clients, services, appointments, and transactions with pagination.",
+    "Ensure appointment conflict detection and commission calculations.",
+    "Support financial management with detailed transaction handling and reporting.",
+    "Provide push notification capability for reminders and updates using web push and cron jobs.",
+    "Facilitate barbershop tenant self-registration and administration with proper validation and onboarding.",
+    "Maintain high test coverage and solid documentation for deployment and maintainability."
   ],
   "key_features": [
-    "Authentication system with JWT access and refresh tokens plus OTP for password recovery, including endpoints for login, token refresh, logout, OTP request, and verification.",
-    "Professional management with role-based access and commission rate configuration, covering list, create, update, retrieve, and delete functions.",
-    "Client management with CRUD operations and Web Push subscription registration to enable notifications.",
-    "Service management for barbershop offerings with price and duration metadata and full CRUD capabilities.",
-    "Appointment system supporting booking management with validation against scheduling conflicts, status updates, and automatic commission calculation upon completion.",
-    "Transaction management allowing financial record keeping of incomes and expenses with category filtering and paging.",
-    "Multi-tenant architecture enforced by validation middleware using x-tenant-slug header and scoped data on barbershopId.",
-    "Serverless optimized API design with pagination parameters on list endpoints to handle Vercel timeouts.",
-    "Rate limiting middleware leveraging Upstash Redis for protecting against abuse at tenant and IP levels.",
-    "Data persistence strategies using PostgreSQL with Prisma ORM and caching in Upstash Redis for transient data like OTP codes."
+    "Public APIs for health checks, root info, and Swagger UI documentation.",
+    "Multi-tenant authentication API supporting login, OTP, refresh tokens, and logout with tenant slug header validation.",
+    "Professionals management API with role-based access (ADMIN/BARBER) and pagination.",
+    "Clients management API supporting CRUD operations and tenant isolation.",
+    "Services API enabling CRUD with administrative control for create, update, and delete.",
+    "Appointment management API with filters, conflict detection for scheduling, status updates, and commission computation.",
+    "Transactions API managing incomes and expenses with filtering, pagination, and related financial reports.",
+    "Barbershop API for tenant data retrieval and updates via tenant slug.",
+    "Push notification services integrated with Vercel Cron jobs for appointment reminders.",
+    "Middleware enforcing tenant validation, rate limiting, and authentication.",
+    "Deployment-ready monorepo backend with Prisma ORM, PostgreSQL, Redis caching, and OpenAPI documentation."
   ],
   "user_flow_summary": [
-    "User authenticates via email and password, receives access and refresh tokens, and can request OTP codes to recover passwords.",
-    "Authenticated users can create, view, update, and delete professionals, clients, services, appointments, and transactions scoped by their respective barbershop tenant.",
-    "When scheduling appointments, the system validates professional availability and conflicting bookings before confirming the slot.",
-    "Appointment status changes are managed with commission calculation automatically triggered when an appointment is marked as COMPLETED.",
-    "Clients can register their Web Push subscription to receive notifications triggered via cron jobs protected by a secret header.",
-    "Transactions can be filtered by type (income or expense), category, and date range, enabling financial insights per tenant.",
-    "API clients must include the tenant slug header on every request for tenant isolation, otherwise receive a 404 error.",
-    "Rate limiting is enforced per tenant and IP address to mitigate abuse and ensure system availability."
+    "Tenant Identification: Every API request for tenant-specific data requires the `x-tenant-slug` header to identify the barbershop tenant context.",
+    "Authentication Flow: Users log in via email and password or OTP, receiving JWT tokens for secure API access, with refresh and logout capabilities.",
+    "Professionals Management: Admins can create, update, delete, and list professionals within their tenant scope with pagination controls.",
+    "Clients Management: Users can manage client records filtered by their tenant, supporting the full CRUD lifecycle.",
+    "Services Handling: Admin users can manage service offerings with standard CRUD operations and pagination.",
+    "Appointment Booking: Users can list, create, update, and cancel appointments while the system prevents time conflicts and calculates commissions post-completion.",
+    "Financial Transactions: Users can track income and expenses along with categories, generate summary and commission reports for their tenant.",
+    "Notifications: Push subscription management and scheduled notifications via cron jobs provide reminders for upcoming appointments.",
+    "Barbershop Tenant Management: Tenants can self-register or be seeded, then update their tenant information as needed.",
+    "Documentation & Testing: Developers access comprehensive Swagger UI docs and validate functionality through extensive automated tests."
   ],
   "validation_criteria": [
-    "All API endpoints must require and validate the x-tenant-slug header, returning 404 if missing or invalid.",
-    "Authentication tokens must comply with security lifetimes: access tokens expire in 15 minutes, refresh tokens live 7 days and may be revoked.",
-    "OTP codes must be 6-digit and stored only in Redis with a 5-minute TTL, never in the relational database.",
-    "Database access must always filter queries by barbershopId to enforce tenant data isolation securely.",
-    "Appointments must not be created if there are scheduling conflicts with existing non-cancelled appointments for the same professional and time slot.",
-    "Commission values are only calculated and snapshot when appointment status changes to COMPLETED, consistent across transactions.",
-    "Pagination parameters (page and limit) must be implemented and tested on all list endpoints to prevent timeout errors in serverless environment.",
-    "Rate limiting policies must be validated to reject excessive requests from the same tenant and IP within the configured thresholds.",
-    "Unit and integration tests must cover key business logic including authentication, scheduling validation, commission calculations, and transaction management.",
-    "The Prisma Singleton pattern must be implemented to prevent database connection exhaustion in the serverless runtime.",
-    "Web Push notification subscription management and cron job functionality must be tested end-to-end with protected cron endpoint access."
+    "All endpoints validate the presence and correctness of the tenant slug; unknown tenants yield 404 errors.",
+    "Authentication endpoints validate credentials, token handling, and OTP workflows with Redis TTL enforcement.",
+    "Role-based access restrictions enforce ADMIN-only access on sensitive operations such as creating/deleting professionals and services.",
+    "Pagination parameters (`page` and `limit`) are required, and responses include pagination metadata.",
+    "Appointment creation enforces conflict detection by checking professional availability and ignores cancelled entries.",
+    "Financial transactions maintain correct decimal precision and enforce tenant isolation.",
+    "Push notifications are sent only after proper subscription and validated by cron trigger with security tokens.",
+    "Swagger/OpenAPI documentation covers all API endpoints with up-to-date schemas and usage notes.",
+    "Test coverage achieves at least 80% including unit, integration, and rate limit scenarios.",
+    "Monorepo builds and lint tests pass without errors; CI/CD pipelines verify test automation and deployment success to Vercel."
   ],
   "code_summary": {
     "tech_stack": [
-      "TypeScript",
-      "Node.js 22",
+      "TypeScript (Node.js)",
       "Fastify",
-      "PostgreSQL",
+      "Vercel Serverless (@vercel/node) - handler em packages/backend/api/index.ts",
       "Prisma ORM",
-      "Upstash Redis",
-      "JWT Authentication",
-      "Zod Validation",
-      "Bcrypt",
-      "Vitest"
+      "PostgreSQL (Supabase)",
+      "Upstash Redis (cache + rate limit + OTP TTL)",
+      "JWT (@fastify/jwt) + Cookies (@fastify/cookie)",
+      "Zod (validação)",
+      "Swagger/OpenAPI (@fastify/swagger, @fastify/swagger-ui)",
+      "Vitest + Supertest (testes)"
     ],
     "features": [
       {
-        "name": "Authentication",
-        "description": "Sistema de autenticação com JWT (access e refresh tokens) e OTP para recuperação de senha",
+        "name": "Public API (Health + Root + Docs)",
+        "description": "Endpoints públicos: health check, root info e Swagger UI. Não exigem x-tenant-slug.",
         "files": [
-          "src/routes/auth.ts",
-          "src/controllers/authController.ts",
-          "src/services/authService.ts",
-          "src/middleware/auth.ts"
+          "packages/backend/src/app.ts",
+          "packages/backend/src/middleware/tenant.ts",
+          "packages/backend/src/middleware/rateLimit.ts"
         ],
         "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Barbershop SaaS - Public API",
+            "version": "1.0.0"
+          },
+          "servers": [
+            {
+              "url": "http://localhost:3000"
+            }
+          ],
+          "paths": {
+            "/": {
+              "get": {
+                "summary": "Root endpoint",
+                "responses": {
+                  "200": {
+                    "description": "API metadata",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "docs": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/health": {
+              "get": {
+                "summary": "Health check",
+                "responses": {
+                  "200": {
+                    "description": "Health status",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": ["ok"]
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "environment": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/docs": {
+              "get": {
+                "summary": "Swagger UI (HTML)",
+                "responses": {
+                  "200": {
+                    "description": "Swagger UI"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Auth API",
+        "description": "Autenticação multi-tenant via x-tenant-slug: login (email/senha), refresh token, logout, request/verify OTP. Endpoint de teste para recuperar OTP pode estar habilitado em ambiente não-prod.",
+        "files": [
+          "packages/backend/src/routes/auth.ts",
+          "packages/backend/src/controllers/authController.ts",
+          "packages/backend/src/lib/redis.ts",
+          "packages/backend/src/middleware/tenant.ts",
+          "packages/backend/src/middleware/auth.ts"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Barbershop SaaS - Auth API",
+            "version": "1.0.0"
+          },
+          "servers": [
+            {
+              "url": "http://localhost:3000"
+            }
+          ],
+          "components": {
+            "securitySchemes": {
+              "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+              }
+            },
+            "parameters": {
+              "TenantSlug": {
+                "name": "x-tenant-slug",
+                "in": "header",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Slug do tenant (barbearia). Obrigatório para rotas /api/* (exceto /health, /docs, /)."
+              }
+            }
+          },
           "paths": {
             "/api/auth/login": {
               "post": {
                 "summary": "Login com email e senha",
-                "tags": [
-                  "Auth"
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
                 ],
                 "requestBody": {
+                  "required": true,
                   "content": {
                     "application/json": {
                       "schema": {
                         "type": "object",
-                        "required": [
-                          "email",
-                          "password"
-                        ],
+                        "required": ["email", "password"],
                         "properties": {
                           "email": {
                             "type": "string",
@@ -105,7 +230,7 @@
                 },
                 "responses": {
                   "200": {
-                    "description": "Login successful",
+                    "description": "Tokens + profissional",
                     "content": {
                       "application/json": {
                         "schema": {
@@ -118,30 +243,53 @@
                               "type": "string"
                             },
                             "professional": {
-                              "type": "object"
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "email": {
+                                  "type": "string",
+                                  "format": "email"
+                                },
+                                "role": {
+                                  "type": "string",
+                                  "enum": ["ADMIN", "BARBER"]
+                                }
+                              }
                             }
                           }
                         }
                       }
                     }
+                  },
+                  "401": {
+                    "description": "Credenciais inválidas"
+                  },
+                  "404": {
+                    "description": "Tenant não encontrado (x-tenant-slug inválido/ausente)"
                   }
                 }
               }
             },
             "/api/auth/refresh": {
               "post": {
-                "summary": "Renovar access token",
-                "tags": [
-                  "Auth"
+                "summary": "Refresh do access token",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
                 ],
                 "requestBody": {
+                  "required": true,
                   "content": {
                     "application/json": {
                       "schema": {
                         "type": "object",
-                        "required": [
-                          "refreshToken"
-                        ],
+                        "required": ["refreshToken"],
                         "properties": {
                           "refreshToken": {
                             "type": "string"
@@ -150,31 +298,68 @@
                       }
                     }
                   }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Novo access token",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "accessToken": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "401": {
+                    "description": "Refresh token inválido/expirado"
+                  },
+                  "404": {
+                    "description": "Tenant não encontrado (x-tenant-slug inválido/ausente)"
+                  }
                 }
               }
             },
             "/api/auth/logout": {
               "post": {
-                "summary": "Logout do usuário",
-                "tags": [
-                  "Auth"
-                ]
+                "summary": "Logout (invalida tokens conforme implementação)",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Logout efetuado"
+                  },
+                  "401": {
+                    "description": "Não autorizado"
+                  },
+                  "404": {
+                    "description": "Tenant não encontrado (x-tenant-slug inválido/ausente)"
+                  }
+                }
               }
             },
             "/api/auth/request-otp": {
               "post": {
-                "summary": "Solicitar código OTP",
-                "tags": [
-                  "Auth"
+                "summary": "Solicitar OTP",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
                 ],
                 "requestBody": {
+                  "required": true,
                   "content": {
                     "application/json": {
                       "schema": {
                         "type": "object",
-                        "required": [
-                          "email"
-                        ],
+                        "required": ["email"],
                         "properties": {
                           "email": {
                             "type": "string",
@@ -184,24 +369,32 @@
                       }
                     }
                   }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OTP gerado e armazenado no Redis (TTL)"
+                  },
+                  "404": {
+                    "description": "Tenant não encontrado (x-tenant-slug inválido/ausente)"
+                  }
                 }
               }
             },
             "/api/auth/verify-otp": {
               "post": {
-                "summary": "Verificar código OTP",
-                "tags": [
-                  "Auth"
+                "summary": "Validar OTP e emitir tokens",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
                 ],
                 "requestBody": {
+                  "required": true,
                   "content": {
                     "application/json": {
                       "schema": {
                         "type": "object",
-                        "required": [
-                          "email",
-                          "otp"
-                        ],
+                        "required": ["email", "otp"],
                         "properties": {
                           "email": {
                             "type": "string",
@@ -216,6 +409,47 @@
                       }
                     }
                   }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Tokens + profissional"
+                  },
+                  "401": {
+                    "description": "OTP inválido/expirado"
+                  },
+                  "404": {
+                    "description": "Tenant não encontrado (x-tenant-slug inválido/ausente)"
+                  }
+                }
+              }
+            },
+            "/api/auth/test/otp/{identifier}": {
+              "get": {
+                "summary": "[TEST ONLY] Recuperar OTP no Redis (quando habilitado)",
+                "description": "Disponível apenas com ENABLE_TEST_OTP_ENDPOINT=true e NODE_ENV != production.",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "identifier",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OTP + expiresIn"
+                  },
+                  "400": {
+                    "description": "Tenant context required"
+                  },
+                  "404": {
+                    "description": "OTP não encontrado/expirado"
+                  }
                 }
               }
             }
@@ -223,41 +457,57 @@
         }
       },
       {
-        "name": "Professional Management",
-        "description": "CRUD de profissionais (barbeiros e administradores) com controle de taxa de comissão e roles",
+        "name": "Professionals API",
+        "description": "CRUD de profissionais no tenant atual. Requer Authorization Bearer + x-tenant-slug.",
         "files": [
-          "src/routes/professionals.ts",
-          "src/controllers/professionalController.ts",
-          "src/services/professionalService.ts",
-          "src/repositories/professionalRepository.ts"
+          "packages/backend/src/routes/professionals.ts",
+          "packages/backend/src/controllers/professionalController.ts",
+          "packages/backend/src/middleware/auth.ts",
+          "packages/backend/src/middleware/tenant.ts"
         ],
         "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Barbershop SaaS - Professionals API",
+            "version": "1.0.0"
+          },
+          "servers": [
+            {
+              "url": "http://localhost:3000"
+            }
+          ],
+          "components": {
+            "securitySchemes": {
+              "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+              }
+            },
+            "parameters": {
+              "TenantSlug": {
+                "name": "x-tenant-slug",
+                "in": "header",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "paths": {
             "/api/professionals": {
               "get": {
-                "summary": "Listar todos os profissionais",
-                "tags": [
-                  "Professionals"
-                ],
-                "security": [
-                  {
-                    "bearerAuth": []
-                  }
-                ],
+                "summary": "Listar profissionais (paginação)",
                 "parameters": [
                   {
-                    "name": "x-tenant-slug",
-                    "in": "header",
-                    "required": true,
-                    "schema": {
-                      "type": "string"
-                    }
+                    "$ref": "#/components/parameters/TenantSlug"
                   },
                   {
                     "name": "page",
                     "in": "query",
                     "schema": {
-                      "type": "integer",
+                      "type": "number",
                       "default": 1
                     }
                   },
@@ -265,43 +515,47 @@
                     "name": "limit",
                     "in": "query",
                     "schema": {
-                      "type": "integer",
-                      "default": 10
+                      "type": "number",
+                      "default": 20
                     }
                   }
-                ]
-              },
-              "post": {
-                "summary": "Criar novo profissional",
-                "tags": [
-                  "Professionals"
                 ],
                 "security": [
                   {
                     "bearerAuth": []
                   }
                 ],
+                "responses": {
+                  "200": {
+                    "description": "Lista paginada"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  },
+                  "403": {
+                    "description": "Forbidden"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar profissional",
                 "parameters": [
                   {
-                    "name": "x-tenant-slug",
-                    "in": "header",
-                    "required": true,
-                    "schema": {
-                      "type": "string"
-                    }
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
                   }
                 ],
                 "requestBody": {
+                  "required": true,
                   "content": {
                     "application/json": {
                       "schema": {
                         "type": "object",
-                        "required": [
-                          "name",
-                          "email",
-                          "password",
-                          "commissionRate"
-                        ],
+                        "required": ["name", "email", "password", "commissionRate", "role"],
                         "properties": {
                           "name": {
                             "type": "string"
@@ -319,14 +573,25 @@
                           },
                           "role": {
                             "type": "string",
-                            "enum": [
-                              "ADMIN",
-                              "BARBER"
-                            ]
+                            "enum": ["ADMIN", "BARBER"]
                           }
                         }
                       }
                     }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Criado"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  },
+                  "403": {
+                    "description": "Forbidden"
+                  },
+                  "409": {
+                    "description": "Conflito (email já usado)"
                   }
                 }
               }
@@ -334,77 +599,165 @@
             "/api/professionals/{id}": {
               "get": {
                 "summary": "Buscar profissional por ID",
-                "tags": [
-                  "Professionals"
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
                 ],
                 "security": [
                   {
                     "bearerAuth": []
                   }
-                ]
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Profissional"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  },
+                  "403": {
+                    "description": "Forbidden"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
               },
               "put": {
                 "summary": "Atualizar profissional",
-                "tags": [
-                  "Professionals"
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
                 ],
                 "security": [
                   {
                     "bearerAuth": []
                   }
-                ]
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Atualizado"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  },
+                  "403": {
+                    "description": "Forbidden"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
               },
               "delete": {
-                "summary": "Deletar profissional",
-                "tags": [
-                  "Professionals"
+                "summary": "Remover profissional",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
                 ],
                 "security": [
                   {
                     "bearerAuth": []
                   }
-                ]
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Deletado"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  },
+                  "403": {
+                    "description": "Forbidden"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
               }
             }
           }
         }
       },
       {
-        "name": "Client Management",
-        "description": "CRUD de clientes com suporte a notificações Web Push",
+        "name": "Clients API",
+        "description": "CRUD de clientes no tenant atual. Requer Authorization Bearer + x-tenant-slug.",
         "files": [
-          "src/routes/clients.ts",
-          "src/controllers/clientController.ts",
-          "src/services/clientService.ts",
-          "src/repositories/clientRepository.ts"
+          "packages/backend/src/routes/clients.ts",
+          "packages/backend/src/controllers/clientController.ts",
+          "packages/backend/src/middleware/auth.ts",
+          "packages/backend/src/middleware/tenant.ts"
         ],
         "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Barbershop SaaS - Clients API",
+            "version": "1.0.0"
+          },
+          "servers": [
+            {
+              "url": "http://localhost:3000"
+            }
+          ],
+          "components": {
+            "securitySchemes": {
+              "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+              }
+            },
+            "parameters": {
+              "TenantSlug": {
+                "name": "x-tenant-slug",
+                "in": "header",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "paths": {
             "/api/clients": {
               "get": {
-                "summary": "Listar todos os clientes",
-                "tags": [
-                  "Clients"
-                ],
-                "security": [
-                  {
-                    "bearerAuth": []
-                  }
-                ],
+                "summary": "Listar clientes (paginação)",
                 "parameters": [
                   {
-                    "name": "x-tenant-slug",
-                    "in": "header",
-                    "required": true,
-                    "schema": {
-                      "type": "string"
-                    }
+                    "$ref": "#/components/parameters/TenantSlug"
                   },
                   {
                     "name": "page",
                     "in": "query",
                     "schema": {
-                      "type": "integer",
+                      "type": "number",
                       "default": 1
                     }
                   },
@@ -412,140 +765,402 @@
                     "name": "limit",
                     "in": "query",
                     "schema": {
-                      "type": "integer",
-                      "default": 10
+                      "type": "number",
+                      "default": 20
                     }
                   }
-                ]
-              },
-              "post": {
-                "summary": "Criar novo cliente",
-                "tags": [
-                  "Clients"
                 ],
                 "security": [
                   {
                     "bearerAuth": []
                   }
-                ]
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Lista paginada"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar cliente",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "responses": {
+                  "201": {
+                    "description": "Criado"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  }
+                }
               }
             },
             "/api/clients/{id}": {
               "get": {
                 "summary": "Buscar cliente por ID",
-                "tags": [
-                  "Clients"
-                ]
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Cliente"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
               },
               "put": {
                 "summary": "Atualizar cliente",
-                "tags": [
-                  "Clients"
-                ]
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Atualizado"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
               },
               "delete": {
-                "summary": "Deletar cliente",
-                "tags": [
-                  "Clients"
-                ]
-              }
-            },
-            "/api/clients/{id}/subscribe": {
-              "post": {
-                "summary": "Cadastrar subscription de Web Push",
-                "tags": [
-                  "Clients"
-                ]
+                "summary": "Remover cliente",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Deletado"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
               }
             }
           }
         }
       },
       {
-        "name": "Service Management",
-        "description": "CRUD de serviços oferecidos pela barbearia com preço e duração",
+        "name": "Services API",
+        "description": "CRUD de serviços no tenant atual. Requer Authorization Bearer + x-tenant-slug.",
         "files": [
-          "src/routes/services.ts",
-          "src/controllers/serviceController.ts",
-          "src/services/serviceService.ts",
-          "src/repositories/serviceRepository.ts"
+          "packages/backend/src/routes/services.ts",
+          "packages/backend/src/controllers/serviceController.ts",
+          "packages/backend/src/middleware/auth.ts",
+          "packages/backend/src/middleware/tenant.ts"
         ],
         "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Barbershop SaaS - Services API",
+            "version": "1.0.0"
+          },
+          "servers": [
+            {
+              "url": "http://localhost:3000"
+            }
+          ],
+          "components": {
+            "securitySchemes": {
+              "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+              }
+            },
+            "parameters": {
+              "TenantSlug": {
+                "name": "x-tenant-slug",
+                "in": "header",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "paths": {
             "/api/services": {
               "get": {
-                "summary": "Listar todos os serviços",
-                "tags": [
-                  "Services"
+                "summary": "Listar serviços (paginação)",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 1
+                    }
+                  },
+                  {
+                    "name": "limit",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 20
+                    }
+                  }
                 ],
                 "security": [
                   {
                     "bearerAuth": []
                   }
-                ]
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Lista paginada"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  }
+                }
               },
               "post": {
-                "summary": "Criar novo serviço",
-                "tags": [
-                  "Services"
+                "summary": "Criar serviço",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
                 ],
                 "security": [
                   {
                     "bearerAuth": []
                   }
-                ]
+                ],
+                "responses": {
+                  "201": {
+                    "description": "Criado"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  }
+                }
               }
             },
             "/api/services/{id}": {
               "get": {
                 "summary": "Buscar serviço por ID",
-                "tags": [
-                  "Services"
-                ]
-              },
-              "put": {
-                "summary": "Atualizar serviço",
-                "tags": [
-                  "Services"
-                ]
-              },
-              "delete": {
-                "summary": "Deletar serviço",
-                "tags": [
-                  "Services"
-                ]
-              }
-            }
-          }
-        }
-      },
-      {
-        "name": "Appointment Management",
-        "description": "Sistema de agendamentos com validação de conflitos, status tracking e cálculo automático de comissões",
-        "files": [
-          "src/routes/appointments.ts",
-          "src/controllers/appointmentController.ts",
-          "src/services/appointmentService.ts",
-          "src/repositories/appointmentRepository.ts"
-        ],
-        "api_doc": {
-          "paths": {
-            "/api/appointments": {
-              "get": {
-                "summary": "Listar agendamentos",
-                "tags": [
-                  "Appointments"
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
                 ],
                 "security": [
                   {
                     "bearerAuth": []
                   }
                 ],
+                "responses": {
+                  "200": {
+                    "description": "Serviço"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
+              },
+              "put": {
+                "summary": "Atualizar serviço",
                 "parameters": [
                   {
-                    "name": "x-tenant-slug",
-                    "in": "header",
-                    "required": true
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Atualizado"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
+              },
+              "delete": {
+                "summary": "Remover serviço",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Deletado"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Appointments API",
+        "description": "Gestão de agendamentos no tenant atual. List/get exigem apenas x-tenant-slug; create/update/status/delete exigem autenticação (JWT) validada no controller.",
+        "files": [
+          "packages/backend/src/routes/appointments.ts",
+          "packages/backend/src/controllers/appointmentController.ts",
+          "packages/backend/src/services/appointmentService.ts",
+          "packages/backend/src/middleware/tenant.ts",
+          "packages/backend/src/middleware/auth.ts"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Barbershop SaaS - Appointments API",
+            "version": "1.0.0"
+          },
+          "servers": [
+            {
+              "url": "http://localhost:3000"
+            }
+          ],
+          "components": {
+            "securitySchemes": {
+              "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+              }
+            },
+            "parameters": {
+              "TenantSlug": {
+                "name": "x-tenant-slug",
+                "in": "header",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "paths": {
+            "/api/appointments": {
+              "get": {
+                "summary": "Listar agendamentos (com filtros e paginação)",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 1
+                    }
+                  },
+                  {
+                    "name": "limit",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 20
+                    }
+                  },
+                  {
+                    "name": "status",
+                    "in": "query",
+                    "schema": {
+                      "type": "string",
+                      "enum": ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"]
+                    }
                   },
                   {
                     "name": "professionalId",
@@ -562,18 +1177,11 @@
                     }
                   },
                   {
-                    "name": "status",
-                    "in": "query",
-                    "schema": {
-                      "type": "string"
-                    }
-                  },
-                  {
                     "name": "startDate",
                     "in": "query",
                     "schema": {
                       "type": "string",
-                      "format": "date"
+                      "format": "date-time"
                     }
                   },
                   {
@@ -581,75 +1189,232 @@
                     "in": "query",
                     "schema": {
                       "type": "string",
-                      "format": "date"
+                      "format": "date-time"
                     }
                   }
-                ]
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Lista paginada"
+                  },
+                  "401": {
+                    "description": "Tenant not identified"
+                  }
+                }
               },
               "post": {
-                "summary": "Criar novo agendamento",
-                "tags": [
-                  "Appointments"
+                "summary": "Criar agendamento",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
                 ],
                 "security": [
                   {
                     "bearerAuth": []
                   }
-                ]
+                ],
+                "responses": {
+                  "201": {
+                    "description": "Criado"
+                  },
+                  "401": {
+                    "description": "User not authenticated / Tenant not identified"
+                  },
+                  "409": {
+                    "description": "Conflito de horário"
+                  }
+                }
               }
             },
             "/api/appointments/{id}": {
               "get": {
-                "summary": "Buscar agendamento por ID"
+                "summary": "Buscar agendamento por ID",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Agendamento"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
               },
               "put": {
-                "summary": "Atualizar agendamento"
+                "summary": "Atualizar agendamento",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Atualizado"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  }
+                }
               },
               "delete": {
-                "summary": "Cancelar agendamento"
+                "summary": "Remover agendamento",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Deletado"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  }
+                }
               }
             },
             "/api/appointments/{id}/status": {
               "patch": {
                 "summary": "Atualizar status do agendamento",
-                "description": "Calcula comissão automaticamente quando status muda para COMPLETED"
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Atualizado"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  }
+                }
               }
             }
           }
         }
       },
       {
-        "name": "Transaction Management",
-        "description": "Gestão de transações financeiras (receitas e despesas) com categorização",
+        "name": "Transactions API",
+        "description": "Financeiro do tenant atual: list/get exigem x-tenant-slug; create/update/delete exigem JWT e validação de tenant no controller.",
         "files": [
-          "src/routes/transactions.ts",
-          "src/controllers/transactionController.ts",
-          "src/services/transactionService.ts",
-          "src/repositories/transactionRepository.ts"
+          "packages/backend/src/routes/transactions.ts",
+          "packages/backend/src/controllers/transactionController.ts",
+          "packages/backend/src/services/transactionService.ts",
+          "packages/backend/src/middleware/tenant.ts",
+          "packages/backend/src/middleware/auth.ts"
         ],
         "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Barbershop SaaS - Transactions API",
+            "version": "1.0.0"
+          },
+          "servers": [
+            {
+              "url": "http://localhost:3000"
+            }
+          ],
+          "components": {
+            "securitySchemes": {
+              "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+              }
+            },
+            "parameters": {
+              "TenantSlug": {
+                "name": "x-tenant-slug",
+                "in": "header",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "paths": {
             "/api/transactions": {
               "get": {
-                "summary": "Listar transações",
-                "tags": [
-                  "Transactions"
-                ],
-                "security": [
-                  {
-                    "bearerAuth": []
-                  }
-                ],
+                "summary": "Listar transações (filtros + paginação)",
                 "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 1
+                    }
+                  },
+                  {
+                    "name": "limit",
+                    "in": "query",
+                    "schema": {
+                      "type": "number",
+                      "default": 20
+                    }
+                  },
                   {
                     "name": "type",
                     "in": "query",
                     "schema": {
                       "type": "string",
-                      "enum": [
-                        "INCOME",
-                        "EXPENSE"
-                      ]
+                      "enum": ["INCOME", "EXPENSE"]
                     }
                   },
                   {
@@ -664,7 +1429,7 @@
                     "in": "query",
                     "schema": {
                       "type": "string",
-                      "format": "date"
+                      "format": "date-time"
                     }
                   },
                   {
@@ -672,60 +1437,207 @@
                     "in": "query",
                     "schema": {
                       "type": "string",
-                      "format": "date"
+                      "format": "date-time"
                     }
                   }
-                ]
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Lista paginada"
+                  },
+                  "401": {
+                    "description": "Tenant not identified"
+                  }
+                }
               },
               "post": {
-                "summary": "Criar nova transação",
-                "tags": [
-                  "Transactions"
+                "summary": "Criar transação",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
                 ],
                 "security": [
                   {
                     "bearerAuth": []
                   }
-                ]
+                ],
+                "responses": {
+                  "201": {
+                    "description": "Criado"
+                  },
+                  "401": {
+                    "description": "User not authenticated / Tenant not identified"
+                  },
+                  "403": {
+                    "description": "Tenant mismatch"
+                  }
+                }
               }
             },
             "/api/transactions/{id}": {
               "get": {
-                "summary": "Buscar transação por ID"
+                "summary": "Buscar transação por ID",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Transação"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
               },
               "put": {
-                "summary": "Atualizar transação"
+                "summary": "Atualizar transação",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Atualizado"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  },
+                  "403": {
+                    "description": "Tenant mismatch"
+                  }
+                }
               },
               "delete": {
-                "summary": "Deletar transação"
+                "summary": "Remover transação",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  },
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "security": [
+                  {
+                    "bearerAuth": []
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Deletado"
+                  },
+                  "401": {
+                    "description": "Authentication required"
+                  },
+                  "403": {
+                    "description": "Tenant mismatch"
+                  }
+                }
               }
             }
           }
         }
       },
       {
-        "name": "Barbershop Management",
-        "description": "Gestão de tenants (barbearias) com controle de ativação",
+        "name": "Barbershops API",
+        "description": "Leitura/atualização do tenant atual (via x-tenant-slug).",
         "files": [
-          "src/routes/barbershops.ts",
-          "src/controllers/barbershopController.ts"
+          "packages/backend/src/routes/barbershops.ts",
+          "packages/backend/src/controllers/barbershopController.ts",
+          "packages/backend/src/middleware/tenant.ts"
         ],
         "api_doc": {
-          "paths": {
-            "/api/barbershops": {
-              "get": {
-                "summary": "Listar todas as barbearias",
-                "tags": [
-                  "Barbershops"
-                ]
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Barbershop SaaS - Barbershop API",
+            "version": "1.0.0"
+          },
+          "servers": [
+            {
+              "url": "http://localhost:3000"
+            }
+          ],
+          "components": {
+            "parameters": {
+              "TenantSlug": {
+                "name": "x-tenant-slug",
+                "in": "header",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
               }
-            },
-            "/api/barbershops/{slug}": {
+            }
+          },
+          "paths": {
+            "/api/barbershop": {
               "get": {
-                "summary": "Buscar barbearia por slug",
-                "tags": [
-                  "Barbershops"
-                ]
+                "summary": "Obter dados da barbearia atual",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Barbearia"
+                  },
+                  "401": {
+                    "description": "Tenant not identified"
+                  },
+                  "404": {
+                    "description": "Barbershop not found"
+                  }
+                }
+              },
+              "put": {
+                "summary": "Atualizar dados da barbearia atual",
+                "parameters": [
+                  {
+                    "$ref": "#/components/parameters/TenantSlug"
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Atualizado"
+                  },
+                  "401": {
+                    "description": "Tenant not identified"
+                  },
+                  "404": {
+                    "description": "Not found"
+                  }
+                }
               }
             }
           }

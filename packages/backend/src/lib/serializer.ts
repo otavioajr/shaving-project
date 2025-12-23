@@ -17,7 +17,7 @@ export function serializeResponse<T>(obj: T): unknown {
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(item => serializeResponse(item))
+    return obj.map((item) => serializeResponse(item))
   }
 
   if (typeof obj === 'object') {
@@ -145,9 +145,7 @@ export function serializeAppointmentWithRelations<T extends AppointmentWithRelat
     createdBy: appointment.createdBy
       ? serializeProfessional(appointment.createdBy)
       : appointment.createdBy,
-    service: appointment.service
-      ? serializeService(appointment.service)
-      : appointment.service,
+    service: appointment.service ? serializeService(appointment.service) : appointment.service,
   }
 }
 

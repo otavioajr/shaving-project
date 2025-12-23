@@ -45,10 +45,7 @@ describe('rateLimitMiddleware', () => {
         ip: '127.0.0.1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(ipRatelimit.limit).not.toHaveBeenCalled()
       expect(statusMock).not.toHaveBeenCalled()
@@ -62,10 +59,7 @@ describe('rateLimitMiddleware', () => {
         ip: '127.0.0.1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(ipRatelimit.limit).not.toHaveBeenCalled()
       expect(statusMock).not.toHaveBeenCalled()
@@ -79,10 +73,7 @@ describe('rateLimitMiddleware', () => {
         ip: '127.0.0.1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(ipRatelimit.limit).not.toHaveBeenCalled()
       expect(statusMock).not.toHaveBeenCalled()
@@ -96,10 +87,7 @@ describe('rateLimitMiddleware', () => {
         ip: '127.0.0.1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(ipRatelimit.limit).not.toHaveBeenCalled()
       expect(statusMock).not.toHaveBeenCalled()
@@ -113,10 +101,7 @@ describe('rateLimitMiddleware', () => {
         ip: '127.0.0.1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(ipRatelimit.limit).not.toHaveBeenCalled()
       expect(statusMock).not.toHaveBeenCalled()
@@ -130,10 +115,7 @@ describe('rateLimitMiddleware', () => {
         ip: '127.0.0.1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(ipRatelimit.limit).not.toHaveBeenCalled()
       expect(statusMock).not.toHaveBeenCalled()
@@ -147,10 +129,7 @@ describe('rateLimitMiddleware', () => {
         ip: '127.0.0.1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(ipRatelimit.limit).not.toHaveBeenCalled()
       expect(statusMock).not.toHaveBeenCalled()
@@ -174,10 +153,7 @@ describe('rateLimitMiddleware', () => {
         ip: '192.168.1.1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(ipRatelimit.limit).toHaveBeenCalledWith('192.168.1.1')
       expect(headerMock).toHaveBeenCalledWith('X-RateLimit-Limit', '100')
@@ -201,10 +177,7 @@ describe('rateLimitMiddleware', () => {
         ip: '192.168.1.1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).toHaveBeenCalledWith(429)
       expect(sendMock).toHaveBeenCalledWith({
@@ -230,10 +203,7 @@ describe('rateLimitMiddleware', () => {
         ip: '127.0.0.1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(ipRatelimit.limit).toHaveBeenCalledWith('203.0.113.1')
     })
@@ -255,10 +225,7 @@ describe('rateLimitMiddleware', () => {
         ip: '127.0.0.1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(ipRatelimit.limit).toHaveBeenCalledWith('203.0.113.2')
     })
@@ -288,10 +255,7 @@ describe('rateLimitMiddleware', () => {
         tenantId: 'barbershop-1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(tenantRatelimit.limit).toHaveBeenCalledWith('barbershop-1')
       expect(headerMock).toHaveBeenCalledWith('X-RateLimit-Limit', '1000')
@@ -323,10 +287,7 @@ describe('rateLimitMiddleware', () => {
         tenantId: 'barbershop-1',
       }
 
-      await rateLimitMiddleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      )
+      await rateLimitMiddleware(mockRequest as FastifyRequest, mockReply as FastifyReply)
 
       expect(statusMock).toHaveBeenCalledWith(429)
       expect(sendMock).toHaveBeenCalledWith({

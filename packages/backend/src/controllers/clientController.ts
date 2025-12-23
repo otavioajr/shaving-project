@@ -28,9 +28,18 @@ export class ClientController {
     try {
       const { page, limit } = listQuerySchema.parse(request.query)
       const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const result = await clientService.listClients(barbershopId, { page, limit })
@@ -47,9 +56,18 @@ export class ClientController {
     try {
       const { id } = idParamSchema.parse(request.params)
       const barbershopId = request.tenantId
+      const user = request.user
 
       if (!barbershopId) {
         return reply.status(401).send({ error: 'Tenant not identified' })
+      }
+
+      if (!user?.id) {
+        return reply.status(401).send({ error: 'Authentication required' })
+      }
+
+      if (user.barbershopId !== barbershopId) {
+        return reply.status(403).send({ error: 'Tenant mismatch' })
       }
 
       const client = await clientService.getClient(id, barbershopId)

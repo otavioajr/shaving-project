@@ -42,8 +42,8 @@ Aplicar a conversão **uma única vez, de forma centralizada**, usando um hook g
 - Arquivo: `packages/backend/src/app.ts`
 - Importar `serializeResponse`.
 - Registrar um `app.addHook('preSerialization', ...)` que:
-    - Só rode para respostas sob `request.url` que comecem com `/api` (evita overhead em `/docs/json`).
-    - Retorne `serializeResponse(payload)`.
+  - Só rode para respostas sob `request.url` que comecem com `/api` (evita overhead em `/docs/json`).
+  - Retorne `serializeResponse(payload)`.
 
 2. **Manter controllers como estão (sem duplicação)**
 
@@ -57,8 +57,8 @@ Aplicar a conversão **uma única vez, de forma centralizada**, usando um hook g
 - Retornar no handler um payload contendo `new Decimal('10.50')` e `new Date(...)`.
 - Validar que `response.json()` retorna `amount` como `number` e datas como `string` ISO.
 - Reaproveitar o padrão de mocks já usado em `packages/backend/src/middleware/__tests__/integration.test.ts` para:
-    - `getCachedTenant` retornar tenant válido.
-    - `ipRatelimit.limit`/`tenantRatelimit.limit` retornarem `success: true`.
+  - `getCachedTenant` retornar tenant válido.
+  - `ipRatelimit.limit`/`tenantRatelimit.limit` retornarem `success: true`.
 
 2. **Rodar suite atual**
 

@@ -19,22 +19,26 @@ Implementar sistema de notificações push usando Web Push API e endpoint de cro
 ## Arquivos a Criar
 
 ### Service
+
 1. **`/packages/backend/src/services/notification.service.ts`**
    - Envio de push notifications
    - Gerenciamento de subscriptions
    - Validação de VAPID keys
 
 ### Controller
+
 2. **`/packages/backend/src/controllers/notification.controller.ts`**
    - Endpoint para salvar push subscription
 
 ### Cron Endpoint
+
 3. **`/packages/backend/api/cron/notify.ts`**
    - Endpoint protegido por CRON_SECRET
    - Busca appointments próximos
    - Envia notificações
 
 ### Schema
+
 4. **`/packages/backend/src/schemas/notification.schema.ts`**
    - Validação Zod para subscription
 
@@ -45,11 +49,13 @@ Implementar sistema de notificações push usando Web Push API e endpoint de cro
 ### VAPID Keys
 
 **Variáveis de Ambiente:**
+
 - `VAPID_PUBLIC_KEY`: Chave pública VAPID
 - `VAPID_PRIVATE_KEY`: Chave privada VAPID
 - `VAPID_SUBJECT`: Email ou URL do serviço (ex: `mailto:admin@example.com`)
 
 **Geração:**
+
 ```bash
 npx web-push generate-vapid-keys
 ```
@@ -57,10 +63,12 @@ npx web-push generate-vapid-keys
 ### Push Subscription
 
 **Armazenamento:**
+
 - Campo `pushSubscription` no modelo `Client`
 - Formato JSON string (Web Push subscription object)
 
 **Estrutura:**
+
 ```typescript
 {
   endpoint: string,
@@ -76,6 +84,7 @@ npx web-push generate-vapid-keys
 ## Endpoints
 
 ### POST /clients/:id/push-subscription
+
 - Params: `id` (client ID)
 - Body: `{ subscription: PushSubscription }`
 - Auth: Requerida
@@ -90,12 +99,14 @@ npx web-push generate-vapid-keys
 ## Cron Endpoint
 
 ### POST /api/cron/notify
+
 - Header: `x-cron-secret: ${CRON_SECRET}`
 - Auth: NÃO requerida (protegido por secret)
 - Ação: Envia lembretes de appointments próximos
 - Retorna: `{ sent: number, errors: number }`
 
 **Configuração Vercel (`vercel.json`):**
+
 ```json
 {
   "crons": [
@@ -145,6 +156,7 @@ npx web-push generate-vapid-keys
 4. Retornar estatísticas
 
 **Mensagem de Lembrete:**
+
 ```
 Título: "Lembrete de Agendamento"
 Mensagem: "Você tem um agendamento em 15 minutos com {professional.name} - {service.name}"
@@ -157,22 +169,21 @@ Mensagem: "Você tem um agendamento em 15 minutos com {professional.name} - {ser
 **Biblioteca:** `web-push`
 
 **Configuração:**
+
 ```typescript
-import webpush from 'web-push';
+import webpush from 'web-push'
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!,
   process.env.VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
-);
+)
 ```
 
 **Envio:**
+
 ```typescript
-await webpush.sendNotification(
-  subscription,
-  JSON.stringify(payload)
-);
+await webpush.sendNotification(subscription, JSON.stringify(payload))
 ```
 
 ---
@@ -180,11 +191,13 @@ await webpush.sendNotification(
 ## Tratamento de Erros
 
 ### Subscription Inválida
+
 - Remover subscription do client
 - Logar erro
 - Continuar com próximos
 
 ### Erros Comuns
+
 - `410 Gone`: Subscription expirada → remover
 - `404 Not Found`: Subscription inválida → remover
 - `429 Too Many Requests`: Rate limit → aguardar
@@ -195,6 +208,7 @@ await webpush.sendNotification(
 ## Dependências
 
 Todas as dependências já estão instaladas:
+
 - `web-push`
 - `@prisma/client`
 
@@ -239,6 +253,7 @@ Todas as dependências já estão instaladas:
 ## Configuração Vercel
 
 **Atualizar `vercel.json`:**
+
 ```json
 {
   "crons": [
@@ -251,6 +266,7 @@ Todas as dependências já estão instaladas:
 ```
 
 **Variáveis de Ambiente no Vercel:**
+
 - `CRON_SECRET`
 - `VAPID_PUBLIC_KEY`
 - `VAPID_PRIVATE_KEY`
@@ -261,4 +277,5 @@ Todas as dependências já estão instaladas:
 ## Próximos Passos
 
 Após completar este milestone, o próximo será:
+
 - **MILESTONE 8:** Barbershop Management

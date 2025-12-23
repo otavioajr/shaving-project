@@ -9,7 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Prettier & Code Formatting Tooling** (2025-12-22)
+  - Added Prettier v3.7.4 for consistent code formatting
+  - Configured with: no semicolons, single quotes, 2-space indent, 100 print width
+  - Added `eslint-config-prettier` to disable conflicting ESLint rules
+  - Added EditorConfig (`.editorconfig`) for cross-IDE consistency
+  - Added husky + lint-staged for pre-commit formatting enforcement
+  - New scripts: `pnpm format`, `pnpm format:check`
+  - Files: `.prettierrc`, `.prettierignore`, `.editorconfig`, `.husky/pre-commit`
+
+- RBAC aplicado no CRUD de Professionals/Services (ADMIN vs BARBER), com self-update restrito a name/email/password.
+- Autenticação obrigatória também nos endpoints GET de professionals/clients/services.
+- Soft delete (`isActive=false`) para professionals/clients/services com filtros de listagem apenas ativos.
+- Testes de controllers para CRUD de professionals/clients/services.
+
 ### Fixed
+
+- **Proteção de Rotas de Transações (GET)** (2025-12-22)
+  - **Problema:** Rotas GET `/api/transactions` e `/api/transactions/:id` não exigiam autenticação JWT, permitindo acesso apenas com `x-tenant-slug`.
+  - **Solução:** Adicionado middleware `requireAuth` e validação de tenant match no `transactionController`.
+  - **Arquivos modificados:**
+    - `src/routes/transactions.ts`: Adicionado `preHandler: requireAuth` e schemas de segurança.
+    - `src/controllers/transactionController.ts`: Adicionado check de auth e tenant mismatch em `list()` e `getById()`.
+  - **Testes:** Novo arquivo `src/controllers/__tests__/transactions.test.ts` cobrindo cenários 401 e 403.
+
 - **Correção de serialização Decimal nos Services** (2025-12-20)
   - **Problema:** Endpoints com campos `Decimal` (professionals, services, appointments, transactions) retornavam erro 500 porque Fastify valida o response schema ANTES do hook `preSerialization`
   - **Solução:** Movido a conversão `Decimal → number` para o **service layer** (antes de retornar ao controller)
@@ -22,15 +47,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Validação:** E2E tests 34/34 ✅, Vitest 68/68 ✅, Lint 0 errors ✅
 - ESLint do backend agora passa sem warnings/erros (remoção de `any` explícito, ajustes de controllers/services e tipagem de testes).
 - E2E script agora falha quando `ACCESS_TOKEN` não é obtido (testes autenticados obrigatórios) e reporta testes pulados com clareza.
+- Script `pnpm start` do backend agora aponta para o arquivo correto gerado pelo build (`dist/src/server.js`).
 
 ### Docs
+
 - Alinhado `docs/DEVELOPMENT.md` e `docs/QUICK-TEST.md` com o estado atual do backend (status de milestones, números de testes/cobertura e TestSprite).
 - Corrigidos links relativos em `docs/plans/*.md` para navegação correta.
 - Documentado `pnpm lint` como verificação obrigatória em toda implementação (README e QUICK-TEST).
-- Adicionado checklist de PR/merge (“Definition of Done”) em `docs/PR-CHECKLIST.md`.
+- Adicionado checklist de PR/merge ("Definition of Done") em `docs/PR-CHECKLIST.md`.
+- **TestSprite MCP E2E Run** (2025-12-23)
+  - Executado TestSprite MCP de ponta a ponta no backend
+  - Regenerado `code_summary.json` com documentação OpenAPI completa de todas as features
+  - Gerado novo `testsprite_backend_test_plan.json` com 10 test cases
+  - Resultado: **1/10 testes passando** (TC009 - Barbershop GET/PUT)
+  - **Root cause dos 9 falhos:** Credenciais incorretas nos testes gerados (`admin@barbearia.com` vs `admin@barbearia-teste.com`)
+  - Report consolidado: `packages/backend/testsprite_tests/testsprite-mcp-test-report.md`
+  - **Nota:** Créditos do TestSprite esgotados durante re-execução com credenciais corretas
 
 ### Next Steps
-- Milestone 4: aplicar RBAC (roles) e testes do CRUD
+
 - Milestone 5: validar transições de status e testes de appointments
 - Milestone 6: adicionar endpoints de summary/commission report e testes
 - Milestone 8: proteger update de barbershop com auth/RBAC
@@ -45,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 **Seed Script:**
+
 - `prisma/seed.ts` - Development database seeder
   - Idempotent script (safe to run multiple times)
   - Creates 1 barbershop with slug `barbearia-teste`
@@ -55,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Outputs test credentials for manual API testing
 
 **Documentation:**
+
 - Updated `docs/QUICK-TEST.md` with seed instructions and credential info
 - Added "Testar com Dados de Seed" section with example curl requests
 - Clear steps in preamble: install → db:generate → **db:seed** → dev
@@ -82,6 +119,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 **Middleware:**
+
 - `src/middleware/tenant.ts` - Tenant validation middleware
   - Validates `x-tenant-slug` header
   - Caches tenant lookups in Redis (5-minute TTL)
@@ -96,6 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Skips rate limiting for public routes
 
 **Database Migrations:**
+
 - `prisma/migrations/20251207085846_add_rls_and_indexes/migration.sql` - RLS and performance indexes
   - Enabled Row Level Security (RLS) on all tables (barbershops, professionals, clients, services, appointments, transactions)
   - Created RLS policies for tenant isolation using `current_setting('app.current_tenant')`
@@ -106,12 +145,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Policies designed to work with Prisma in serverless (fallback to application-level filtering)
 
 **Application Updates:**
+
 - Updated `src/app.ts` to register global middlewares
   - Tenant middleware registered first (validates tenant before rate limiting)
   - Rate limit middleware registered second
   - Public routes (`/health`, `/docs`, `/`) bypass both middlewares
 
 **Tests:**
+
 - `src/middleware/__tests__/tenant.test.ts` - 9 unit tests for tenant middleware
   - Tests public route skipping
   - Tests missing header handling
@@ -160,6 +201,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 **Database Migrations:**
+
 - `prisma/migrations/20251206133233_init/migration.sql` - Initial migration creating all database tables, enums, indexes, and foreign keys
   - 6 tables: `barbershops`, `professionals`, `clients`, `services`, `appointments`, `transactions`
   - 4 enums: `Role`, `AppointmentStatus`, `PaymentMethod`, `TransactionType`
@@ -167,6 +209,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Composite indexes for multi-tenant query optimization
 
 **Unit Tests:**
+
 - `src/__tests__/prisma.test.ts` - 5 tests verifying schema structure and migration integrity
   - Validates schema contains all enums and models
   - Verifies PostgreSQL datasource configuration
@@ -204,6 +247,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - 2025-12-06
 
 ### Added
+
 - **Plans Structure:** Criada estrutura de planos individuais por milestone em `docs/plans/`
   - `principal-plan.md` - Plano principal com visão geral completa do projeto
   - `01-database-schema.md` - Plano detalhado do Milestone 1
@@ -226,6 +270,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 **Root Monorepo Structure:**
+
 - `package.json` - Root workspace configuration with pnpm scripts
 - `pnpm-workspace.yaml` - pnpm workspaces configuration
 - `.gitignore` - Comprehensive ignore rules for Node.js, build outputs, env files
@@ -236,7 +281,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Backend Package Structure (`packages/backend/`):**
 
-*Configuration Files:*
+_Configuration Files:_
+
 - `package.json` - Dependencies and npm scripts for backend
   - Runtime: fastify, @fastify/jwt, @fastify/swagger, @fastify/cors, @fastify/cookie
   - Database: @prisma/client, prisma
@@ -251,7 +297,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `eslint.config.js` - ESLint flat config with TypeScript rules
 - `.env.example` - Environment variables template with detailed comments
 
-*Core Application:*
+_Core Application:_
+
 - `src/app.ts` - Fastify application factory
   - CORS support with credentials
   - JWT authentication (@fastify/jwt)
@@ -262,7 +309,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `src/server.ts` - Local development server (port 3000)
 - `api/index.ts` - Vercel serverless entrypoint with Fastify adapter
 
-*Core Libraries:*
+_Core Libraries:_
+
 - `src/lib/prisma.ts` - **Prisma Singleton Pattern**
   - Uses `globalThis` to prevent connection exhaustion in serverless
   - Development logging (query, error, warn)
@@ -274,7 +322,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Refresh token storage (7-day TTL)
   - Tenant cache (5-minute TTL)
 
-*Type Definitions:*
+_Type Definitions:_
+
 - `src/types/index.ts` - TypeScript type definitions
   - `PaginationParams` interface
   - `PaginatedResult<T>` interface
@@ -282,7 +331,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fastify type extensions (tenantId, tenantSlug)
   - @fastify/jwt type extensions (JWT payload)
 
-*Database Schema:*
+_Database Schema:_
+
 - `prisma/schema.prisma` - Complete Prisma schema
   - **Enums:** Role, AppointmentStatus, PaymentMethod, TransactionType
   - **Models:**
@@ -295,7 +345,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Indexes:** Optimized for multi-tenant queries
   - **Cascading deletes:** Tenant isolation enforcement
 
-*Folder Structure:*
+_Folder Structure:_
+
 - `src/controllers/` - Empty, ready for route handlers
 - `src/services/` - Empty, ready for business logic
 - `src/repositories/` - Empty, ready for data access layer

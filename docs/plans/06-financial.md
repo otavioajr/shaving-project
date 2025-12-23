@@ -19,22 +19,26 @@ Implementar sistema completo de transações financeiras e relatórios (resumo f
 ## Arquivos a Criar
 
 ### Repository
+
 1. **`/packages/backend/src/repositories/transaction.repository.ts`**
    - CRUD básico
    - Busca com filtros (date, type, category)
    - Agregações para relatórios
 
 ### Service
+
 2. **`/packages/backend/src/services/transaction.service.ts`**
    - Lógica de negócio
    - Cálculos de relatórios
 
 ### Controller
+
 3. **`/packages/backend/src/controllers/transaction.controller.ts`**
    - Endpoints CRUD de transações
    - Endpoints de relatórios
 
 ### Schema
+
 4. **`/packages/backend/src/schemas/transaction.schema.ts`**
    - Validação Zod
 
@@ -45,24 +49,28 @@ Implementar sistema completo de transações financeiras e relatórios (resumo f
 ### Transactions CRUD
 
 **GET /transactions**
+
 - Query params: `page`, `limit`, `dateFrom?`, `dateTo?`, `type?`, `category?`
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Lista paginada de transactions com filtros
 
 **GET /transactions/:id**
+
 - Params: `id`
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Transaction específica
 
 **POST /transactions**
+
 - Body: `{ amount, type, category, date }`
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Transaction criada
 
 **PUT /transactions/:id**
+
 - Params: `id`
 - Body: `{ amount?, type?, category?, date? }`
 - Auth: Requerida
@@ -70,6 +78,7 @@ Implementar sistema completo de transações financeiras e relatórios (resumo f
 - Retorna: Transaction atualizada
 
 **DELETE /transactions/:id**
+
 - Params: `id`
 - Auth: Requerida
 - Role: Qualquer
@@ -78,12 +87,14 @@ Implementar sistema completo de transações financeiras e relatórios (resumo f
 ### Reports
 
 **GET /reports/summary**
+
 - Query params: `dateFrom`, `dateTo` (obrigatórios)
 - Auth: Requerida
 - Role: Qualquer
 - Retorna: Resumo financeiro do período
 
 **GET /reports/commissions**
+
 - Query params: `dateFrom`, `dateTo` (obrigatórios), `professionalId?`
 - Auth: Requerida
 - Role: Qualquer
@@ -96,6 +107,7 @@ Implementar sistema completo de transações financeiras e relatórios (resumo f
 ### Transaction
 
 **Campos:**
+
 - `id`: String (UUID)
 - `barbershopId`: String (FK)
 - `amount`: Decimal (valor da transação)
@@ -106,6 +118,7 @@ Implementar sistema completo de transações financeiras e relatórios (resumo f
 - `createdAt`, `updatedAt`: DateTime
 
 **Tipos:**
+
 - `INCOME`: Receita (valores positivos)
 - `EXPENSE`: Despesa (valores positivos, mas tipo indica despesa)
 
@@ -118,6 +131,7 @@ Implementar sistema completo de transações financeiras e relatórios (resumo f
 **Endpoint:** `GET /reports/summary?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD`
 
 **Response:**
+
 ```typescript
 {
   period: {
@@ -144,6 +158,7 @@ Implementar sistema completo de transações financeiras e relatórios (resumo f
 ```
 
 **Lógica:**
+
 1. Buscar transactions no período
 2. Separar por `type` (INCOME/EXPENSE)
 3. Agrupar por `category`
@@ -155,6 +170,7 @@ Implementar sistema completo de transações financeiras e relatórios (resumo f
 **Endpoint:** `GET /reports/commissions?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&professionalId?=uuid`
 
 **Response:**
+
 ```typescript
 {
   period: {
@@ -182,6 +198,7 @@ Implementar sistema completo de transações financeiras e relatórios (resumo f
 ```
 
 **Lógica:**
+
 1. Buscar appointments COMPLETED no período
 2. Filtrar por `professionalId` se fornecido
 3. Agrupar por professional
@@ -212,11 +229,13 @@ async getCommissionsByPeriod(
 ### Service - Cálculos
 
 **Precisão Decimal:**
+
 - Usar `Decimal` do Prisma para cálculos monetários
 - Arredondar para 2 casas decimais na apresentação
 - Manter precisão completa no banco
 
 **Validações:**
+
 - `amount` deve ser positivo
 - `date` deve estar dentro do período válido
 - `category` não pode ser vazio
@@ -226,19 +245,23 @@ async getCommissionsByPeriod(
 ## Filtros
 
 ### Por Data
+
 - `dateFrom`: Data inicial (YYYY-MM-DD)
 - `dateTo`: Data final (YYYY-MM-DD)
 - Retorna transactions no intervalo
 
 ### Por Tipo
+
 - `type`: `INCOME` ou `EXPENSE`
 - Filtra por tipo de transação
 
 ### Por Categoria
+
 - `category`: String (busca parcial)
 - Filtra por categoria
 
 ### Combinação
+
 - Todos os filtros podem ser combinados
 - Paginação sempre aplicada
 
@@ -247,6 +270,7 @@ async getCommissionsByPeriod(
 ## Dependências
 
 Todas as dependências já estão instaladas:
+
 - `@prisma/client`
 - `zod`
 - `date-fns`
@@ -256,6 +280,7 @@ Todas as dependências já estão instaladas:
 ## Checklist de Testes
 
 ### Transactions CRUD
+
 - [ ] Listar transactions com paginação funciona
 - [ ] Buscar transaction por ID funciona
 - [ ] Criar transaction funciona
@@ -268,6 +293,7 @@ Todas as dependências já estão instaladas:
 - [ ] Isolamento por tenant funciona
 
 ### Financial Summary
+
 - [ ] Resumo calculado corretamente
 - [ ] Income total correto
 - [ ] Expenses total correto
@@ -278,6 +304,7 @@ Todas as dependências já estão instaladas:
 - [ ] Precisão decimal mantida
 
 ### Commission Report
+
 - [ ] Relatório agrupa por professional
 - [ ] Comissões calculadas corretamente
 - [ ] Revenue total por professional correto
@@ -287,6 +314,7 @@ Todas as dependências já estão instaladas:
 - [ ] Apenas appointments COMPLETED incluídos
 
 ### Validações
+
 - [ ] Amount deve ser positivo
 - [ ] Date deve ser válida
 - [ ] Category não pode ser vazio
@@ -313,4 +341,5 @@ Todas as dependências já estão instaladas:
 ## Próximos Passos
 
 Após completar este milestone, o próximo será:
+
 - **MILESTONE 7:** Notifications (Web Push + Cron)

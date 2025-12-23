@@ -3,10 +3,12 @@
 Guia curto para validar o que já existe no backend e ver algo rodando em poucos minutos.
 
 ## Pré-requisitos
+
 - Node.js 22+ e pnpm 9+
 - Variáveis de ambiente preenchidas em `packages/backend/.env` (use `packages/backend/.env.example` como base)
 
 ## Passo a passo
+
 1. Instale dependências na raiz:
    ```bash
    pnpm install
@@ -20,16 +22,18 @@ Guia curto para validar o que já existe no backend e ver algo rodando em poucos
    pnpm db:migrate
    ```
 4. **Popular dados de teste (NOVO):**
+
    ```bash
    pnpm db:seed
    ```
+
    Isto cria automaticamente:
    - 1 barbershop de teste (`barbearia-teste`)
    - 1 admin (`admin@barbearia-teste.com` / `senha123`)
    - 1 barbeiro (`barber@barbearia-teste.com` / `senha123`)
    - 1 cliente de teste (`João Silva`)
    - 3 serviços (Corte, Barba, Corte+Barba)
-   
+
    ✅ Seguro rodar múltiplas vezes (idempotente)
 
 5. Suba o servidor em modo dev (porta 3000):
@@ -38,18 +42,21 @@ Guia curto para validar o que já existe no backend e ver algo rodando em poucos
    ```
 
 ## Smoke manual
-- Health check (público, sem tenant):  
+
+- Health check (público, sem tenant):
+
   ```bash
   curl -i http://localhost:3000/health
-  ```  
+  ```
+
   Esperado: `200 OK` com `{ "status": "ok", "environment": "development", ... }`.
 
 - Swagger UI: abra `http://localhost:3000/docs` no navegador para ver a documentação carregando.
 
-- Endpoint raiz:  
+- Endpoint raiz:
   ```bash
   curl -i http://localhost:3000/
-  ```  
+  ```
   Esperado: `200 OK` com nome e versão da API.
 
 ## Testar com Dados de Seed
@@ -62,11 +69,13 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
 ```
 
 **Esperado:**
+
 - Status: `200 OK` (listagem não exige auth; create/update/delete exigem)
 - Body: `{ data: [...], pagination: { page, limit, total, totalPages } }`
 - Headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` (rate limit ativado)
 
 ## Testes automatizados
+
 - Rodar lint (obrigatório em toda implementação):
   ```bash
   pnpm lint
@@ -85,6 +94,7 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
 Veja `docs/PR-CHECKLIST.md`.
 
 ## TestSprite (E2E)
+
 Para rodar os testes E2E gerados pelo TestSprite contra o backend local:
 
 1. No `packages/backend/.env`, habilite (somente dev/test):
@@ -114,6 +124,7 @@ Veja o report consolidado em `testsprite_tests/testsprite-mcp-test-report.md`.
 ## ✅ Validação dos Middlewares (Tenant + Rate Limit)
 
 ### 1. Testar Swagger UI Completo
+
 **Objetivo:** Confirmar que todas as sub-rotas do Swagger funcionam sem bloqueio
 
 1. Abra `http://localhost:3000/docs` no navegador
@@ -121,6 +132,7 @@ Veja o report consolidado em `testsprite_tests/testsprite-mcp-test-report.md`.
 3. Recarregue a página (Ctrl+R)
 
 **Verificar:**
+
 - ✅ Interface do Swagger UI carrega completamente
 - ✅ **Nenhuma requisição com status 404** no Network
 - ✅ Requisições esperadas com 200:
@@ -131,6 +143,7 @@ Veja o report consolidado em `testsprite_tests/testsprite-mcp-test-report.md`.
 ---
 
 ### 2. Testar Rotas Públicas (Sem Tenant e Sem Rate Limit)
+
 **Objetivo:** Confirmar que rotas públicas não exigem tenant nem aplicam rate limit
 
 ```bash
@@ -142,6 +155,7 @@ curl -i http://localhost:3000/docs/json
 ```
 
 **Verificar:**
+
 - ✅ Status: `200 OK`
 - ✅ **Sem headers** `X-RateLimit-*` (não aplica rate limit)
 - ✅ **Não exige** header `x-tenant-slug`
@@ -149,6 +163,7 @@ curl -i http://localhost:3000/docs/json
 ---
 
 ### 3. Testar Rota Protegida SEM Header de Tenant
+
 **Objetivo:** Confirmar que rotas protegidas bloqueiam sem tenant
 
 ```bash
@@ -156,15 +171,18 @@ curl -i http://localhost:3000/api/professionals
 ```
 
 **Verificar:**
+
 - ✅ Status: `404 Not Found`
 - ✅ Resposta: `{"error": "Tenant not found", "message": "Missing x-tenant-slug header"}`
 
 ---
 
 ### 4. Testar Rota Protegida COM Tenant Válido
+
 **Objetivo:** Confirmar que rate limit é aplicado em rotas protegidas
 
 **Pré-requisito:** Criar um tenant no banco
+
 ```bash
 # Opção 1: Via Prisma Studio
 pnpm db:studio
@@ -175,11 +193,13 @@ pnpm db:seed
 ```
 
 **Teste:**
+
 ```bash
 curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/professionals
 ```
 
 **Verificar:**
+
 - ✅ Status: `200 OK` (GET list; POST/PUT/DELETE sem token retornam `401`)
 - ✅ **COM headers** `X-RateLimit-*`:
   ```
@@ -191,6 +211,7 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
 ---
 
 ### 5. Testar Rate Limit (Opcional)
+
 **Objetivo:** Confirmar que rate limit bloqueia após atingir limite
 
 ```bash
@@ -205,6 +226,7 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
 ```
 
 **Verificar:**
+
 - ✅ Status: `429 Too Many Requests`
 - ✅ Resposta: `{"error": "Too Many Requests", ...}`
 - ✅ Header `X-RateLimit-Remaining: 0`
@@ -225,14 +247,17 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
 ## 🐛 Troubleshooting
 
 ### Swagger ainda retorna 404 em sub-rotas
+
 **Causa:** Middlewares não atualizados corretamente
 
 **Solução:**
+
 1. Verifique que **ambos** os arquivos têm a correção:
    - `packages/backend/src/middleware/tenant.ts`
    - `packages/backend/src/middleware/rateLimit.ts`
 
    Procure por:
+
    ```typescript
    if (PUBLIC_ROUTES.includes(path) || path.startsWith('/docs')) {
      return
@@ -244,9 +269,11 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
 ---
 
 ### Tenant não encontrado mesmo com slug correto
+
 **Causa:** Barbershop não existe ou está inativo no banco
 
 **Solução:**
+
 1. Execute `npm run db:studio`
 2. Vá para tabela `Barbershop`
 3. Verifique se existe registro com o `slug` usado
@@ -255,9 +282,11 @@ curl -i -H "x-tenant-slug: barbearia-teste" http://localhost:3000/api/profession
 ---
 
 ### Rate limit não funciona
+
 **Causa:** Redis (Upstash) não configurado
 
 **Solução:**
+
 1. Verifique `.env` tem as variáveis:
    ```env
    UPSTASH_REDIS_REST_URL=https://...

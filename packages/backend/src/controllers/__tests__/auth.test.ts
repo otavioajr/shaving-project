@@ -11,11 +11,15 @@ const redisMock = {
 }
 
 const ipRatelimitMock = {
-  limit: vi.fn().mockResolvedValue({ success: true, limit: 1000, remaining: 999, reset: Date.now() + 60000 }),
+  limit: vi
+    .fn()
+    .mockResolvedValue({ success: true, limit: 1000, remaining: 999, reset: Date.now() + 60000 }),
 }
 
 const tenantRatelimitMock = {
-  limit: vi.fn().mockResolvedValue({ success: true, limit: 1000, remaining: 999, reset: Date.now() + 60000 }),
+  limit: vi
+    .fn()
+    .mockResolvedValue({ success: true, limit: 1000, remaining: 999, reset: Date.now() + 60000 }),
 }
 
 const getCachedTenant = vi.fn().mockResolvedValue('tenant-id')
@@ -95,7 +99,11 @@ describe('Auth Controller', () => {
     const body = response.json()
     expect(body.accessToken).toBeDefined()
     expect(body.refreshToken).toBeDefined()
-    expect(body.professional).toMatchObject({ id: 'prof-1', email: 'admin@example.com', role: 'ADMIN' })
+    expect(body.professional).toMatchObject({
+      id: 'prof-1',
+      email: 'admin@example.com',
+      role: 'ADMIN',
+    })
     expect(redisMock.setex).toHaveBeenCalledWith(
       'barbershop:refresh:tenant-id:prof-1',
       604800,

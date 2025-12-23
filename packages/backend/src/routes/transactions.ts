@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { transactionController } from '../controllers/transactionController.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const errorResponseSchema = {
   type: 'object',
@@ -33,7 +34,11 @@ const transactionSchema = {
     category: { type: 'string' },
     description: { type: 'string', nullable: true },
     date: { type: 'string', format: 'date-time' },
-    paymentMethod: { type: 'string', enum: ['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX'], nullable: true },
+    paymentMethod: {
+      type: 'string',
+      enum: ['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX'],
+      nullable: true,
+    },
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
   },
@@ -53,9 +58,11 @@ export async function transactionRoutes(app: FastifyInstance) {
   app.get(
     '/transactions',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Transactions'],
         summary: 'List all transactions',
+        security: [{ bearerAuth: [] }],
         querystring: {
           type: 'object',
           properties: {
@@ -67,7 +74,11 @@ export async function transactionRoutes(app: FastifyInstance) {
             endDate: { type: 'string', format: 'date-time' },
           },
         },
-        response: { 200: transactionListSchema },
+        response: {
+          200: transactionListSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+        },
       },
     },
     transactionController.list.bind(transactionController)
@@ -76,11 +87,18 @@ export async function transactionRoutes(app: FastifyInstance) {
   app.get(
     '/transactions/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Transactions'],
         summary: 'Get transaction by ID',
+        security: [{ bearerAuth: [] }],
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
-        response: { 200: transactionSchema, 404: errorResponseSchema },
+        response: {
+          200: transactionSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+          404: errorResponseSchema,
+        },
       },
     },
     transactionController.getById.bind(transactionController)
@@ -89,9 +107,11 @@ export async function transactionRoutes(app: FastifyInstance) {
   app.post(
     '/transactions',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Transactions'],
         summary: 'Create new transaction',
+        security: [{ bearerAuth: [] }],
         body: {
           type: 'object',
           required: ['amount', 'type', 'category', 'date'],
@@ -104,7 +124,13 @@ export async function transactionRoutes(app: FastifyInstance) {
             paymentMethod: { type: 'string', enum: ['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX'] },
           },
         },
-        response: { 201: transactionSchema, 400: errorResponseSchema, 401: errorResponseSchema, 403: errorResponseSchema, 404: errorResponseSchema },
+        response: {
+          201: transactionSchema,
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+          404: errorResponseSchema,
+        },
       },
     },
     transactionController.create.bind(transactionController)
@@ -113,9 +139,11 @@ export async function transactionRoutes(app: FastifyInstance) {
   app.put(
     '/transactions/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Transactions'],
         summary: 'Update transaction',
+        security: [{ bearerAuth: [] }],
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
         body: {
           type: 'object',
@@ -128,7 +156,13 @@ export async function transactionRoutes(app: FastifyInstance) {
             paymentMethod: { type: 'string', enum: ['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'PIX'] },
           },
         },
-        response: { 200: transactionSchema, 400: errorResponseSchema, 401: errorResponseSchema, 403: errorResponseSchema, 404: errorResponseSchema },
+        response: {
+          200: transactionSchema,
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+          404: errorResponseSchema,
+        },
       },
     },
     transactionController.update.bind(transactionController)
@@ -137,11 +171,19 @@ export async function transactionRoutes(app: FastifyInstance) {
   app.delete(
     '/transactions/:id',
     {
+      preHandler: requireAuth,
       schema: {
         tags: ['Transactions'],
         summary: 'Delete transaction',
+        security: [{ bearerAuth: [] }],
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
-        response: { 204: { type: 'null' }, 400: errorResponseSchema, 401: errorResponseSchema, 403: errorResponseSchema, 404: errorResponseSchema },
+        response: {
+          204: { type: 'null' },
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+          404: errorResponseSchema,
+        },
       },
     },
     transactionController.delete.bind(transactionController)

@@ -63,7 +63,10 @@ export async function appointmentRoutes(app: FastifyInstance) {
           properties: {
             page: { type: 'number', default: 1 },
             limit: { type: 'number', default: 20 },
-            status: { type: 'string', enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'] },
+            status: {
+              type: 'string',
+              enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
+            },
             professionalId: { type: 'string' },
             clientId: { type: 'string' },
             startDate: { type: 'string', format: 'date-time' },
@@ -162,10 +165,18 @@ export async function appointmentRoutes(app: FastifyInstance) {
           type: 'object',
           required: ['status'],
           properties: {
-            status: { type: 'string', enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'] },
+            status: {
+              type: 'string',
+              enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
+            },
           },
         },
-        response: { 200: appointmentSchema, 400: errorResponseSchema, 401: errorResponseSchema, 404: errorResponseSchema },
+        response: {
+          200: appointmentSchema,
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          404: errorResponseSchema,
+        },
       },
     },
     appointmentController.updateStatus.bind(appointmentController)
@@ -178,7 +189,12 @@ export async function appointmentRoutes(app: FastifyInstance) {
         tags: ['Appointments'],
         summary: 'Delete appointment',
         params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
-        response: { 204: { type: 'null' }, 400: errorResponseSchema, 401: errorResponseSchema, 404: errorResponseSchema },
+        response: {
+          204: { type: 'null' },
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          404: errorResponseSchema,
+        },
       },
     },
     appointmentController.delete.bind(appointmentController)

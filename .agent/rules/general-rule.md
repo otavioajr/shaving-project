@@ -35,9 +35,11 @@ Multi-Tenant Barbershop SaaS Platform backend built for zero-cost deployment on 
 ### Database Connection Management
 
 **CRITICAL:** Must implement Prisma Singleton pattern in `src/lib/prisma.ts`:
+
 ```typescript
 global.prisma
 ```
+
 This prevents connection exhaustion in serverless environment.
 
 **Production:** Configure to use Supabase Connection Pooler (Port 6543)
@@ -114,6 +116,7 @@ All entities include: `barbershopId`, `createdAt`, `updatedAt`
 ## Development Commands
 
 When the project is set up, typical commands will be:
+
 - `npm run dev` - Local development
 - `npm test` - Run Vitest test suite
 - `npm run lint` - Code linting

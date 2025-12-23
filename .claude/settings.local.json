@@ -1,7 +1,4 @@
 {
-  "enabledMcpjsonServers": [
-    "supabase",
-    "upstash"
-  ],
+  "enabledMcpjsonServers": ["supabase", "upstash"],
   "outputStyle": "Learning"
 }

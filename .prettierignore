@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.vercel/
+coverage/
+
+# Prisma generated
+packages/backend/prisma/migrations/
+
+# IDE/OS
+.idea/
+.vscode/
+.DS_Store
+
+# Logs
+*.log
+
+# Lock files
+pnpm-lock.yaml
+
+# Auto-generated
+*.min.js
+*.min.css

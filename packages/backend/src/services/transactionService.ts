@@ -1,4 +1,8 @@
-import { transactionRepository, type PaginationParams, type ListFilters } from '../repositories/transactionRepository.js'
+import {
+  transactionRepository,
+  type PaginationParams,
+  type ListFilters,
+} from '../repositories/transactionRepository.js'
 import { professionalRepository } from '../repositories/professionalRepository.js'
 import type { TransactionType, PaymentMethod, Prisma } from '@prisma/client'
 import { serializeTransactionWithRelations } from '../lib/serializer.js'
@@ -39,7 +43,10 @@ export class TransactionService {
 
   async createTransaction(input: CreateTransactionInput) {
     // Verify professional exists
-    const professional = await professionalRepository.findById(input.createdById, input.barbershopId)
+    const professional = await professionalRepository.findById(
+      input.createdById,
+      input.barbershopId
+    )
     if (!professional) {
       throw new Error('Professional not found')
     }
@@ -52,7 +59,9 @@ export class TransactionService {
       date: new Date(input.date),
       paymentMethod: input.paymentMethod || null,
       barbershop: { connect: { id: input.barbershopId } },
-      createdBy: { connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.createdById } } },
+      createdBy: {
+        connect: { barbershopId_id: { barbershopId: input.barbershopId, id: input.createdById } },
+      },
     })
     return serializeTransactionWithRelations(transaction)
   }

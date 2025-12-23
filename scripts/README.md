@@ -7,12 +7,14 @@ Script automatizado para executar testes de ponta a ponta de todos os endpoints 
 ### Pré-requisitos
 
 1. Servidor rodando:
+
    ```bash
    cd /Users/otavioajr/Documents/Projetos/shaving-project
    pnpm dev
    ```
 
 2. Banco de dados seedado:
+
    ```bash
    pnpm db:seed
    ```
@@ -119,18 +121,21 @@ Testes falhos: 0
 ### Troubleshooting
 
 **Erro: "Servidor não está rodando"**
+
 ```bash
 # Certifique-se de que o servidor está rodando
 pnpm dev
 ```
 
 **Erro: "Tenant não encontrado"**
+
 ```bash
 # Certifique-se de que o banco foi seedado
 pnpm db:seed
 ```
 
 **Erro: "Não foi possível extrair access token"**
+
 - Verifique se as credenciais estão corretas
 - Verifique se o tenant existe e está ativo
 - Verifique logs do servidor

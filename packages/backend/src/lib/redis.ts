@@ -32,11 +32,7 @@ export const tenantRatelimit = new Ratelimit({
 const OTP_TTL = 300 // 5 minutes in seconds
 const OTP_PREFIX = 'barbershop:otp'
 
-export async function storeOTP(
-  barbershopId: string,
-  email: string,
-  code: string
-): Promise<void> {
+export async function storeOTP(barbershopId: string, email: string, code: string): Promise<void> {
   const key = `${OTP_PREFIX}:${barbershopId}:${email}`
   await redis.set(key, code, { ex: OTP_TTL })
 }
@@ -58,10 +54,7 @@ export async function verifyOTP(
   return false
 }
 
-export async function deleteOTP(
-  barbershopId: string,
-  email: string
-): Promise<void> {
+export async function deleteOTP(barbershopId: string, email: string): Promise<void> {
   const key = `${OTP_PREFIX}:${barbershopId}:${email}`
   await redis.del(key)
 }
@@ -90,17 +83,12 @@ export async function getRefreshToken(
   return data as { createdAt: number; expiresAt: number }
 }
 
-export async function deleteRefreshToken(
-  professionalId: string,
-  tokenId: string
-): Promise<void> {
+export async function deleteRefreshToken(professionalId: string, tokenId: string): Promise<void> {
   const key = `${REFRESH_TOKEN_PREFIX}:${professionalId}:${tokenId}`
   await redis.del(key)
 }
 
-export async function deleteAllRefreshTokens(
-  professionalId: string
-): Promise<void> {
+export async function deleteAllRefreshTokens(professionalId: string): Promise<void> {
   const pattern = `${REFRESH_TOKEN_PREFIX}:${professionalId}:*`
   const keys = await redis.keys(pattern)
   if (keys.length > 0) {
@@ -112,10 +100,7 @@ export async function deleteAllRefreshTokens(
 const TENANT_CACHE_TTL = 60 * 5 // 5 minutes
 const TENANT_CACHE_PREFIX = 'barbershop:tenant'
 
-export async function cacheTenant(
-  slug: string,
-  tenantId: string
-): Promise<void> {
+export async function cacheTenant(slug: string, tenantId: string): Promise<void> {
   const key = `${TENANT_CACHE_PREFIX}:${slug}`
   await redis.set(key, tenantId, { ex: TENANT_CACHE_TTL })
 }

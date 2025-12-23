@@ -28,18 +28,18 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 
 ## Milestone Status
 
-| Milestone | Status | Description |
-|-----------|--------|-------------|
-| 0 | **COMPLETE** ✅ | Project Scaffolding |
-| 1 | **COMPLETE** ✅ | Database Schema & Core Infrastructure |
-| 2 | **COMPLETE** ✅ | Fastify App & Core Middleware |
-| 3 | **COMPLETE** ✅ | Authentication (JWT + OTP) |
-| 4 | In Progress | CRUD (Professionals, Clients, Services) |
-| 5 | In Progress | Appointment Management |
-| 6 | In Progress | Financial Management |
-| 7 | In Progress | Notifications (Web Push + Cron) |
-| 8 | In Progress | Barbershop Management |
-| 9 | In Progress | Testing, Docs & Deployment |
+| Milestone | Status          | Description                             |
+| --------- | --------------- | --------------------------------------- |
+| 0         | **COMPLETE** ✅ | Project Scaffolding                     |
+| 1         | **COMPLETE** ✅ | Database Schema & Core Infrastructure   |
+| 2         | **COMPLETE** ✅ | Fastify App & Core Middleware           |
+| 3         | **COMPLETE** ✅ | Authentication (JWT + OTP)              |
+| 4         | **COMPLETE** ✅ | CRUD (Professionals, Clients, Services) |
+| 5         | In Progress     | Appointment Management                  |
+| 6         | In Progress     | Financial Management                    |
+| 7         | In Progress     | Notifications (Web Push + Cron)         |
+| 8         | In Progress     | Barbershop Management                   |
+| 9         | In Progress     | Testing, Docs & Deployment              |
 
 ---
 
@@ -48,10 +48,12 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 Quando for fazer deploy em **produção**, revise obrigatoriamente as variáveis de ambiente do backend (`packages/backend/.env.example` como referência).
 
 ### Test-only / Segurança
+
 - `NODE_ENV="production"` (isso também ativa comportamento de cookies `secure` e desabilita rotas de teste)
 - `ENABLE_TEST_OTP_ENDPOINT="false"` (**nunca** habilitar em produção; expõe OTP)
 
 ### Essenciais de runtime
+
 - `API_URL="https://<seu-dominio>"` (usado em docs/callbacks)
 - `JWT_SECRET="<segredo forte (>= 32 chars)>"` (não reutilizar o de dev)
 - `DATABASE_URL="<prod pooler 6543>"` (runtime)
@@ -59,10 +61,40 @@ Quando for fazer deploy em **produção**, revise obrigatoriamente as variáveis
 - `UPSTASH_REDIS_REST_URL="https://..."` e `UPSTASH_REDIS_REST_TOKEN="..."` (prod)
 
 ### Cron e notificações (quando habilitados)
+
 - `CRON_SECRET="<segredo forte>"` (proteger endpoints de cron)
 - `VAPID_PUBLIC_KEY="..."`, `VAPID_PRIVATE_KEY="..."`, `VAPID_SUBJECT="mailto:..."`
 
 > Regra prática: qualquer coisa marcada como “test-only” deve estar desabilitada em produção.
+
+---
+
+## Code Formatting
+
+**Status:** CONFIGURED ✅
+
+The project uses Prettier for consistent code formatting with pre-commit hooks.
+
+### Configuration
+
+- **Prettier:** No semicolons, single quotes, 2-space indent, 100 print width
+- **EditorConfig:** Cross-IDE baseline formatting
+- **Pre-commit hooks:** husky + lint-staged auto-format staged files
+
+### Commands
+
+```bash
+pnpm format       # Format all files
+pnpm format:check # Check formatting without changes
+```
+
+### Pre-commit Hook
+
+When you commit, lint-staged automatically:
+
+1. Runs `prettier --write` on staged `.ts` files
+2. Runs `eslint --fix` on staged `.ts` files
+3. Runs `prettier --write` on staged `.json`, `.md`, `.yml` files
 
 ---
 
@@ -161,8 +193,9 @@ Quando for fazer deploy em **produção**, revise obrigatoriamente as variáveis
   - Creates admin and barber test users with known credentials
   - Creates test client and services
   - Safe to run multiple times
-  
+
 **Quick Start:**
+
 ```bash
 pnpm db:seed
 ```
@@ -198,7 +231,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ## Milestone 4: CRUD (Professionals, Clients, Services)
 
-**Status:** IN PROGRESS
+**Status:** COMPLETE ✅
 
 ### Checklist
 
@@ -219,10 +252,11 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
   - `src/routes/services.ts`
 - [x] Pagination implementation
   - All list endpoints return `{ data: [], pagination: { page, limit, total, totalPages } }`
-- [x] Auth required for create/update/delete operations
-- [ ] Role-based access control (RBAC) by `role` (ADMIN vs BARBER)
+- [x] Auth required for all operations (including GET)
+- [x] Role-based access control (RBAC) by `role` (ADMIN vs BARBER)
+- [x] Soft delete with `isActive` and filtering of inactive records
 - [x] Swagger documentation (schemas in routes)
-- [ ] Unit and integration tests for CRUD endpoints
+- [x] Unit and integration tests for CRUD endpoints
 
 ---
 
@@ -262,9 +296,11 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
   - `src/controllers/transactionController.ts`
   - `src/routes/transactions.ts`
 - [x] Auth required for create/update/delete operations
+- [x] Auth required for list/get operations (GET)
+  - Validates `requireAuth` + `tenantId` match
 - [ ] Financial summary endpoint
 - [ ] Commission report endpoint (via appointments)
-- [ ] Tests
+- [x] Tests (Unit tests for controller guards added)
 
 ---
 
@@ -305,7 +341,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ### Checklist
 
-- [x] `pnpm test` passing (Vitest: 68/68 ✅)
+- [x] `pnpm test` passing (Vitest: 79/79 ✅)
 - [x] `pnpm lint` passing (0 warnings/errors)
 - [ ] Test coverage >= 80% (current: ~58% lines/stmts on `pnpm test:coverage`)
 - [x] Complete Swagger documentation
@@ -313,7 +349,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - [ ] GitHub Actions CI workflow
 - [ ] Vercel deployment
 - [ ] Production health check
-- [x] TestSprite E2E integration (10/10 passing, report available)
+- [x] TestSprite MCP integration (backend API suite, report available)
 - [ ] PR/Merge checklist followed (`docs/PR-CHECKLIST.md`)
 
 ### Maintenance Notes
@@ -321,28 +357,50 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - 2025-12-19: Hook global de pre-serialization para converter Prisma Decimal em `number` e `Date` em ISO string nas respostas `/api`.
 - 2025-12-20: ESLint do backend passou sem warnings/erros após ajustes de tipagem e limpeza de `any` explícito.
 - 2025-12-20: **Correção Decimal→number movida para service layer** (preSerialization hook não era chamado antes da validação de schema do Fastify). Helpers type-safe em `serializer.ts`, aplicados em todos os services com campos Decimal.
+- 2025-12-23: Corrigido script `pnpm start` do backend para apontar para `dist/src/server.js` (build do `tsc`).
 
 ---
 
-## TestSprite E2E Testing
+## TestSprite MCP Testing (Backend API)
 
-**Status:** Integrated (Current suite passing)
+**Status:** Integrated (suite executável contra backend local)
 
-### Test Results (2025-12-18)
+### Test Results (2025-12-23 - Latest Run)
 
-**Vitest (Unit Tests):** 68/68 ✅
+**Vitest (Unit Tests):** 79/79 ✅
 **Vitest Coverage:** ~58% (target: 80%)
-**TestSprite (E2E):** 10/10 ✅ (100%)
+**TestSprite (MCP/Backend):** 1/10 ⚠️ (see notes)
 
 ### Reports & Plans
 
-- **Test Report:** `testsprite_tests/testsprite-mcp-test-report.md`
+- **Test Report:** `packages/backend/testsprite_tests/testsprite-mcp-test-report.md`
+- **Code Summary:** `packages/backend/testsprite_tests/tmp/code_summary.json`
+- **Test Plan:** `packages/backend/testsprite_tests/testsprite_backend_test_plan.json`
 - **Plan A (Fix Tests):** `docs/plans/10-testsprite-fix-tests.md`
 - **Plan B (OTP Endpoint):** `docs/plans/11-testsprite-otp-endpoint.md`
 
+### Test Cases (10 total)
+
+| ID    | Title                                                                 | Status |
+| ----- | --------------------------------------------------------------------- | ------ |
+| TC001 | test_login_with_valid_and_invalid_credentials                         | ❌     |
+| TC002 | test_refresh_access_token_with_valid_and_invalid_refresh_token        | ❌     |
+| TC003 | test_logout_invalidate_tokens_and_handle_unauthorized_access          | ❌     |
+| TC004 | test_request_otp_and_verify_otp_for_password_recovery                 | ❌     |
+| TC005 | test_get_professionals_list_with_pagination_and_authorization         | ❌     |
+| TC006 | test_create_professional_with_admin_role_and_duplicate_email_handling | ❌     |
+| TC007 | test_appointment_creation_with_conflict_detection                     | ❌     |
+| TC008 | test_financial_transactions_filtering_and_pagination                  | ❌     |
+| TC009 | test_barbershop_get_and_update_with_tenant_validation                 | ✅     |
+| TC010 | test_rate_limiting_enforcement_on_protected_endpoints                 | ❌     |
+
 ### Notes
 
-- Earlier TestSprite failures (schema mismatch / tenant error code expectations / OTP dependency) were addressed; Plan A/B remain as reference in `docs/plans/`.
+- **Root cause of failures:** Test generator used wrong email domain (`@barbearia.com` instead of `@barbearia-teste.com` from seed)
+- **TC009 passed** because it used a pre-authenticated JWT with correct email
+- **Action needed:** Re-run with correct credentials: `admin@barbearia-teste.com` / `barber@barbearia-teste.com`
+- TestSprite credits exhausted during re-run attempt (2025-12-23)
+- Earlier TestSprite failures (schema mismatch / tenant error code expectations / OTP dependency) were addressed; Plan A/B remain as reference.
 
 ---
 
@@ -371,4 +429,4 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ---
 
-*Last updated: 2025-12-20*
+_Last updated: 2025-12-23_

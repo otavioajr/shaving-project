@@ -41,7 +41,9 @@ describe('Redis Client & Helpers', () => {
       vi.resetModules()
       await import('../lib/redis')
 
-      expect(warnSpy).toHaveBeenCalledWith('Missing Upstash Redis credentials. Rate limiting will not work.')
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Missing Upstash Redis credentials. Rate limiting will not work.'
+      )
       warnSpy.mockRestore()
     })
   })

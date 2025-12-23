@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "test_login_with_valid_and_invalid_credentials",
+    "description": "Verify login endpoint with valid email and password returns access and refresh tokens and professional data. Test invalid credentials return 401 error. Test missing or invalid tenant slug returns 404 error."
+  },
+  {
+    "id": "TC002",
+    "title": "test_refresh_access_token_with_valid_and_invalid_refresh_token",
+    "description": "Verify refresh token endpoint returns new access token when provided valid refresh token. Test invalid or expired refresh token returns 401 error. Test missing or invalid tenant slug returns 404 error."
+  },
+  {
+    "id": "TC003",
+    "title": "test_logout_invalidate_tokens_and_handle_unauthorized_access",
+    "description": "Verify logout endpoint invalidates tokens and returns success message. Test unauthorized access returns 401 error. Test missing or invalid tenant slug returns 404 error."
+  },
+  {
+    "id": "TC004",
+    "title": "test_request_otp_and_verify_otp_for_password_recovery",
+    "description": "Verify request OTP endpoint sends OTP for valid email and returns success message. Verify verify OTP endpoint validates OTP and issues tokens. Test invalid or expired OTP returns 401 error. Test missing or invalid tenant slug returns 404 error."
+  },
+  {
+    "id": "TC005",
+    "title": "test_get_professionals_list_with_pagination_and_authorization",
+    "description": "Verify get professionals endpoint returns paginated list of professionals for authorized users. Test unauthorized access returns 401 error. Test forbidden access returns 403 error. Test missing or invalid tenant slug returns 404 error."
+  },
+  {
+    "id": "TC006",
+    "title": "test_create_professional_with_admin_role_and_duplicate_email_handling",
+    "description": "Verify create professional endpoint allows only ADMIN role to create new professional. Test duplicate email returns 409 error. Test unauthorized and forbidden access returns 401 and 403 errors respectively."
+  },
+  {
+    "id": "TC007",
+    "title": "test_appointment_creation_with_conflict_detection",
+    "description": "Verify appointment creation endpoint prevents scheduling conflicts by checking overlapping appointments excluding cancelled ones. Test successful creation returns 201. Test time slot conflict returns 409 error."
+  },
+  {
+    "id": "TC008",
+    "title": "test_financial_transactions_filtering_and_pagination",
+    "description": "Verify transactions listing endpoint supports filtering by type, category, date range with pagination. Test unauthorized access returns 401 error. Test missing or invalid tenant slug returns 404 error."
+  },
+  {
+    "id": "TC009",
+    "title": "test_barbershop_get_and_update_with_tenant_validation",
+    "description": "Verify get barbershop endpoint returns current barbershop data for valid tenant. Verify update barbershop endpoint updates data correctly. Test missing or invalid tenant slug returns 404 error."
+  },
+  {
+    "id": "TC010",
+    "title": "test_rate_limiting_enforcement_on_protected_endpoints",
+    "description": "Verify rate limiting middleware enforces limits per IP and tenant on protected endpoints. Test exceeding limits returns HTTP 429 error."
+  }
+]

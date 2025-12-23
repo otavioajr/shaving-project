@@ -3,6 +3,7 @@
 ## Prerequisites
 
 Before executing this plan, read:
+
 1. **[principal-plan.md](principal-plan.md)** - Project overview
 2. **[DEVELOPMENT.md](../DEVELOPMENT.md)** - Current milestone status
 3. **[CHANGELOG.md](../CHANGELOG.md)** - Recent changes
@@ -27,6 +28,7 @@ Add a test-only endpoint to retrieve OTP codes from Redis, enabling true E2E tes
 ### Why This Needs Careful Implementation
 
 Exposing OTP retrieval is inherently risky. This endpoint:
+
 - Could allow account takeover if exposed in production
 - Must be completely disabled in production environments
 - Requires explicit opt-in via environment variable
@@ -53,23 +55,22 @@ Add at the end of the auth routes, inside the route registration function:
 ```typescript
 // Test-only OTP retrieval endpoint
 // SECURITY: Only available in non-production with explicit opt-in
-if (process.env.ENABLE_TEST_OTP_ENDPOINT === 'true' &&
-    process.env.NODE_ENV !== 'production') {
-
+if (process.env.ENABLE_TEST_OTP_ENDPOINT === 'true' && process.env.NODE_ENV !== 'production') {
   app.get(
     '/auth/test/otp/:identifier',
     {
       schema: {
         tags: ['Auth - Test Only'],
         summary: '[TEST ONLY] Retrieve OTP for testing',
-        description: 'WARNING: This endpoint is only available in test/development environments. It allows retrieving OTP codes for E2E testing purposes.',
+        description:
+          'WARNING: This endpoint is only available in test/development environments. It allows retrieving OTP codes for E2E testing purposes.',
         params: {
           type: 'object',
           required: ['identifier'],
           properties: {
             identifier: {
               type: 'string',
-              description: 'Email or phone number used to request OTP'
+              description: 'Email or phone number used to request OTP',
             },
           },
         },
@@ -105,7 +106,7 @@ if (process.env.ENABLE_TEST_OTP_ENDPOINT === 'true' &&
       if (!otp) {
         return reply.code(404).send({
           error: 'OTP not found or expired',
-          hint: 'Request a new OTP via POST /auth/request-otp first'
+          hint: 'Request a new OTP via POST /auth/request-otp first',
         })
       }
 
@@ -231,6 +232,7 @@ x-tenant-slug: barbearia-teste
 ### Error Responses
 
 **404 - OTP Not Found:**
+
 ```json
 {
   "error": "OTP not found or expired",
@@ -239,6 +241,7 @@ x-tenant-slug: barbearia-teste
 ```
 
 **404 - Endpoint Disabled (Production):**
+
 ```json
 {
   "error": "Not Found"
@@ -249,15 +252,16 @@ x-tenant-slug: barbearia-teste
 
 ## When to Use This Plan
 
-| Scenario | Use Plan A | Use Plan B |
-|----------|------------|------------|
-| Fix schema mismatches | ✅ | ❌ |
-| Test OTP request/verify flow | ❌ | ✅ |
-| CI/CD E2E testing with full OTP | ❌ | ✅ |
-| Most failing tests | ✅ | ❌ |
-| TC004 specifically | ❌ | ✅ |
+| Scenario                        | Use Plan A | Use Plan B |
+| ------------------------------- | ---------- | ---------- |
+| Fix schema mismatches           | ✅         | ❌         |
+| Test OTP request/verify flow    | ❌         | ✅         |
+| CI/CD E2E testing with full OTP | ❌         | ✅         |
+| Most failing tests              | ✅         | ❌         |
+| TC004 specifically              | ❌         | ✅         |
 
 **Recommendation:**
+
 - Execute **Plan A first** (fixes 5 of 6 failing tests)
 - Execute **Plan B only if** you need true OTP E2E testing (TC004)
 
@@ -265,11 +269,11 @@ x-tenant-slug: barbearia-teste
 
 ## Risk Assessment
 
-| Risk | Mitigation | Residual Risk |
-|------|------------|---------------|
-| Endpoint exposed in production | Dual guard: env var + NODE_ENV check | Low |
-| Developer forgets to disable | Startup warning log, .env.example default=false | Low |
-| OTP leaked in logs | Only return OTP in response body, not logged | Low |
+| Risk                           | Mitigation                                      | Residual Risk |
+| ------------------------------ | ----------------------------------------------- | ------------- |
+| Endpoint exposed in production | Dual guard: env var + NODE_ENV check            | Low           |
+| Developer forgets to disable   | Startup warning log, .env.example default=false | Low           |
+| OTP leaked in logs             | Only return OTP in response body, not logged    | Low           |
 
 ---
 
