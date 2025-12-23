@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: 'read'
-      pull-requests: 'write' # Necessário para postar o comentário de review
+      pull-requests: 'write' # Necessário para postar o comentário de review
       issues: 'write'
 
     steps:
@@ -27,17 +27,17 @@ jobs:
         uses: 'google-github-actions/run-gemini-cli@v0'
         id: 'gemini_pr_review'
         env:
-          # Usamos o segredo padrão do GitHub para permissões de escrita
+          # Usamos o segredo padrão do GitHub para permissões de escrita
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         with:
-          # Autenticação via Google AI Studio
+          # Autenticação via Google AI Studio
           gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
-          gemini_model: 'gemini-1.5-pro'
+          gemini_model: 'gemini-2.5-flash'
           
-          # Correção da flag depreciada: agora usamos o comando direto
+          # Correção da flag depreciada: agora usamos o comando direto
           command: 'review'
           
-          # Configurações simplificadas e estáveis
+          # Configurações simplificadas e estáveis
           settings: |-
             {
               "model": {
