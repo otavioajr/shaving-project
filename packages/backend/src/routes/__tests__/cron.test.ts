@@ -112,6 +112,23 @@ describe('Cron Routes', () => {
       expect(response.json().error).toBe('Database connection failed')
     })
 
+    it('returns generic error message in production environment', async () => {
+      const originalEnv = process.env.NODE_ENV
+      process.env.NODE_ENV = 'production'
+      mockProcessReminders.mockRejectedValue(new Error('Database connection failed'))
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/cron/notify',
+        headers: { 'x-cron-secret': CRON_SECRET },
+      })
+
+      expect(response.statusCode).toBe(500)
+      expect(response.json().error).toBe('An internal error occurred while processing reminders')
+
+      process.env.NODE_ENV = originalEnv
+    })
+
     it('returns 500 when CRON_SECRET is not configured', async () => {
       delete process.env.CRON_SECRET
       const app2 = await buildTestApp()

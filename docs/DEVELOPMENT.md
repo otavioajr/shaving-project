@@ -331,6 +331,9 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - [x] Cron endpoint (`/api/cron/notify`)
 - [x] CRON_SECRET protection
 - [x] Tests
+- [x] Performance optimization: parallel reminder sending with limited concurrency (5)
+  - Replaced sequential loop with concurrent execution to reduce cron execution time
+  - Maintains error handling and subscription cleanup
 
 ---
 
@@ -374,6 +377,9 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - 2025-12-20: ESLint do backend passou sem warnings/erros após ajustes de tipagem e limpeza de `any` explícito.
 - 2025-12-20: **Correção Decimal→number movida para service layer** (preSerialization hook não era chamado antes da validação de schema do Fastify). Helpers type-safe em `serializer.ts`, aplicados em todos os services com campos Decimal.
 - 2025-12-23: Corrigido script `pnpm start` do backend para apontar para `dist/src/server.js` (build do `tsc`).
+- 2025-12-23: Comparação de `CRON_SECRET` ajustada para tempo constante com `timingSafeEqual`.
+- 2025-12-23: `pushSubscription` usa `Prisma.DbNull` para limpar e filtrar JSON null.
+- 2025-12-23: **Cron notify error handling melhorado** - Retorna mensagem genérica em produção para evitar vazamento de detalhes internos. Mensagens detalhadas permanecem em dev/test. Adicionado logging de erro e sucesso com estatísticas.
 
 ---
 

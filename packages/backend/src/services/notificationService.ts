@@ -1,7 +1,7 @@
 import webpush from 'web-push'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
-import type { Client, Appointment, Professional, Service } from '@prisma/client'
+import type { Client } from '@prisma/client'
 import {
   pushSubscriptionSchema,
   type PushSubscription,
@@ -16,12 +16,14 @@ export interface SendResult {
   shouldRemoveSubscription?: boolean
 }
 
-// Appointment with relations for reminder formatting
-export interface AppointmentWithRelations extends Appointment {
-  client: Client
-  professional: Professional
-  service: Service
-}
+// Appointment with relations for reminder formatting (Prisma-generated type)
+export type AppointmentWithRelations = Prisma.AppointmentGetPayload<{
+  include: {
+    client: true
+    professional: true
+    service: true
+  }
+}>
 
 export class NotificationService {
   private vapidConfigured = false
@@ -180,7 +182,7 @@ export class NotificationService {
         professional: true,
         service: true,
       },
-    }) as Promise<AppointmentWithRelations[]>
+    })
   }
 
   /**
