@@ -11,8 +11,8 @@ export async function tenantMiddleware(
   // Skip middleware for public routes
   const path = (request.url ?? '/').split('?')[0] // Remove query string
 
-  // Check if path is exactly in PUBLIC_ROUTES or starts with /docs
-  if (PUBLIC_ROUTES.includes(path) || path.startsWith('/docs')) {
+  // Check if path is exactly in PUBLIC_ROUTES or starts with /docs or /api/cron
+  if (PUBLIC_ROUTES.includes(path) || path.startsWith('/docs') || path.startsWith('/api/cron')) {
     return
   }
 

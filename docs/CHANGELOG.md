@@ -11,6 +11,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Milestone 7: Notifications (Web Push + Cron) - COMPLETE** (2025-12-23)
+  - **New Service:** `NotificationService` (singleton pattern)
+    - `sendNotification()` - Send push notifications via web-push library
+    - `sendAppointmentReminder()` - Format and send appointment reminders
+    - `processReminders()` - Cron job logic to find and notify upcoming appointments
+    - Error handling for expired (410) and invalid (404) subscriptions
+  - **New Endpoint:** `POST /api/cron/notify` (protected by CRON_SECRET header)
+    - Finds CONFIRMED appointments in next 15-minute window
+    - Sends push notifications to clients with valid subscriptions
+    - Returns statistics: `{ sent: number, errors: number }`
+  - **New Schema:** `notification.schema.ts` with Zod validators
+    - `pushSubscriptionSchema` - Validates Web Push subscription format
+    - `notificationPayloadSchema` - Validates notification content
+  - **Middleware Updates:**
+    - Added `/api/cron` bypass in `tenantMiddleware` (no tenant header required)
+    - Added `/api/cron` bypass in `rateLimitMiddleware` (no rate limiting)
+  - **Tests:** 16 new tests (10 unit + 6 integration) covering:
+    - Subscription validation (valid/invalid formats)
+    - Push notification sending (success and error cases)
+    - Error handling (410 Gone, 404 Not Found, 429 Rate Limit)
+    - Appointment reminder formatting
+    - Cron endpoint authentication and processing
+  - **All Tests:** 124/124 passing ✅
+  - **Lint:** 0 errors/0 warnings ✅
+
 - **Prettier & Code Formatting Tooling** (2025-12-22)
   - Added Prettier v3.7.4 for consistent code formatting
   - Configured with: no semicolons, single quotes, 2-space indent, 100 print width

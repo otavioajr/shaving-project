@@ -15,6 +15,7 @@ import { transactionRoutes } from './routes/transactions.js'
 import { reportRoutes } from './routes/reports.js'
 import { authRoutes } from './routes/auth.js'
 import { barbershopRoutes } from './routes/barbershops.js'
+import { cronRoutes } from './routes/cron.js'
 import { serializeResponse } from './lib/serializer.js'
 
 export interface AppOptions {
@@ -79,6 +80,7 @@ export async function buildApp(options: AppOptions = {}): Promise<FastifyInstanc
         { name: 'Transactions', description: 'Financial transactions' },
         { name: 'Reports', description: 'Financial reports' },
         { name: 'Barbershops', description: 'Barbershop/tenant management' },
+        { name: 'Cron', description: 'Cron job endpoints (protected by CRON_SECRET)' },
       ],
     },
   })
@@ -161,6 +163,7 @@ export async function buildApp(options: AppOptions = {}): Promise<FastifyInstanc
   await app.register(reportRoutes, { prefix: '/api' })
   await app.register(authRoutes, { prefix: '/api' })
   await app.register(barbershopRoutes, { prefix: '/api' })
+  await app.register(cronRoutes, { prefix: '/api' })
 
   return app
 }

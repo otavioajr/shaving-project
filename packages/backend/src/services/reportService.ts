@@ -73,7 +73,7 @@ export class ReportService {
     const appointmentsCount =
       typeof appointments._count === 'number'
         ? appointments._count
-        : ((appointments._count as any)?._all ?? 0)
+        : ((appointments._count as Record<string, number>)?._all ?? 0)
 
     return {
       period: {
@@ -120,7 +120,10 @@ export class ReportService {
         const commission = c._sum?.commissionValue
           ? new Decimal(c._sum.commissionValue)
           : new Decimal(0)
-        const count = typeof c._count === 'number' ? c._count : ((c._count as any)?._all ?? 0)
+        const count =
+          typeof c._count === 'number'
+            ? c._count
+            : ((c._count as Record<string, number>)?._all ?? 0)
 
         return {
           id: c.professional.id,

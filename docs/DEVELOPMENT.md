@@ -37,7 +37,7 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 | 4         | **COMPLETE** ✅ | CRUD (Professionals, Clients, Services) |
 | 5         | **COMPLETE** ✅ | Appointment Management                  |
 | 6         | **COMPLETE** ✅ | Financial Management                    |
-| 7         | In Progress     | Notifications (Web Push + Cron)         |
+| 7         | **COMPLETE** ✅ | Notifications (Web Push + Cron)         |
 | 8         | In Progress     | Barbershop Management                   |
 | 9         | In Progress     | Testing, Docs & Deployment              |
 
@@ -322,15 +322,15 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ## Milestone 7: Notifications (Web Push + Cron)
 
-**Status:** IN PROGRESS
+**Status:** COMPLETE ✅
 
 ### Checklist
 
 - [x] Persist push subscription on Client (`pushSubscription` field)
-- [ ] Web Push service (send notifications)
-- [ ] Cron endpoint (`/api/cron/notify`)
-- [ ] CRON_SECRET protection
-- [ ] Tests
+- [x] Web Push service (send notifications)
+- [x] Cron endpoint (`/api/cron/notify`)
+- [x] CRON_SECRET protection
+- [x] Tests
 
 ---
 
