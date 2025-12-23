@@ -36,7 +36,7 @@ Cada milestone possui um plano detalhado em `docs/plans/`. Antes de iniciar qual
 | 3         | **COMPLETE** ✅ | Authentication (JWT + OTP)              |
 | 4         | **COMPLETE** ✅ | CRUD (Professionals, Clients, Services) |
 | 5         | **COMPLETE** ✅ | Appointment Management                  |
-| 6         | In Progress     | Financial Management                    |
+| 6         | **COMPLETE** ✅ | Financial Management                    |
 | 7         | In Progress     | Notifications (Web Push + Cron)         |
 | 8         | In Progress     | Barbershop Management                   |
 | 9         | In Progress     | Testing, Docs & Deployment              |
@@ -301,7 +301,7 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ## Milestone 6: Financial Management
 
-**Status:** IN PROGRESS
+**Status:** COMPLETE ✅
 
 ### Checklist
 
@@ -313,8 +313,9 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - [x] Auth required for create/update/delete operations
 - [x] Auth required for list/get operations (GET)
   - Validates `requireAuth` + `tenantId` match
-- [ ] Financial summary endpoint
-- [ ] Commission report endpoint (via appointments)
+- [x] Financial summary endpoint
+- [x] Commission report endpoint (via appointments)
+- [x] Commission report professionals lookup scoped by tenant (`barbershopId`)
 - [x] Tests (Unit tests for controller guards added)
 
 ---
