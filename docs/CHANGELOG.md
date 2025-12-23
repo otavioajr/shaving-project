@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Proteção de Rotas de Transações (GET)** (2025-12-22)
+  - **Problema:** Rotas GET `/api/transactions` e `/api/transactions/:id` não exigiam autenticação JWT, permitindo acesso apenas com `x-tenant-slug`.
+  - **Solução:** Adicionado middleware `requireAuth` e validação de tenant match no `transactionController`.
+  - **Arquivos modificados:**
+    - `src/routes/transactions.ts`: Adicionado `preHandler: requireAuth` e schemas de segurança.
+    - `src/controllers/transactionController.ts`: Adicionado check de auth e tenant mismatch em `list()` e `getById()`.
+  - **Testes:** Novo arquivo `src/controllers/__tests__/transactions.test.ts` cobrindo cenários 401 e 403.
+
 - **Correção de serialização Decimal nos Services** (2025-12-20)
   - **Problema:** Endpoints com campos `Decimal` (professionals, services, appointments, transactions) retornavam erro 500 porque Fastify valida o response schema ANTES do hook `preSerialization`
   - **Solução:** Movido a conversão `Decimal → number` para o **service layer** (antes de retornar ao controller)

@@ -296,9 +296,11 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
   - `src/controllers/transactionController.ts`
   - `src/routes/transactions.ts`
 - [x] Auth required for create/update/delete operations
+- [x] Auth required for list/get operations (GET)
+  - Validates `requireAuth` + `tenantId` match
 - [ ] Financial summary endpoint
 - [ ] Commission report endpoint (via appointments)
-- [ ] Tests
+- [x] Tests (Unit tests for controller guards added)
 
 ---
 
