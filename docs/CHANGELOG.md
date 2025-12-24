@@ -9,7 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Refactor:** NotificationService - Use Prisma.GetPayload for type-safe relations (2025-12-23)
+  - Replaced manual `AppointmentWithRelations` interface with Prisma-generated type
+  - Removed unnecessary type assertion `as Promise<AppointmentWithRelations[]>`
+  - Improved type safety by using Prisma's native type generation
+  - Removed unused imports: `Appointment`, `Professional`, `Service`
+
 ### Added
+
+- **Milestone 7: Notifications (Web Push + Cron) - COMPLETE** (2025-12-23)
+  - **New Service:** `NotificationService` (singleton pattern)
+    - `sendNotification()` - Send push notifications via web-push library
+    - `sendAppointmentReminder()` - Format and send appointment reminders
+    - `processReminders()` - Cron job logic to find and notify upcoming appointments
+    - Error handling for expired (410) and invalid (404) subscriptions
+  - **New Endpoint:** `POST /api/cron/notify` (protected by CRON_SECRET header)
+    - Finds CONFIRMED appointments in next 15-minute window
+    - Sends push notifications to clients with valid subscriptions
+    - Returns statistics: `{ sent: number, errors: number }`
+  - **New Schema:** `notification.schema.ts` with Zod validators
+    - `pushSubscriptionSchema` - Validates Web Push subscription format
+    - `notificationPayloadSchema` - Validates notification content
+  - **Middleware Updates:**
+    - Added `/api/cron` bypass in `tenantMiddleware` (no tenant header required)
+    - Added `/api/cron` bypass in `rateLimitMiddleware` (no rate limiting)
+  - **Tests:** 16 new tests (10 unit + 6 integration) covering:
+    - Subscription validation (valid/invalid formats)
+    - Push notification sending (success and error cases)
+    - Error handling (410 Gone, 404 Not Found, 429 Rate Limit)
+    - Appointment reminder formatting
+    - Cron endpoint authentication and processing
+  - **All Tests:** 124/124 passing ✅
+  - **Lint:** 0 errors/0 warnings ✅
 
 - **Prettier & Code Formatting Tooling** (2025-12-22)
   - Added Prettier v3.7.4 for consistent code formatting
@@ -61,8 +94,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Cron notification performance optimization** (2025-12-23)
+  - Changed `processReminders()` to send appointment reminders in parallel with limited concurrency (5)
+  - Replaced sequential `for...of` loop with concurrent execution to reduce cron job execution time
+  - Maintains non-abortive behavior: collects all results even if some fail
+  - Invalid subscriptions are still properly removed after all reminders are processed
 - **Tenant scoping in commission report professionals lookup** (2025-12-23)
   - Added `barbershopId` filter when fetching professionals for commission aggregation
+- **Cron secret comparison hardened** (2025-12-23)
+  - Use constant-time comparison for `CRON_SECRET` validation to reduce timing attack risk
+- **Cron notify error handling** (2025-12-23)
+  - Return generic error message in production to avoid leaking internal details
+  - Detailed error messages remain available in dev/test environments for debugging
+  - Added error logging with `request.log.error()` for server-side debugging
+  - Added success logging with statistics (`{ sent, errors }`) after processing reminders
+- **Push subscription JSON null handling** (2025-12-23)
+  - Use `Prisma.DbNull` for clearing and filtering client push subscriptions
 
 - **Appointment Update Final-State Response** (2025-12-23)
   - Map attempts to update COMPLETED/CANCELLED/NO_SHOW appointments to 400 in `appointmentController.update`
