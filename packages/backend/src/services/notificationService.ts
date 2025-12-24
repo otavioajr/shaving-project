@@ -181,6 +181,12 @@ export class NotificationService {
    * @param limit Maximum concurrent tasks
    * @param worker Function that processes each item
    * @returns Array of results in the same order as items
+   *
+   * TODO: Code review feedback (PR review - Junior):
+   * 1. Improve defensive pattern: Change `while (queue.length > 0) { shift()! }` to `while (true) { const task = shift(); if (!task) break }`
+   * 2. Remove try/catch block with unsafe `as R` cast - let workers handle their own errors
+   *    (Current usage in processReminders already has internal try/catch, making this redundant)
+   * See: https://github.com/anthropics/claude-code/pull/XXX#discussion_rXXX
    */
   private async runWithConcurrency<T, R>(
     items: T[],
@@ -198,6 +204,7 @@ export class NotificationService {
         } catch (error) {
           // Convert unexpected errors to a result-like object
           // This ensures we don't abort the batch
+          // TODO: Remove this try/catch - unsafe type cast `as R` and redundant with worker error handling
           results[index] = {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error',
