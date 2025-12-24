@@ -339,18 +339,31 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ## Milestone 8: Barbershop Management
 
-**Status:** IN PROGRESS
+**Status:** COMPLETE ✅
 
 ### Checklist
 
-- [ ] Self-registration endpoint (if applicable)
+- [x] Self-registration endpoint (POST /api/barbershops)
+  - `src/controllers/barbershopController.ts::register()`
+  - Public endpoint, no auth required
+  - Creates barbershop + first ADMIN user + returns JWT tokens
 - [x] Seed script (`prisma/seed.ts`)
 - [x] Barbershop read/update endpoints
   - `src/controllers/barbershopController.ts`
   - `src/routes/barbershops.ts`
-- [ ] Slug validation (for create/update slug operations)
-- [ ] Require auth/RBAC for barbershop update
-- [ ] Tests
+- [x] Public info endpoint (GET /api/barbershops/:slug)
+- [x] Slug validation (for create/update slug operations)
+  - Regex: `/^[a-z0-9]+(?:-[a-z0-9]+)*$/`
+  - Length: 3-50 characters
+  - Slug is immutable after creation
+- [x] Require auth/RBAC for barbershop update
+  - PUT /api/barbershop requires ADMIN role
+  - Returns 403 for non-admin users
+- [x] Tests (16 comprehensive tests)
+  - Self-registration success and error cases
+  - Public info access and validation
+  - Update with auth/RBAC checks
+  - Duplicate slug and email validation
 
 ---
 
@@ -373,6 +386,9 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ### Maintenance Notes
 
+- 2025-12-24: Corrigido retorno 400 para erros de validação de slug no self-registration (antes retornava 500).
+- 2025-12-24: Self-registration now uses a single Prisma write to avoid orphaned barbershops when admin creation fails.
+- 2025-12-24: Added tenant match validation to `GET /api/barbershop` to prevent cross-tenant access with mismatched JWT.
 - 2025-12-19: Hook global de pre-serialization para converter Prisma Decimal em `number` e `Date` em ISO string nas respostas `/api`.
 - 2025-12-20: ESLint do backend passou sem warnings/erros após ajustes de tipagem e limpeza de `any` explícito.
 - 2025-12-20: **Correção Decimal→number movida para service layer** (preSerialization hook não era chamado antes da validação de schema do Fastify). Helpers type-safe em `serializer.ts`, aplicados em todos os services com campos Decimal.
@@ -451,4 +467,4 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 
 ---
 
-_Last updated: 2025-12-23_
+_Last updated: 2025-12-24_

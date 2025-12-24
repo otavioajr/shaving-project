@@ -19,6 +19,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Milestone 8: Barbershop Management - COMPLETE** (2025-12-24)
+  - **New Schema:** `barbershop.schema.ts` with Zod validators
+    - `slugSchema` - Validates slug format: `/^[a-z0-9]+(?:-[a-z0-9]+)*$/`, 3-50 chars
+    - `selfRegisterSchema` - Validates self-registration input with email/password strength
+    - `updateBarbershopSchema` - Selective updates (name, isActive only - slug immutable)
+    - `publicBarbershopInfoSchema` - Public-facing data (id, name, slug, isActive)
+  - **New Endpoints:**
+    - `POST /api/barbershops` - Self-registration (public, creates barbershop + admin + returns JWT tokens)
+    - `GET /api/barbershops/:slug` - Get barbershop public info (public, no auth required)
+    - `PUT /api/barbershop` - Update current tenant (protected, ADMIN role only)
+    - `GET /api/barbershop` - Get current tenant info (protected)
+  - **Repository Updates:** `BarbershopRepository`
+    - `create()` - Create new barbershop
+    - `isSlugUnique()` - Validate slug uniqueness globally
+    - `findEmailGlobally()` - Check email across all tenants (for self-registration)
+  - **Service Updates:** `BarbershopService`
+    - `validateSlug()` - Validate slug format and length
+    - `getPublicInfo()` - Retrieve public barbershop data (returns null if inactive)
+    - `selfRegister()` - Self-registration flow: validate, create barbershop, hash password, create ADMIN
+  - **Controller Updates:** `BarbershopController`
+    - `register()` - Handle self-registration with JWT token generation and refresh token storage
+    - `getPublicInfo()` - Return public barbershop info
+    - `update()` - Update with auth/tenant/role validation (ADMIN only)
+  - **Middleware Updates:** `tenantMiddleware`
+    - Added bypass for `POST /api/barbershops` (self-registration, no tenant yet)
+    - Added bypass for `GET /api/barbershops/:slug` (public lookup by slug in URL)
+  - **Tests:** Comprehensive test suite `barbershops.test.ts` (16 tests)
+    - Self-registration: success, duplicate slug (409), duplicate email (409), validation errors (400)
+    - Public info: success, not found (404), inactive (404), no sensitive data leakage
+    - Update: ADMIN success, auth required (401), role validation (403), input validation (400)
+  - **Security:**
+    - Global email uniqueness enforcement (single email per platform)
+    - RBAC: only ADMIN can update barbershop settings
+    - Slug immutability: slug cannot be changed after creation
+    - Public info: no sensitive fields in public endpoints
+  - **All Tests:** 142/142 passing ✅
+  - **Lint:** 0 errors/0 warnings ✅
+
 - **Milestone 7: Notifications (Web Push + Cron) - COMPLETE** (2025-12-23)
   - **New Service:** `NotificationService` (singleton pattern)
     - `sendNotification()` - Send push notifications via web-push library
@@ -94,6 +132,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Barbershop self-registration slug validation errors** (2025-12-24)
+  - Map slug length/format validation messages to 400 responses instead of 500
+
+- **Tenant match validation for barbershop read** (2025-12-24)
+  - Added auth + tenant mismatch checks to `GET /api/barbershop` to prevent cross-tenant access
+
+- **Self-registration atomic write** (2025-12-24)
+  - Create barbershop and ADMIN in a single Prisma write to avoid orphaned barbershops
 - **Cron notification performance optimization** (2025-12-23)
   - Changed `processReminders()` to send appointment reminders in parallel with limited concurrency (5)
   - Replaced sequential `for...of` loop with concurrent execution to reduce cron job execution time
