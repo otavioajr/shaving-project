@@ -147,16 +147,6 @@ export class NotificationService {
   }
 
   /**
-   * Remove invalid subscription from client
-   */
-  async removeInvalidSubscription(clientId: string): Promise<void> {
-    await prisma.client.update({
-      where: { id: clientId },
-      data: { pushSubscription: Prisma.DbNull },
-    })
-  }
-
-  /**
    * Find upcoming appointments for notification (next 15 minutes)
    * Uses a 1-minute window (15-16 min) to avoid re-sending on subsequent cron runs
    */
@@ -186,7 +176,7 @@ export class NotificationService {
   }
 
   /**
-   * Execute tasks with limited concurrency
+   * Execute tasks with limited concurrency using worker pool pattern
    * @param items Array of items to process
    * @param limit Maximum concurrent tasks
    * @param worker Function that processes each item
@@ -198,34 +188,26 @@ export class NotificationService {
     worker: (item: T, index: number) => Promise<R>
   ): Promise<R[]> {
     const results: R[] = new Array(items.length)
-    const executing: Promise<void>[] = []
+    const queue = [...items.entries()]
 
-    for (let i = 0; i < items.length; i++) {
-      const promise = (async () => {
+    const runWorker = async () => {
+      while (queue.length > 0) {
+        const [index, item] = queue.shift()!
         try {
-          results[i] = await worker(items[i], i)
+          results[index] = await worker(item, index)
         } catch (error) {
           // Convert unexpected errors to a result-like object
           // This ensures we don't abort the batch
-          results[i] = {
+          results[index] = {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error',
           } as R
         }
-      })()
-
-      executing.push(promise)
-
-      if (executing.length >= limit) {
-        await Promise.race(executing)
-        executing.splice(
-          executing.findIndex((p) => p === promise),
-          1
-        )
       }
     }
 
-    await Promise.all(executing)
+    const workers = Array.from({ length: Math.min(limit, items.length) }, () => runWorker())
+    await Promise.all(workers)
     return results
   }
 
@@ -256,8 +238,9 @@ export class NotificationService {
 
     let sent = 0
     let errors = 0
+    const clientsToRemoveSubscription: string[] = []
 
-    // Process results and remove invalid subscriptions
+    // Process results and collect invalid subscriptions for batch removal
     for (let i = 0; i < results.length; i++) {
       const result = results[i]
       const appointment = appointments[i]
@@ -267,11 +250,19 @@ export class NotificationService {
       } else {
         errors++
 
-        // Remove invalid subscriptions
+        // Collect invalid subscription clients for batch removal
         if (result.shouldRemoveSubscription) {
-          await this.removeInvalidSubscription(appointment.client.id)
+          clientsToRemoveSubscription.push(appointment.client.id)
         }
       }
+    }
+
+    // Batch remove all invalid subscriptions in a single query
+    if (clientsToRemoveSubscription.length > 0) {
+      await prisma.client.updateMany({
+        where: { id: { in: clientsToRemoveSubscription } },
+        data: { pushSubscription: Prisma.DbNull },
+      })
     }
 
     return { sent, errors }

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { Prisma } from '@prisma/client'
-import type { Client } from '@prisma/client'
 import type { SendResult } from 'web-push'
 import type { AppointmentWithRelations } from '../notificationService.js'
 
@@ -32,12 +31,12 @@ vi.mock('web-push', () => {
 // Mock prisma
 vi.mock('../../lib/prisma.js', () => {
   const appointmentFindMany = vi.fn()
-  const clientUpdate = vi.fn()
+  const clientUpdateMany = vi.fn()
 
   return {
     prisma: {
       appointment: { findMany: appointmentFindMany },
-      client: { update: clientUpdate },
+      client: { updateMany: clientUpdateMany },
     },
   }
 })
@@ -274,7 +273,7 @@ describe('NotificationService', () => {
     it('removes invalid subscriptions on error', async () => {
       const { prisma } = await import('../../lib/prisma.js')
       const appointmentFindMany = vi.mocked(prisma.appointment.findMany)
-      const clientUpdate = vi.mocked(prisma.client.update)
+      const clientUpdateMany = vi.mocked(prisma.client.updateMany)
       const mockSendNotification = vi.mocked(webpush.sendNotification)
 
       appointmentFindMany.mockResolvedValue([
@@ -293,12 +292,12 @@ describe('NotificationService', () => {
         },
       ] as unknown as AppointmentWithRelations[])
       mockSendNotification.mockRejectedValue(makeWebPushError('Gone', 410))
-      clientUpdate.mockResolvedValue({} as unknown as Client)
+      clientUpdateMany.mockResolvedValue({} as unknown as { count: number })
 
       const result = await service.processReminders()
       expect(result.errors).toBe(1)
-      expect(clientUpdate).toHaveBeenCalledWith({
-        where: { id: 'client-1' },
+      expect(clientUpdateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['client-1'] } },
         data: { pushSubscription: Prisma.DbNull },
       })
     })
@@ -306,7 +305,7 @@ describe('NotificationService', () => {
     it('handles multiple appointments', async () => {
       const { prisma } = await import('../../lib/prisma.js')
       const appointmentFindMany = vi.mocked(prisma.appointment.findMany)
-      const clientUpdate = vi.mocked(prisma.client.update)
+      const clientUpdateMany = vi.mocked(prisma.client.updateMany)
       const mockSendNotification = vi.mocked(webpush.sendNotification)
 
       appointmentFindMany.mockResolvedValue([
@@ -348,14 +347,14 @@ describe('NotificationService', () => {
         }
         return Promise.resolve(mockSendResult)
       })
-      clientUpdate.mockResolvedValue({} as unknown as Client)
+      clientUpdateMany.mockResolvedValue({} as unknown as { count: number })
 
       const result = await service.processReminders()
       expect(result.sent).toBe(1)
       expect(result.errors).toBe(1)
-      expect(clientUpdate).toHaveBeenCalledTimes(1)
-      expect(clientUpdate).toHaveBeenCalledWith({
-        where: { id: 'client-2' },
+      expect(clientUpdateMany).toHaveBeenCalledTimes(1)
+      expect(clientUpdateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['client-2'] } },
         data: { pushSubscription: Prisma.DbNull },
       })
     })
@@ -363,7 +362,7 @@ describe('NotificationService', () => {
     it('handles multiple appointments with multiple invalid subscriptions', async () => {
       const { prisma } = await import('../../lib/prisma.js')
       const appointmentFindMany = vi.mocked(prisma.appointment.findMany)
-      const clientUpdate = vi.mocked(prisma.client.update)
+      const clientUpdateMany = vi.mocked(prisma.client.updateMany)
       const mockSendNotification = vi.mocked(webpush.sendNotification)
 
       appointmentFindMany.mockResolvedValue([
@@ -412,22 +411,14 @@ describe('NotificationService', () => {
       mockSendNotification.mockImplementation(() => {
         return Promise.reject(makeWebPushError('Gone', 410))
       })
-      clientUpdate.mockResolvedValue({} as unknown as Client)
+      clientUpdateMany.mockResolvedValue({} as unknown as { count: number })
 
       const result = await service.processReminders()
       expect(result.sent).toBe(0)
       expect(result.errors).toBe(3)
-      expect(clientUpdate).toHaveBeenCalledTimes(3)
-      expect(clientUpdate).toHaveBeenCalledWith({
-        where: { id: 'client-1' },
-        data: { pushSubscription: Prisma.DbNull },
-      })
-      expect(clientUpdate).toHaveBeenCalledWith({
-        where: { id: 'client-2' },
-        data: { pushSubscription: Prisma.DbNull },
-      })
-      expect(clientUpdate).toHaveBeenCalledWith({
-        where: { id: 'client-3' },
+      expect(clientUpdateMany).toHaveBeenCalledTimes(1)
+      expect(clientUpdateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['client-1', 'client-2', 'client-3'] } },
         data: { pushSubscription: Prisma.DbNull },
       })
     })
