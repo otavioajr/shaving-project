@@ -384,6 +384,14 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - [x] TestSprite MCP integration (backend API suite, report available)
 - [ ] PR/Merge checklist followed (`docs/PR-CHECKLIST.md`)
 
+### 🔴 Issues Críticos (Bloqueantes)
+
+- [ ] **CRÍTICO:** Corrigir mocking em `barbershops.test.ts` (Plano 13)
+  - Testes usando Prisma/Redis reais sem mocks
+  - Falta `afterEach` para fechar app
+  - Inconsistente com padrão dos outros testes
+  - **Bloqueante para merge do PR Milestone 8**
+
 ### Maintenance Notes
 
 - 2025-12-24: Corrigido retorno 400 para erros de validação de slug no self-registration (antes retornava 500).
@@ -464,6 +472,20 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - **Supabase Project:** `shaving-project`
 - **Upstash Redis:** `barbershop-saas-cache`
 - **Package Manager:** pnpm
+
+---
+
+## Planos de Ajuste
+
+### Plano 13: Correção de Testes - Mocking em barbershops.test.ts
+
+**Status:** 🔴 CRÍTICO - Bloqueante  
+**Prioridade:** Alta  
+**Arquivo:** `docs/plans/13-fix-barbershops-tests-mocking.md`
+
+**Problema:** Testes de barbershops usando Prisma/Redis reais sem mocks, causando falhas e inconsistência.
+
+**Ação:** Refatorar para seguir padrão de `auth.test.ts` e `professionals.test.ts` com mocks completos.
 
 ---
 
