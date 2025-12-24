@@ -16,6 +16,14 @@ export async function tenantMiddleware(
     return
   }
 
+  // Skip tenant check for public barbershop endpoints
+  if (path === '/api/barbershops' && request.method === 'POST') {
+    return
+  }
+  if (path.match(/^\/api\/barbershops\/[a-z0-9-]+$/)) {
+    return
+  }
+
   // Get tenant slug from header
   const tenantSlug = request.headers['x-tenant-slug'] as string | undefined
 
