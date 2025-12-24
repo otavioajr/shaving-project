@@ -1,6 +1,6 @@
 # Plano 13: Correção de Testes - Mocking em barbershops.test.ts
 
-**Status:** 🔴 CRÍTICO - Bloqueante para PR  
+**Status:** ✅ COMPLETO  
 **Prioridade:** Alta  
 **Data:** 2025-12-24  
 **Issue:** Testes de barbershops usando Prisma/Redis reais sem mocks
@@ -79,41 +79,46 @@ afterEach(async () => {
 
 ### Fase 1: Setup de Mocks
 
-- [ ] Criar mocks para Redis (redisMock, ipRatelimitMock, tenantRatelimitMock)
-- [ ] Criar mocks para Prisma (barbershop, professional)
-- [ ] Adicionar `vi.mock()` para `../../lib/redis.js`
-- [ ] Adicionar `vi.mock()` para `../../lib/prisma.js`
-- [ ] Remover import direto de `prisma` real
+- [x] Criar mocks para Redis (redisMock, ipRatelimitMock, tenantRatelimitMock)
+- [x] Criar mocks para Prisma (barbershop, professional)
+- [x] Adicionar `vi.mock()` para `../../lib/redis.js`
+- [x] Adicionar `vi.mock()` para `../../lib/prisma.js`
+- [x] Remover import direto de `prisma` real
 
 ### Fase 2: Refatorar Testes
 
-- [ ] **Self-registration tests:**
-  - [ ] Mock `barbershop.findUnique` para verificar slug único
-  - [ ] Mock `professional.findFirst` para verificar email único
-  - [ ] Mock `barbershop.create` com nested `professional.create`
-  - [ ] Mock `redis.setex` para refresh token storage
+- [x] **Self-registration tests:**
+  - [x] Mock `barbershop.findUnique` para verificar slug único
+  - [x] Mock `professional.findFirst` para verificar email único
+  - [x] Mock `barbershop.create` com nested `professional.create`
+  - [x] Mock `redis.setex` para refresh token storage
 
-- [ ] **Public info tests:**
-  - [ ] Mock `barbershop.findUnique` para retornar barbershop ativo/inativo
-  - [ ] Remover uso direto de `prisma.barbershop.update()` (linha 225)
+- [x] **Public info tests:**
+  - [x] Mock `barbershop.findUnique` para retornar barbershop ativo/inativo
+  - [x] Remover uso direto de `prisma.barbershop.update()` (linha 225)
 
-- [ ] **Update tests:**
-  - [ ] Mock `barbershop.findUnique` para buscar barbershop
-  - [ ] Mock `barbershop.update` para atualizar
-  - [ ] Mock `professional.findFirst` para login de admin/barber
+- [x] **GET /api/barbershop tests:**
+  - [x] Adicionar testes para endpoint protegido GET /api/barbershop
+  - [x] Mock `barbershop.findUnique` para buscar barbershop por ID
+  - [x] Testar validações de auth e tenant mismatch
+
+- [x] **Update tests:**
+  - [x] Mock `barbershop.findUnique` para buscar barbershop
+  - [x] Mock `barbershop.update` para atualizar
+  - [x] Mock `professional.findFirst` para login de admin/barber
 
 ### Fase 3: Cleanup e Isolamento
 
-- [ ] Adicionar `afterEach` com `await app.close()`
-- [ ] Adicionar `vi.clearAllMocks()` no `beforeEach`
-- [ ] Garantir isolamento entre testes (reset de mocks)
+- [x] Adicionar `afterEach` com `await app.close()`
+- [x] Adicionar `vi.clearAllMocks()` no `beforeEach`
+- [x] Garantir isolamento entre testes (reset de mocks)
 
 ### Fase 4: Validação
 
-- [ ] Executar `pnpm test` e garantir todos os testes passando
-- [ ] Verificar que não há tentativas de conexão real com DB/Redis
-- [ ] Validar que testes são rápidos e isolados
-- [ ] Comparar com padrão de `auth.test.ts` e `professionals.test.ts`
+- [x] Executar `pnpm test` e garantir todos os testes passando
+- [x] Verificar que não há tentativas de conexão real com DB/Redis
+- [x] Validar que testes são rápidos e isolados
+- [x] Comparar com padrão de `auth.test.ts` e `professionals.test.ts`
 
 ---
 
@@ -227,13 +232,23 @@ barbershopFindUnique.mockResolvedValueOnce({
 
 ## ✅ Critérios de Sucesso
 
-- [x] Todos os 16 testes passando
+- [x] Todos os 20 testes passando (16 originais + 4 novos para GET /api/barbershop)
 - [x] Zero tentativas de conexão com DB/Redis reais
 - [x] Testes executam rapidamente (< 5s total)
 - [x] Estado isolado entre testes
 - [x] Padrão consistente com outros testes de controllers
 - [x] `pnpm lint` sem erros
 - [x] `pnpm test` passando completamente
+
+## 📝 Mudanças Implementadas
+
+1. **Removido:** Import direto de `prisma` real
+2. **Adicionado:** Mocks completos para Redis e Prisma
+3. **Adicionado:** `afterEach` com `app.close()` para cleanup
+4. **Adicionado:** `vi.clearAllMocks()` no `beforeEach` para isolamento
+5. **Refatorado:** Todos os testes agora usam mocks
+6. **Adicionado:** Testes para GET /api/barbershop (endpoint protegido)
+7. **Corrigido:** Mock de `barbershop.findUnique` para suportar busca por slug e ID
 
 ---
 
