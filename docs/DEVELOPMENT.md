@@ -384,8 +384,17 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - [x] TestSprite MCP integration (backend API suite, report available)
 - [ ] PR/Merge checklist followed (`docs/PR-CHECKLIST.md`)
 
+### 🔴 Issues Críticos (Bloqueantes)
+
+- [x] **CRÍTICO:** Corrigir mocking em `barbershops.test.ts` (Plano 13) ✅
+  - [x] Testes agora usam mocks de Prisma/Redis
+  - [x] Adicionado `afterEach` para fechar app
+  - [x] Padrão consistente com outros testes
+  - [x] **Resolvido - PR pode ser mergeado**
+
 ### Maintenance Notes
 
+- 2025-12-24: **CRÍTICO:** Refatorado `barbershops.test.ts` para usar mocks de Prisma/Redis. Testes agora isolados e não requerem conexões reais. Adicionado `afterEach` para fechar app e testes para `GET /api/barbershop`.
 - 2025-12-24: Corrigido retorno 400 para erros de validação de slug no self-registration (antes retornava 500).
 - 2025-12-24: Self-registration now uses a single Prisma write to avoid orphaned barbershops when admin creation fails.
 - 2025-12-24: Added tenant match validation to `GET /api/barbershop` to prevent cross-tenant access with mismatched JWT.
@@ -464,6 +473,20 @@ This is now part of the normal setup flow: `pnpm install` → `pnpm db:generate`
 - **Supabase Project:** `shaving-project`
 - **Upstash Redis:** `barbershop-saas-cache`
 - **Package Manager:** pnpm
+
+---
+
+## Planos de Ajuste
+
+### Plano 13: Correção de Testes - Mocking em barbershops.test.ts
+
+**Status:** 🔴 CRÍTICO - Bloqueante  
+**Prioridade:** Alta  
+**Arquivo:** `docs/plans/13-fix-barbershops-tests-mocking.md`
+
+**Problema:** Testes de barbershops usando Prisma/Redis reais sem mocks, causando falhas e inconsistência.
+
+**Ação:** Refatorar para seguir padrão de `auth.test.ts` e `professionals.test.ts` com mocks completos.
 
 ---
 

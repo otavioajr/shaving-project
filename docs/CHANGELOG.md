@@ -132,6 +132,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Barbershop tests mocking and isolation** (2025-12-24)
+  - Refactored `barbershops.test.ts` to use mocks for Prisma and Redis (was using real connections)
+  - Added `afterEach` hook to close Fastify app after each test
+  - Removed direct `prisma` import and usage in tests
+  - Added proper mock setup following pattern from `auth.test.ts` and `professionals.test.ts`
+  - Tests now isolated and don't require real DB/Redis connections
+  - Added tests for `GET /api/barbershop` endpoint (was missing)
+  - All 20 tests now passing with proper mocking
+
 - **Barbershop self-registration slug validation errors** (2025-12-24)
   - Map slug length/format validation messages to 400 responses instead of 500
 
